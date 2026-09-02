@@ -1,8 +1,10 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import ServiceDetailsWrapper from './ServiceDetailsWrapper';
+import dynamic from 'next/dynamic';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
+
+const ServiceDetailsWrapper = dynamic(() => import('./ServiceDetailsWrapper'), { ssr: false });
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -18,7 +20,6 @@ async function fetchService(slug: string) {
     try {
         const res = await fetch(`${API_URL}/services/${publicId}`, {
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
-            next: { revalidate: 3600 },
         });
         if (!res.ok) return null;
         const json = await res.json();

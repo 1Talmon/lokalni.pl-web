@@ -1,8 +1,10 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import PublicProfileWrapper from './PublicProfileWrapper';
+import dynamic from 'next/dynamic';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
+
+const PublicProfileWrapper = dynamic(() => import('./PublicProfileWrapper'), { ssr: false });
 
 interface Props {
     params: Promise<{ uid: string }>;
@@ -12,7 +14,6 @@ async function fetchProfile(uid: string) {
     try {
         const res = await fetch(`${API_URL}/users/${uid}/profile`, {
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
-            next: { revalidate: 3600 },
         });
         if (!res.ok) return null;
         const json = await res.json();
