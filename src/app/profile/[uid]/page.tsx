@@ -1,10 +1,8 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+import PublicProfileNoSSR from './PublicProfileNoSSR';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
-
-const PublicProfileWrapper = dynamic(() => import('./PublicProfileWrapper'), { ssr: false });
 
 interface Props {
     params: Promise<{ uid: string }>;
@@ -109,7 +107,7 @@ export default async function ProfilePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <PublicProfileWrapper />
+            <PublicProfileNoSSR />
         </>
     );
 }

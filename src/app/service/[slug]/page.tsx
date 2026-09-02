@@ -1,10 +1,8 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+import ServiceDetailsNoSSR from './ServiceDetailsNoSSR';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
-
-const ServiceDetailsWrapper = dynamic(() => import('./ServiceDetailsWrapper'), { ssr: false });
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -120,7 +118,7 @@ export default async function ServicePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <ServiceDetailsWrapper />
+            <ServiceDetailsNoSSR />
         </>
     );
 }
