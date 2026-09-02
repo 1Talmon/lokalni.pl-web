@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import type { Metadata } from 'next';
 import ServiceDetailsNoSSR from './ServiceDetailsNoSSR';
 import { ServiceStaticShell } from './ServiceStaticShell';

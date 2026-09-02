@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import type { Metadata } from 'next';
 import PublicProfileNoSSR from './PublicProfileNoSSR';
 import { PublicProfileStaticShell } from './PublicProfileStaticShell';
