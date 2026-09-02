@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { BASE_URL, API_URL } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 

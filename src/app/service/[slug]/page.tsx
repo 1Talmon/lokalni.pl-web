@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import ServiceDetailsWrapper from './ServiceDetailsWrapper';
 import { API_URL, BASE_URL } from '@/lib/seo-data';

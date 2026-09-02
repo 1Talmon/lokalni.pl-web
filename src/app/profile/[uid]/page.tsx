@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import PublicProfileWrapper from './PublicProfileWrapper';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
