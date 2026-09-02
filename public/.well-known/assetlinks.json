@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.lokalni.app",
+    "sha256_cert_fingerprints": [
+      "79:7F:28:63:AB:BE:07:1A:40:78:10:D3:22:58:10:B3:A1:91:AE:32:12:93:75:CD:69:36:7A:D4:94:2E:92:87"
+    ]
+  }
+}]

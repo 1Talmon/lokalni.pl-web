@@ -1,0 +1,383 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --total-nav-h: calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px));
+  --bg: #F8FAFC;
+  --white: #FFFFFF;
+  --dark: #0F172A;
+  --primary: #6366F1;
+  --primary-dark: #4F46E5;
+  --accent: #10B981;
+  --gray: #64748B;
+  --gray-light: #E2E8F0;
+  --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+
+  /* Pozwala aplikacjom poprawnie liczyć wysokość na iOS */
+  height: -webkit-fill-available;
+
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: -webkit-fill-available;
+  scrollbar-gutter: stable;
+}
+
+html.scroll-locked body {
+  overflow: hidden;
+  padding-right: var(--scrollbar-w, 0px);
+}
+
+html.scroll-locked [data-fixed-nav],
+html.scroll-locked [data-fixed-bottom-nav] {
+  padding-right: var(--scrollbar-w, 0px);
+}
+
+
+/* Pasek przycisków z px-4 — padding-right musi uwzględniać istniejące 1rem */
+html.scroll-locked [data-fixed-nav-px4] {
+  padding-right: calc(1rem + var(--scrollbar-w, 0px));
+}
+
+/* Cookie banner — kompensacja pozycji right gdy scrollbar znika */
+html.scroll-locked [data-cookie-banner] {
+  right: calc(1rem + var(--scrollbar-w, 0px));
+}
+@media (min-width: 768px) {
+  html.scroll-locked [data-cookie-banner] {
+    right: calc(1.5rem + var(--scrollbar-w, 0px));
+  }
+}
+
+html.footer-visible [data-cta-bar],
+html.scroll-locked [data-cta-bar] {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+html.scroll-locked [data-cta-bar] {
+  padding-right: var(--scrollbar-w, 0px);
+}
+
+[data-cta-bar] {
+  animation: cta-bar-fadein 0.2s ease-out;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes cta-bar-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--white);
+  color: var(--dark);
+  line-height: 1.5;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding-top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  overscroll-behavior-x: none;
+}
+
+/* Eliminates 300ms tap delay on interactive elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* iOS notch — full-screen modal panels (mobile only) */
+@media (max-width: 767px) {
+  [data-modal-panel] {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Emoji via CSS content — niezależne od font stacka */
+.emoji-wave::after {
+  content: "👋";
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Touch-only fixes (nie wpływa na desktop) */
+@media (hover: none) and (pointer: coarse) {
+  /* Zapobiega automatycznemu zoomowi przy fokusie inputa na iOS */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  /* Wyłącza zaznaczanie tekstu jak w natywnej apce */
+  * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Przywraca zaznaczanie tam gdzie jest potrzebne */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  /* Wyłącza systemowe menu przy długim przytrzymaniu zdjęcia */
+  img {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+}
+
+#root {
+  overflow-x: clip;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- RESZTA STYLÓW --- */
+
+/* Hide scrollbar utility — used on swipe strip to prevent iOS scrollbar track */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Custom styles */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+}
+
+/* Range slider custom */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #6366F1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #4F46E5;
+  transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+  @apply bg-red-100 text-red-800;
+}
+/* ── Leaflet popup overrides ─────────────────────────────────────── */
+.lokalni-popup .leaflet-popup-content-wrapper {
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08);
+    border: none;
+    padding: 0;
+    overflow: hidden;
+}
+.lokalni-popup .leaflet-popup-content {
+    margin: 14px;
+    width: auto !important;
+    min-width: 0 !important;
+}
+.lokalni-popup .leaflet-popup-tip-container { display: none; }
+.lokalni-popup .leaflet-popup-close-button {
+    top: 10px !important;
+    right: 10px !important;
+    width: 26px !important;
+    height: 26px !important;
+    background: rgba(0,0,0,0.45) !important;
+    backdrop-filter: blur(4px) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 16px !important;
+    color: white !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+}
+.lokalni-popup .leaflet-popup-close-button:hover {
+    background: rgba(0,0,0,0.65) !important;
+    color: white !important;
+}
+
+/* ── Animacja markerów mapy ──────────────────────────────────────── */
+.lk-marker {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* ── Animacja wejścia strony (CSS — synchroniczna, bez WAAPI race) ─ */
+@keyframes pageEnterFade {
+    from { transform: translateX(20px); }
+    to   { transform: translateX(0); }
+}
+.page-enter-forward {
+    animation: pageEnterFade 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Nawigacja wstecz (POP) — transform slide, opacity=1 przez cały czas.
+   Opacity < 1 pozwala starym GPU teksturom (mapa, zdjęcia) "przeświecać" przez
+   nową stronę w iOS WebKit compositor — transform tego nie robi bo warstwa jest zawsze nieprzezroczysta. */
+@keyframes pagePopSlide {
+    from { transform: translateX(-16px); }
+    to   { transform: translateX(0); }
+}
+.page-pop-back {
+    animation: pagePopSlide 0.13s ease-out both;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* View Transitions — przycisk "Wróć" w aplikacji (webNavigate + html.vt-inapp):
+   Old zostaje w pełni widoczny (animation:none), new wchodzi na wierzch (fade-in).
+   Cross-fade (oboje częściowo przeźroczyści) powoduje flash w Safari gdy canvas
+   Leaflet nie jest poprawnie uchwycony w screenshocie VT. */
+html.vt-inapp ::view-transition-old(root) {
+    animation: none;
+}
+html.vt-inapp ::view-transition-new(root) {
+    animation: 100ms ease-out both vt-fade-in;
+}
+@keyframes vt-fade-in { from { opacity: 0; } }
+

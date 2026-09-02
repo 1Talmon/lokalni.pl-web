@@ -1,0 +1,36 @@
+/* Zaktualizuj sekcję body w Twoim CSS */
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--white); /* Zmień na biały, żeby tło pod logo było spójne */
+  color: var(--dark);
+  line-height: 1.5;
+  min-width: 300px;
+
+  /* KLUCZOWA POPRAWKA POD IOS */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+/* Definicja klatek animacji błysku */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Definicja dla shimmerOnce (jeśli chcesz, by błysnął tylko raz na początku) */
+@keyframes shimmerOnce {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

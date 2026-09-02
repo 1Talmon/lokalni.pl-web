@@ -1,0 +1,1 @@
+export const Keyboard = { addListener: async (_event?: string, _handler?: (info: { keyboardHeight: number }) => void) => ({ remove: async () => {} }), removeAllListeners: async () => {}, hide: async () => {}, show: async () => {}, setScroll: async (_opts?: { isDisabled?: boolean }) => {}, setStyle: async (_opts?: unknown) => {}, setResizeMode: async (_opts?: unknown) => {} };

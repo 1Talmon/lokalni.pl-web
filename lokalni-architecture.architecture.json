@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Lokalni Projekt — Runtime Architecture",
+    "subtitle": "React + Capacitor mobile/web marketplace · JWT REST backend",
+    "output": "lokalni-architecture.html"
+  },
+  "components": [
+    { "id": "user",          "type": "external",    "label": "User / Device",           "sublabel": "iOS · Android · Browser",          "pos": [40,  205], "size": [130, 60] },
+    { "id": "capacitor",     "type": "cloud",        "label": "Capacitor Shell",          "sublabel": "CapacitorHttp intercept",           "pos": [205, 170], "size": [148, 65], "tag": "com.lokalni.test" },
+    { "id": "nginx",         "type": "cloud",        "label": "nginx",                    "sublabel": "dist/ · CSP · HSTS · X-Frame",      "pos": [205, 295], "size": [148, 60] },
+    { "id": "app",           "type": "frontend",     "label": "App.tsx",                  "sublabel": "ErrorBoundary · ModalsManager",      "pos": [390, 195], "size": [145, 65] },
+    { "id": "router",        "type": "frontend",     "label": "AppRoutes",                "sublabel": "React Router v6 · React.lazy",       "pos": [390, 315], "size": [145, 55] },
+    { "id": "views",         "type": "frontend",     "label": "Lazy Views",               "sublabel": "Home · Map · Dashboard · Profile",   "pos": [572, 150], "size": [155, 70] },
+    { "id": "modals",        "type": "frontend",     "label": "ModalsManager",            "sublabel": "global modals · createPortal",        "pos": [572, 270], "size": [155, 55] },
+    { "id": "static_data",   "type": "database",     "label": "Static Data",              "sublabel": "constants · fixtures · categories",  "pos": [572, 375], "size": [155, 55] },
+    { "id": "use_app_logic", "type": "messagebus",   "label": "useAppLogic",              "sublabel": "auth · services · chat · modals · map", "pos": [764, 145], "size": [158, 80], "tag": "mega-hook" },
+    { "id": "rq_hooks",      "type": "frontend",     "label": "React Query Hooks",        "sublabel": "useMyProfile · useNotifications",    "pos": [764, 275], "size": [158, 55] },
+    { "id": "local_storage", "type": "database",     "label": "localStorage",             "sublabel": "userToken JWT · persisted state",    "pos": [764, 380], "size": [158, 55] },
+    { "id": "api_client",    "type": "backend",      "label": "apiClient.ts",             "sublabel": "JWT bearer · 401 auto-refresh",      "pos": [965, 145], "size": [148, 70] },
+    { "id": "auth_svc",      "type": "security",     "label": "authService",              "sublabel": "tokenUtils · CRUD · JWT decode · clearAll()", "pos": [965, 268], "size": [148, 65] },
+    { "id": "backend",       "type": "backend",      "label": "REST API Backend",         "sublabel": "JWT auth · video chunk upload",      "pos": [1163, 145], "size": [148, 70] },
+    { "id": "jwt_refresh",   "type": "security",     "label": "/auth/refresh",            "sublabel": "token renewal endpoint",             "pos": [1163, 268], "size": [148, 60] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "React App — Vite bundle (dist/)",
+      "wraps": ["app", "router", "views", "modals", "static_data", "use_app_logic", "rq_hooks", "local_storage"]
+    },
+    {
+      "kind": "region",
+      "label": "Backend Server",
+      "wraps": ["backend", "jwt_refresh"],
+      "pad": 20
+    }
+  ],
+  "connections": [
+    { "from": "user",          "to": "capacitor",     "variant": "emphasis",  "fromSide": "right",  "toSide": "left" },
+    { "from": "user",          "to": "nginx",         "label": "HTTPS / web", "variant": "dashed",  "fromSide": "bottom", "toSide": "left" },
+    { "from": "capacitor",     "to": "app",           "label": "loads",       "fromSide": "right",  "toSide": "left" },
+    { "from": "nginx",         "to": "app",           "variant": "dashed",    "fromSide": "right",  "toSide": "bottom" },
+    { "from": "app",           "to": "views",         "fromSide": "right",    "toSide": "left" },
+    { "from": "app",           "to": "modals",        "fromSide": "right",    "toSide": "left" },
+    { "from": "router",        "to": "views",         "label": "lazy",        "variant": "dashed",  "fromSide": "right", "toSide": "bottom", "labelDy": 68 },
+    { "from": "views",         "to": "use_app_logic", "label": "state + actions", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelDy": 65 },
+    { "from": "use_app_logic", "to": "api_client",    "label": "HTTP calls",  "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelDy": 66 },
+    { "from": "use_app_logic", "to": "local_storage", "label": "persist",     "variant": "dashed",  "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "from": "rq_hooks",      "to": "api_client",    "fromSide": "right",    "toSide": "bottom" },
+    { "from": "api_client",    "to": "backend",       "label": "REST",        "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "from": "api_client",    "to": "jwt_refresh",   "label": "401 → refresh", "variant": "security", "fromSide": "bottom", "toSide": "left" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Platform",
+      "items": [
+        "Capacitor (com.lokalni.test) wraps the web app for iOS/Android; CapacitorHttp monkey-patches window.fetch on native; safe-area insets via CSS env()",
+        "nginx serves dist/ on web; CSP, HSTS, X-Frame-Options set as HTTP response headers (not meta tags)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "State",
+      "items": [
+        "useAppLogic is the single mega-hook owning ALL global state (auth, services, chat, favorites, modals, map) — no Context, no Redux; props-drilled to every top-level view",
+        "React Query hooks (useMyProfile, useNotifications, usePublicProfile) layer server-synced data on top"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Auth / Security",
+      "items": [
+        "JWT stored in localStorage under key 'userToken' (known limitation; httpOnly cookie requires backend change)",
+        "apiClient auto-refreshes on 401 via /auth/refresh; tokenUtils.clearAll() auto-logouts on expiry or tab visibility change"
+      ]
+    }
+  ]
+}

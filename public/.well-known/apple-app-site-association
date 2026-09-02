@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "M2N48G97SV.com.lokalni.app",
+        "paths": ["*"]
+      }
+    ]
+  }
+}

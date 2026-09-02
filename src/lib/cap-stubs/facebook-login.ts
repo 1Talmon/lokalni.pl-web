@@ -1,0 +1,1 @@
+export const FacebookLogin = { login: async (_opts?: unknown) => ({ accessToken: null as null | { token: string } }), logout: async () => {}, getCurrentAccessToken: async () => ({ accessToken: null as null | { token: string } }) };
