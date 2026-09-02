@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @cloudflare/next-on-pages",
+    "build:cf": "npx @cloudflare/next-on-pages && printf '_worker.js\\n_routes.json\\n' > .vercel/output/static/.assetsignore",
     "preview:cf": "npx wrangler pages dev",
     "start": "next start",
     "lint": "eslint ."

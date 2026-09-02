@@ -1,10 +1,18 @@
 {
-  "name": "lokalni-web",
+  "name": "lokalni-pl-nextjs",
   "compatibility_date": "2024-12-18",
   "compatibility_flags": ["nodejs_compat"],
   "main": ".vercel/output/static/_worker.js",
   "assets": {
     "directory": ".vercel/output/static",
     "binding": "ASSETS"
-  }
+  },
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "mylokalni.pl",
+      "zone_name": "mylokalni.pl",
+      "custom_domain": true
+    }
+  ]
 }
