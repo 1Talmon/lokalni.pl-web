@@ -144,6 +144,11 @@ export default function PublicProfileClient() {
     }, [profileReady]);
 
     useEffect(() => {
+        if (!profileReady) return;
+        window.dispatchEvent(new CustomEvent('ppv:ready'));
+    }, [profileReady]);
+
+    useEffect(() => {
         if (!profileReady || !Capacitor.isNativePlatform()) return;
         let r2 = 0;
         const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
