@@ -1,4 +1,18 @@
-import { Star, MapPin } from 'lucide-react';
+function StarIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400 fill-amber-400" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+    );
+}
+function MapPinIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden="true">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+        </svg>
+    );
+}
 
 function normalizeUrl(url: string | null | undefined): string | null {
     if (!url) return null;
@@ -67,7 +81,7 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
                             <h2 className="text-xl font-black text-gray-900 leading-tight truncate">{name}</h2>
                             {data.city && (
                                 <p className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
-                                    <MapPin size={13} className="shrink-0" />
+                                    <MapPinIcon />
                                     {data.city}
                                 </p>
                             )}
@@ -76,7 +90,7 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
 
                     {rating > 0 && reviewsCount > 0 && (
                         <div className="flex items-center gap-1.5 mb-4">
-                            <Star size={16} className="text-amber-400 fill-amber-400" />
+                            <StarIcon />
                             <span className="font-semibold text-gray-900 text-sm">{rating.toFixed(1)}</span>
                             <span className="text-gray-400 text-sm">
                                 ({reviewsCount} {reviewsCount === 1 ? 'opinia' : reviewsCount < 5 ? 'opinie' : 'opinii'})
