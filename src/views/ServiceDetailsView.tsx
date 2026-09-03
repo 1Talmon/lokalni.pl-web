@@ -100,7 +100,7 @@ const ServiceMap = ({ city, address, lat: propLat, lng: propLng, radiusKm, servi
     const { isNative } = usePlatform();
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY as string,
+        googleMapsApiKey: (process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY as string | undefined) ?? '',
     });
 
     const portalMapRef = useRef<google.maps.Map | null>(null);
