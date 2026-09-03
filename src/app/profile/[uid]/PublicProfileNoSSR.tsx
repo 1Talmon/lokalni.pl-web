@@ -1,6 +1,11 @@
 'use client';
-import dynamic from 'next/dynamic';
-const PublicProfileWrapper = dynamic(() => import('./PublicProfileWrapper'), { ssr: false });
+import React, { useState, useEffect } from 'react';
+
 export default function PublicProfileNoSSR() {
-    return <PublicProfileWrapper />;
+    const [Wrapper, setWrapper] = useState<React.ElementType | null>(null);
+    useEffect(() => {
+        import('./PublicProfileWrapper').then(m => setWrapper(() => m.default));
+    }, []);
+    if (!Wrapper) return null;
+    return React.createElement(Wrapper);
 }

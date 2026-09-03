@@ -1,6 +1,7 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import ServiceDetailsNoSSR from './ServiceDetailsNoSSR';
-import { ServiceStaticShell } from './ServiceStaticShell';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
 interface Props {
@@ -117,12 +118,6 @@ export default async function ServicePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            {d && <ServiceStaticShell data={d} />}
-            <script
-                dangerouslySetInnerHTML={{
-                    __html: `(function(){window.addEventListener('sdv:ready',function(){var e=document.querySelector('[data-ssr-shell]');if(e)e.style.display='none';},{once:true});})();`,
-                }}
-            />
             <ServiceDetailsNoSSR />
         </>
     );

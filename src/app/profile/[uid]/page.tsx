@@ -1,6 +1,7 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import PublicProfileNoSSR from './PublicProfileNoSSR';
-import { PublicProfileStaticShell } from './PublicProfileStaticShell';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
 interface Props {
@@ -106,12 +107,6 @@ export default async function ProfilePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            {d && <PublicProfileStaticShell data={d} />}
-            <script
-                dangerouslySetInnerHTML={{
-                    __html: `(function(){window.addEventListener('ppv:ready',function(){var e=document.querySelector('[data-ssr-shell]');if(e)e.style.display='none';},{once:true});})();`,
-                }}
-            />
             <PublicProfileNoSSR />
         </>
     );

@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,7 @@ import type { AppActions } from '../types/appTypes';
 import { usePlatform } from '../hooks/usePlatform';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-const ReportModal = lazy(() => import('../components/modals/ReportModal').then(m => ({ default: m.ReportModal })));
+const ReportModal = dynamic(() => import('../components/modals/ReportModal').then(m => ({ default: m.ReportModal })));
 import { NewsFeedModal, type FeedItem } from '../components/modals/NewsFeedModal';
 import { CertificatesModal, type CertOrComp } from '../components/modals/CertificatesModal';
 import { ClientPhotosModal } from '../components/modals/ClientPhotosModal';
