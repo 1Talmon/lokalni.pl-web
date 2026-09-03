@@ -1,6 +1,11 @@
 'use client';
-import dynamic from 'next/dynamic';
-const ServiceDetailsWrapper = dynamic(() => import('./ServiceDetailsWrapper'), { ssr: false });
+import React, { useState, useEffect } from 'react';
+
 export default function ServiceDetailsNoSSR() {
-    return <ServiceDetailsWrapper />;
+    const [Wrapper, setWrapper] = useState<React.ElementType | null>(null);
+    useEffect(() => {
+        import('./ServiceDetailsWrapper').then(m => setWrapper(() => m.default));
+    }, []);
+    if (!Wrapper) return null;
+    return React.createElement(Wrapper);
 }
