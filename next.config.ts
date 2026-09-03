@@ -31,7 +31,7 @@ const NOINDEX_HEADER = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
 const PRIVATE_ROUTES = '/(dashboard|booking-form|support|chat|calendar|favorites|delete-account|delete-account-confirm|verify-email|review|invite|r|auth|zgoda-rodzica)/:path*';
 
 if (process.env.NODE_ENV === 'development') {
-    await setupDevPlatform();
+    void setupDevPlatform();
 }
 
 const nextConfig: NextConfig = {
