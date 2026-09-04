@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { API_URL } from '@/lib/seo-data';
 
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export async function GET() {
     try {
         const res = await fetch(`${API_URL}/public/sitemap/services`, {
             headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
+            next: { revalidate: 3600 },
         });
 
         if (res.ok) {
