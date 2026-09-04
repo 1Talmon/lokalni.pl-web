@@ -1,16 +1,24 @@
 ---
-description: Deploy lokalni-web — pre-flight (tsc/lint/build:cf) + git push + 3 curl checks (CSP/404/landing)
+description: Deploy lokalni-web — push dev → dev.mylokalni.pl preview verify → merge do main → produkcja
 ---
 
 Wykonaj procedurę deploy lokalni-web zgodnie ze skillem `deploy-web`.
 
-**Wczytaj pełną procedurę:** przeczytaj `.ai/skills/deploy-web/SKILL.md` i wykonaj wszystkie 5 kroków w kolejności.
+**Wczytaj pełną procedurę:** przeczytaj `.ai/skills/deploy-web/SKILL.md` i wykonaj wszystkie 6 kroków w kolejności.
+
+**Kluczowy workflow (dev-first):**
+
+```
+push dev → dev.mylokalni.pl (preview) → verify → merge dev→main → mylokalni.pl (prod) → verify
+```
 
 **Zasady bezpieczeństwa** (obowiązkowe — SKILL.md sekcja "Zasady bezpieczeństwa"):
-- **Zapytaj usera o zgodę** przed `git push` — "push" ≠ "commit"
-- Nigdy force-push do `main`
-- Zawsze `npm run build:cf` przed pushem (nie tylko `next build`)
+- **Domyślnie push na `dev`**, nigdy bezpośrednio na `main` bez zgody usera
+- **Zapytaj usera o zgodę** przed każdym `git push` — "push" ≠ "commit"
+- **Promocja dev → main tylko fast-forward** (`git merge --ff-only dev` na main)
+- Nigdy force-push (ani dev, ani main)
+- Zawsze `npm run build:cf` przed pushem
 
 Jeśli którykolwiek pre-flight check faili — **nie pushuj**, napraw najpierw.
 
-Po push zaczekaj ~3 min na CF Pages CI i puść 3 curl checks z sekcji 4 (CSP + X-Robots-Tag na `/dashboard`, 404 na `/service/nonexistent`, 200 na `/hydraulik-warszawa`). Zaraportuj wynik każdego.
+Po push na `dev` zaczekaj ~3 min i puść 3 curl checks z sekcji 4 (na **dev.mylokalni.pl** — nie prod!). Jeśli OK, zapytaj usera o zgodę na promocję do main. Jeśli tak — merge + push main + kolejne 3 curle na produkcji.

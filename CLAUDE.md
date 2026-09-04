@@ -80,10 +80,20 @@ npx tsc --noEmit         # TypeScript check (pre-commit hook)
 
 ## Deploy
 
-**Automatyczny** — push do `main` na GitHub (`1Talmon/lokalni.pl-web`) → Cloudflare Pages CI zbuduje i zdeployuje. **Claude Code nie deployuje ręcznie** — user pushuje, CI robi resztę.
+**Automatyczny** — CF Pages CI (projekt `lokalni-pl-web`) obserwuje repo `github.com/1Talmon/lokalni.pl-web`. Dwa branche → dwie domeny:
 
-Custom domain `mylokalni.pl` → CF Pages project `lokalni-pl-web`.
-Env vars w CF Dashboard: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`.
+| Branch | Domena | Rola |
+|---|---|---|
+| `main` | `mylokalni.pl` | Produkcja |
+| `dev` | `dev.mylokalni.pl` | Preview / staging (używa tego samego API `api.mylokalni.pl`) |
+
+**Workflow (dev-first):** commit na `dev` → `git push origin dev` → CF Pages preview build → verify curl checks na `dev.mylokalni.pl` → merge fast-forward `dev` → `main` → `git push origin main` → CF Pages produkcyjny build → verify na `mylokalni.pl`.
+
+**Claude Code nie deployuje ręcznie** — user pushuje, CI robi resztę. Deploy API = osobny flow (Docker + SSH, robi user).
+
+Env vars per environment w CF Dashboard → Pages → `lokalni-pl-web` → Settings → Environment variables:
+- Production (main): `NEXT_PUBLIC_API_URL=https://api.mylokalni.pl/api`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY=<key>`
+- Preview (dev): te same wartości (dev używa produkcyjnego API — patrz `.ai/context/current-state.md` gdyby zmienił się na staging API)
 
 ## Package manager — pnpm@10 obowiązkowe
 
@@ -366,11 +376,12 @@ Po polsku. `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` w trailer g
 Utrwalone zasady użytkownika — dotyczą **każdej** sesji w tym projekcie. Auto-memory (`~/.claude/projects/-Users-cypriantalmon-Desktop-lokalni-web/memory/`) też je zawiera, ale tu w CLAUDE.md są team-shared.
 
 - **Język: polski** — user oczekuje odpowiedzi po polsku. Kod komentarze po angielsku, komunikacja po polsku.
-- **Nie pushuj automatycznie** — po commit **czekaj na wyraźne polecenie** "push". "commit" ≠ "push". Force-push do `main` nigdy bez zgody.
+- **Nie pushuj automatycznie** — po commit **czekaj na wyraźne polecenie** "push". "commit" ≠ "push". Force-push nigdy bez zgody.
+- **Domyślnie push na `dev`** — nigdy bezpośrednio na `main` bez uprzedniej weryfikacji na `dev.mylokalni.pl`. Workflow: push dev → verify preview → merge --ff-only dev do main → push main. Patrz `.ai/skills/deploy-web/SKILL.md`.
 - **Nie wgrywaj nic ręcznie na serwer** ani nie restartuj API — user robi to sam. Deploy web = git push (CF Pages CI). Deploy API = user robi Docker rebuild + push do ghcr.io + SSH.
 - **API docs = Notion** — nie edytuj lokalnych `.md` w `Lokalni API/` ani innych projektach. Sam `CLAUDE.md` i `.ai/` można edytować.
 - **Docker logi** — API działa w Dockerze. `docker logs lokalni-api-1` (nie systemd, nie journalctl).
-- **Główny branch:** `main` (nie `dev` jak w siostrzanym mobile projekcie). Push idzie direct na main → CF Pages CI zdeployuje.
+- **Branche:** `dev` (working branch, deploy → `dev.mylokalni.pl`) + `main` (produkcja, deploy → `mylokalni.pl`). Nowe commity ZAWSZE na `dev`. `main` jest deployowany tylko przez fast-forward merge z zweryfikowanego dev.
 
 ## MCP: code-review-graph
 

@@ -1,20 +1,45 @@
 ---
 name: deploy-web
-description: Deploy lokalni-web (Next.js/CF Pages) — flow git push main → CF Pages CI → automatyczny build → mylokalni.pl. Weryfikacja post-deploy przez curl checks.
+description: Deploy lokalni-web (Next.js/CF Pages) — flow push dev → preview build → verify → merge do main → produkcja. Weryfikacja przez curl checks na preview i na prod.
 ---
 
 # Skill: deploy-web
 
 ## Kiedy używać
 
-- User prosi o "deploy" lub "wdrożenie" zmian
-- Chce zweryfikować że commit poszedł na produkcję
+- User prosi o "deploy" / "wdrożenie" / "push" zmian
+- Chce zweryfikować że commit poszedł na preview (dev.mylokalni.pl) lub produkcję (mylokalni.pl)
+- Chce promować dev → main (produkcja)
+
+## Workflow overview
+
+```
+    lokalne commity na dev
+             ↓
+       git push origin dev
+             ↓
+    CF Pages CI build → dev.mylokalni.pl (preview)
+             ↓
+    verify curls (te same 3 checks co prod)
+             ↓
+    if OK: merge dev → main (fast-forward)
+             ↓
+       git push origin main
+             ↓
+    CF Pages CI build → mylokalni.pl (production)
+             ↓
+    verify curls na produkcji
+```
+
+**Kluczowa zasada:** wszystkie zmiany idą **najpierw na dev**, weryfikują się na `dev.mylokalni.pl`, dopiero potem promocja do `main` (produkcja). Nigdy nie pushuj bezpośrednio na main bez uprzedniej weryfikacji na dev.
 
 ## Zasady bezpieczeństwa
 
 - **Nie pushuj bez wyraźnego polecenia** ("push", "wdróż", "deploy"). "Commit" ≠ "push".
-- Nie force-push do `main`.
-- Zawsze weryfikacja lokalna (`build:cf`) **przed** pushem.
+- **Domyślnie push na `dev`** — nigdy bezpośrednio na `main` bez zgody.
+- Nie force-push nigdy (ani dev, ani main).
+- Zawsze `build:cf` **przed** pushem.
+- Promocja dev → main tylko fast-forward merge (żeby historia była czysta), nigdy `--no-ff` chyba że user prosi.
 
 ## Kroki
 
@@ -23,9 +48,9 @@ description: Deploy lokalni-web (Next.js/CF Pages) — flow git push main → CF
 ```bash
 cd /Users/cypriantalmon/Desktop/lokalni-web
 
-# Sprawdź stan repo
 git status
-git log --oneline main..HEAD  # ile commitów ahead
+git branch --show-current  # powinien być `dev`
+git log --oneline origin/dev..HEAD  # ile commitów ahead na dev
 
 # Lokalna quality gate
 npx tsc --noEmit
@@ -42,19 +67,19 @@ grep "\[slug\]" .vercel/output/static/_worker.js/nop-build-log.json 2>/dev/null 
 
 Jeśli **którekolwiek** faili → nie pushuj, napraw najpierw.
 
-### 2. Push (tylko z eksplicit zgody)
+### 2. Push na dev (tylko z eksplicit zgody)
 
 ```bash
-git push origin main
+git push origin dev
 ```
 
 Uwaga na warnings:
 - `Everything up-to-date` → nic nie zostało zdeployowane
 - `[rejected]` → force-push required lub pull first — **nie force-push bez zgody**
 
-### 3. CF Pages CI
+### 3. CF Pages CI (preview deployment)
 
-Push do `main` triggers CF Pages CI automatycznie. Projekt: `lokalni-pl-web`. Build zwykle 2-5 minut. **Nie jest widoczny z terminala** — user obserwuje w CF Dashboard albo automatyczne notifications.
+Push do `dev` triggers CF Pages CI automatycznie. Projekt: `lokalni-pl-web`. Build zwykle 2-5 minut. Preview URL: **`dev.mylokalni.pl`** (custom domain) + `<hash>.lokalni-pl-web.pages.dev` (default preview URL per commit). **Nie jest widoczny z terminala** — user obserwuje w CF Dashboard.
 
 Jeśli user pokaże że CI padło:
 - Sprawdź czy `packageManager: pnpm@10.15.0` jest w `package.json` (bez tego pnpm 9 wywala z `ERR_PNPM_IGNORED_BUILDS`)
@@ -62,13 +87,13 @@ Jeśli user pokaże że CI padło:
 - Sprawdź czy `pnpm-workspace.yaml` ma `onlyBuiltDependencies` block
 - Sprawdź logi w CF Dashboard → Pages → deployment failed → View logs
 
-### 4. Post-deploy verification (obowiązkowe)
+### 4. Post-deploy verification na dev.mylokalni.pl (obowiązkowe przed promocją do main)
 
-Po ~3-5 min od pusha, sprawdź trzy kluczowe endpointy:
+Po ~3-5 min od pusha na `dev`, sprawdź trzy kluczowe endpointy na **preview**:
 
 ```bash
 # 1. CSP + X-Robots-Tag na private route
-/usr/bin/curl -sSI --max-time 15 https://mylokalni.pl/dashboard | \
+/usr/bin/curl -sSI --max-time 15 https://dev.mylokalni.pl/dashboard | \
   grep -iE "^HTTP|content-security-policy|x-robots-tag"
 # oczekiwane:
 #   HTTP/2 200
@@ -77,13 +102,43 @@ Po ~3-5 min od pusha, sprawdź trzy kluczowe endpointy:
 
 # 2. 404 dla nieistniejących service/profile
 /usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" \
-  https://mylokalni.pl/service/nonexistent-XYZ
+  https://dev.mylokalni.pl/service/nonexistent-XYZ
 # oczekiwane: HTTP:404
 
-# 3. 200 dla landing pages keyword-city (fix z sesji 09/2026)
+# 3. 200 dla landing pages keyword-city
 /usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" \
-  https://mylokalni.pl/hydraulik-warszawa
+  https://dev.mylokalni.pl/hydraulik-warszawa
 # oczekiwane: HTTP:200
+```
+
+Jeśli którykolwiek fail — **nie promuj do main**, napraw najpierw na dev.
+
+### 5. Promocja dev → main (produkcja)
+
+Gdy verify preview OK i user zaakceptował, promuj do produkcji:
+
+```bash
+# Fast-forward merge dev do main (bez merge commit)
+git checkout main
+git merge --ff-only dev
+
+# Push main → CF Pages produkcyjny build → mylokalni.pl
+git push origin main
+
+# Wróć na dev do dalszej pracy
+git checkout dev
+```
+
+Jeśli `--ff-only` faili (main się rozjechał z dev) — trzeba rebase dev na main, nie force-merge.
+
+### 6. Post-deploy verification na produkcji
+
+Te same 3 curle, tylko na `mylokalni.pl` (bez `dev.`):
+
+```bash
+/usr/bin/curl -sSI --max-time 15 https://mylokalni.pl/dashboard | grep -iE "^HTTP|csp|x-robots-tag"
+/usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" https://mylokalni.pl/service/nonexistent-XYZ
+/usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" https://mylokalni.pl/hydraulik-warszawa
 ```
 
 Jeśli któryś nie zgadza się z oczekiwanym:
@@ -91,9 +146,9 @@ Jeśli któryś nie zgadza się z oczekiwanym:
 - Sprawdź czy nowy commit hash jest w response (HTML `data-buildid` albo `x-nextjs-` headers)
 - Jeśli nadal fail → sprawdź CF Dashboard deployment log
 
-## Rollback
+## Rollback (produkcja)
 
-Jeśli deploy zepsuł produkcję:
+Jeśli deploy do main zepsuł produkcję:
 
 **Opcja A — revert commit** (bezpieczniejsze):
 ```bash
