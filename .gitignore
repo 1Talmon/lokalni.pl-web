@@ -42,5 +42,6 @@ tsconfig.tsbuildinfo
 *.sw?
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/settings.json
 .code-review-graph/

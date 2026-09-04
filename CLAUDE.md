@@ -32,6 +32,21 @@ Ten projekt utrzymuje briefy i skille w `.ai/` — Claude Code powinien czytać 
 - Zaktualizuj tabelę wyżej (w tym CLAUDE.md)
 - Krótki commit `docs(ai): dodaj skill <slug>` / `docs(ai): brief <slug>`
 
+### Auto-refresh `current-state.md`
+
+`.claude/settings.json` ma **`SessionStart` hook** który przy każdym uruchomieniu sesji Claude Code w tym projekcie wywołuje `scripts/ai-refresh.sh`. Skrypt regeneruje sekcję między znacznikami `<!-- AI_AUTO_START -->` / `<!-- AI_AUTO_END -->` w `.ai/context/current-state.md`:
+
+- Git snapshot (branch, uncommitted count, ahead/behind vs origin)
+- Ostatnie 10 commitów (`git log -10 --oneline`)
+
+Manualne notatki (Historia sesji, Otwarte punkty, Przypomnienia, Audit workflow) są **poza** znacznikami — nietknięte przy refreshu.
+
+**Trigger:** `startup` i `clear` matcher. `resume` intentionally omitted — resumowana sesja ma już context, refresh niepotrzebny.
+
+**Ręczne uruchomienie:** `bash scripts/ai-refresh.sh` (poza sesją Claude, np. przed manualnym commit).
+
+**Efekt uboczny:** po refreshu `git status` może pokazać `.ai/context/current-state.md` jako modified — świadome, w kolejnym commit inny lub osobny `chore(ai): sync current-state`.
+
 ## Commands
 
 Uruchamiać z **project root** (`/Users/cypriantalmon/Desktop/lokalni-web/`).
