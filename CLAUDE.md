@@ -153,12 +153,159 @@ Global singleton na `wss://api.mylokalni.pl`. Auto-connect na login, disconnect 
 - **`packageManager: pnpm@10.15.0`** wpływa też na CI. Zmiana tej wartości wpłynie na deployment.
 - **HSTS w response** — CF nadpisuje `max-age=0`. Fix tylko w CF Dashboard → SSL/TLS → Edge Certificates → HSTS. `_headers` też deklaruje HSTS, ale CF wygrywa.
 
-## Sibling projects na Desktop
+## Ecosystem — 5 projektów w monorepo-style workspace
 
-- `/Users/cypriantalmon/Desktop/lokalni projekt/` — Vite/React + Capacitor (mobile iOS/Android)
-- `/Users/cypriantalmon/Desktop/Lokalni API/` — backend (`api.mylokalni.pl`), Docker
-- `/Users/cypriantalmon/Desktop/Lokalni Admin/` + `Lokalni Admin API/` — admin panel + backend
-- `/Users/cypriantalmon/Desktop/lokalni-audit/` — dokumentacja audytu migracji (6 faz)
+Ten CLAUDE.md jest hubem — Claude Code pracujący w `lokalni-web` może z tego poziomu edytować dowolny z siostrzanych projektów na Desktop. Poniższe sekcje podają minimum żeby pracować. Każdy projekt ma osobne git repo — commity osobno.
+
+**Kolejność startu przy full local dev:**
+1. Postgres + Redis + Meilisearch (via `docker-compose` w Lokalni API)
+2. `Lokalni API` (port 8080)
+3. `lokalni-web` (`next dev`, port 3000) lub `lokalni projekt` (`bun run dev`, port 5173) — konsumują API
+4. `Lokalni Admin API` (osobny port) + `Lokalni Admin` (port 3001)
+
+### 🌐 lokalni-web (ten projekt)
+
+Patrz cały ten CLAUDE.md wyżej.
+
+### 📱 lokalni projekt (Vite + Capacitor mobile)
+
+**Ścieżka:** `/Users/cypriantalmon/Desktop/lokalni projekt/`
+**Rola:** iOS + Android app (Capacitor). Web wygaszany na rzecz `lokalni-web`. Sporo widoków (`src/views/*`, `src/components/modals/*`) współdzielone 1:1 z tym projektem — jeśli zmieniasz shared widok tu, prawdopodobnie musisz zsynchronizować tam (i vice versa).
+
+**Komendy** (z root):
+```bash
+bun run dev          # Vite :5173, proxy /api → https://api.cypriantalmon.pl
+bun run build        # → dist/
+bun run lint         # ESLint (pre-commit hook + lint-staged na *.ts/tsx)
+npx tsc --noEmit     # TypeScript (z src/, strict: false)
+```
+
+**Deploy natywny:** `bun run build` → `npx cap sync ios|android` → Xcode / Android Studio.
+**Deploy web (deprecated):** `dist/` → `/usr/share/nginx/html/` na serwerze + `sudo systemctl reload nginx` (user robi ręcznie, nie Claude).
+
+**Kluczowe różnice od lokalni-web:**
+- Vite (nie Next.js), React Router (nie App Router), single mega-hook `useAppLogic` (bez Context — props drilling)
+- `strict: false` w tsconfig — legacy `any` w dashboard code
+- Capacitor **prawdziwy** (nie stub) — `@capacitor/*` importy dają real native APIs
+- App ID: `com.lokalni.app`
+- Deep szczegóły w `lokalni projekt/CLAUDE.md`
+
+### 🖥️ Lokalni API (backend `api.mylokalni.pl`)
+
+**Ścieżka:** `/Users/cypriantalmon/Desktop/Lokalni API/`
+**Stack:** Fastify 5 + TypeScript ESM (`"type": "module"`), Postgres + Redis + Meilisearch + Firebase Admin + S3 + Postmark + WebSocket.
+
+**Komendy:**
+```bash
+npm run dev          # tsx watch, port z .env (typowo 8080)
+npm run build        # tsc → dist/
+npm run start        # node dist/server.js (produkcja)
+npm run typecheck    # tsc --noEmit
+npm run migrate      # dist/db/migrate.js — SQL migracje
+npm run seed         # seed danych
+npm run seed:cities  # seed miast (osobno)
+npm run seed:geonames
+npm run seed:teryt   # seed rejestru TERYT
+npm run lint         # ESLint na src/
+```
+
+**Deploy:** Docker via GitHub Container Registry.
+- Image: `ghcr.io/1talmon/lokalni-api:latest`
+- `docker-compose.yml` w root — 2 instancje `api-1`, `api-2` (load-balanced przez nginx-lb) + Postgres + Redis + Meilisearch
+- Build+push: `docker build -t ghcr.io/1talmon/lokalni-api:latest . && docker push ...`
+- Na serwerze: `docker compose pull && docker compose up -d` (user robi ręcznie)
+
+**Ważne:**
+- **API to source of truth dla client contracts.** Zmiana route/schema tu wymaga równoległej zmiany w klientach (`lokalni-web`, `lokalni projekt`, `Lokalni Admin`).
+- **Sitemap-services** (`lokalni-web/src/app/sitemap-services.xml/route.ts`) proxuje `${API_URL}/public/sitemap/services` — endpoint musi istnieć.
+- **WebSocket** na tym samym hoście (`wss://api.mylokalni.pl`) — `@fastify/websocket`.
+- **Docker w produkcji** — sprawdzaj logi przez `docker logs lokalni-api-1` (nie systemd, nie journalctl).
+- **API docs** w Notion (nie w plikach `.md` lokalnych).
+
+### 🛡️ Lokalni Admin API (admin backend)
+
+**Ścieżka:** `/Users/cypriantalmon/Desktop/Lokalni Admin API/`
+**Stack:** Fastify 5 + TypeScript ESM + Postgres + Firebase Admin + Postmark. Mniejszy niż Lokalni API.
+
+**Komendy:**
+```bash
+npm run dev          # tsx watch
+npm run build        # tsc + kopia migracji SQL do dist/
+npm run start        # node dist/server.js
+```
+
+**Uwagi:**
+- Osobne repo, osobna baza (albo shared z Lokalni API — do sprawdzenia w `src/db/`).
+- Sensitive endpoint'y (moderacja, user management) — CORS restrictive.
+- Zawiera `AUDIT.md`, `AUDIT_PROGRESS.md`, `FIX_PROGRESS.md`, `PRODUCT_GAPS.md`, `ADMIN_FRONTEND_CONTRACT_CHANGES.md` — sprawdzaj tam context przed zmianami.
+
+### 🎛️ Lokalni Admin (admin frontend)
+
+**Ścieżka:** `/Users/cypriantalmon/Desktop/Lokalni Admin/`
+**Stack:** Vite + React 18 + React Router 6 + React Query + Tailwind. Deploy: Cloudflare (`wrangler.toml`).
+
+**Komendy:**
+```bash
+npm run dev          # Vite :3001
+npm run build        # tsc --noEmit && vite build
+npm run lint         # ESLint
+npm run preview      # vite preview :3001
+```
+
+**Uwagi:**
+- Konsumuje **Lokalni Admin API**, nie główne API.
+- Osobna domena (do sprawdzenia w `wrangler.toml`).
+
+### 📝 lokalni-audit (dokumentacja audytu)
+
+**Ścieżka:** `/Users/cypriantalmon/Desktop/lokalni-audit/`
+Multi-phase audit migracji Vite → Next.js: `00-plan.md`, `01-feature-parity.md`, `02-runtime.md`, `03-seo.md`, `04-deploy.md`, `05-code-quality.md`, `06-perf.md`. Piszesz do niego wyniki analiz, statusy, rekomendacje.
+
+## Cross-project workflow
+
+### Kiedy zmiana dotyka > 1 projektu
+
+**API contract change (route, schema, response format):**
+1. Zmień w `Lokalni API` (backend) — dodaj/zaktualizuj route + Zod schema
+2. Uruchom `Lokalni API` lokalnie (`npm run dev`)
+3. Zaktualizuj client w `lokalni-web` **i** `lokalni projekt` (shared widoki) — types w `src/types/`, wywołania w `src/services/apiClient.ts` lub React Query hooks
+4. Zaktualizuj Notion API docs (source of truth dla API)
+5. Deploy: backend **pierwszy** (Docker rebuild + `docker compose up -d`), frontend **po** (git push → CI). Kompatybilność wsteczna gdy klientów starych wersji jest live.
+
+**Shared widok (`ServiceDetailsView`, `PublicProfileView`, `HomeView`, itd.):**
+- Piki `src/views/*.tsx` istnieją prawie bit-po-bicie w obu projektach (`lokalni-web` + `lokalni projekt`). Zmiana tu = zmiana też tam.
+- Sprawdź `diff -q` między projektami przed edycją żeby wiedzieć jakie różnice już istnieją (np. importy React Router vs Next router).
+
+**Konfiguracja deploy (headers, CSP, cache):**
+- `lokalni-web`: `public/_headers` (CF Pages honoruje natywnie)
+- `lokalni projekt` (web deprecated): `src/nginx.conf`
+- API: `@fastify/helmet` + CORS config w `src/server.ts`
+
+### Kolejność deploy (production)
+
+1. **Backend najpierw** (Lokalni API / Lokalni Admin API — Docker build + push + `docker compose up -d`)
+2. **Frontend potem** (lokalni-web push do main → CF Pages CI; lokalni projekt web → nginx; mobile → Xcode/App Store review)
+
+Nigdy nie deployuj frontendu z API dependency przed backendem.
+
+### Commit conventions (spójne dla wszystkich projektów)
+
+Style widoczny w git log:
+- `fix(scope): opis` (np. `fix(cf-pages): pages_build_output_dir`)
+- `feat(scope): opis`
+- `refactor(scope): opis`
+- `chore(scope): opis`
+- `docs(scope): opis`
+- `perf(scope): opis`
+
+Po polsku. `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` w trailer gdy commit robi Claude Code.
+
+### Autorytatywne źródła
+
+- **Kod:** live w każdym projekcie na Desktop + git remote
+- **API contract:** Notion (nie lokalne `.md` docs — te są przestarzałe / obsolete)
+- **Deploy state:** CF Dashboard (Pages), server SSH (Docker, nginx)
+- **Bug tracking / roadmap:** Notion + `Lokalni Admin API/AUDIT.md` + `lokalni-audit/*.md`
 
 ## MCP: code-review-graph
 
