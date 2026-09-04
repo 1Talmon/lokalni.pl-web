@@ -1,5 +1,5 @@
 ---
-description: Deploy lokalni-web — push dev → dev.mylokalni.pl preview verify → merge do main → produkcja
+description: Deploy lokalni-web — push dev → dev.lokalni-pl-web.pages.dev preview verify → merge do main → produkcja
 ---
 
 Wykonaj procedurę deploy lokalni-web zgodnie ze skillem `deploy-web`.
@@ -9,7 +9,7 @@ Wykonaj procedurę deploy lokalni-web zgodnie ze skillem `deploy-web`.
 **Kluczowy workflow (dev-first):**
 
 ```
-push dev → dev.mylokalni.pl (preview) → verify → merge dev→main → mylokalni.pl (prod) → verify
+push dev → dev.lokalni-pl-web.pages.dev (preview) → verify → merge dev→main → mylokalni.pl (prod) → verify
 ```
 
 **Zasady bezpieczeństwa** (obowiązkowe — SKILL.md sekcja "Zasady bezpieczeństwa"):
@@ -21,4 +21,4 @@ push dev → dev.mylokalni.pl (preview) → verify → merge dev→main → mylo
 
 Jeśli którykolwiek pre-flight check faili — **nie pushuj**, napraw najpierw.
 
-Po push na `dev` zaczekaj ~3 min i puść 3 curl checks z sekcji 4 (na **dev.mylokalni.pl** — nie prod!). Jeśli OK, zapytaj usera o zgodę na promocję do main. Jeśli tak — merge + push main + kolejne 3 curle na produkcji.
+Po push na `dev` zaczekaj ~3 min i puść 3 curl checks z sekcji 4 (na **dev.lokalni-pl-web.pages.dev** — nie prod!). Jeśli OK, zapytaj usera o zgodę na promocję do main. Jeśli tak — merge + push main + kolejne 3 curle na produkcji.

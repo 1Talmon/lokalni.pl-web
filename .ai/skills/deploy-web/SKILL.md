@@ -8,7 +8,7 @@ description: Deploy lokalni-web (Next.js/CF Pages) — flow push dev → preview
 ## Kiedy używać
 
 - User prosi o "deploy" / "wdrożenie" / "push" zmian
-- Chce zweryfikować że commit poszedł na preview (dev.mylokalni.pl) lub produkcję (mylokalni.pl)
+- Chce zweryfikować że commit poszedł na preview (dev.lokalni-pl-web.pages.dev) lub produkcję (mylokalni.pl)
 - Chce promować dev → main (produkcja)
 
 ## Workflow overview
@@ -18,7 +18,7 @@ description: Deploy lokalni-web (Next.js/CF Pages) — flow push dev → preview
              ↓
        git push origin dev
              ↓
-    CF Pages CI build → dev.mylokalni.pl (preview)
+    CF Pages CI build → dev.lokalni-pl-web.pages.dev (preview)
              ↓
     verify curls (te same 3 checks co prod)
              ↓
@@ -31,7 +31,7 @@ description: Deploy lokalni-web (Next.js/CF Pages) — flow push dev → preview
     verify curls na produkcji
 ```
 
-**Kluczowa zasada:** wszystkie zmiany idą **najpierw na dev**, weryfikują się na `dev.mylokalni.pl`, dopiero potem promocja do `main` (produkcja). Nigdy nie pushuj bezpośrednio na main bez uprzedniej weryfikacji na dev.
+**Kluczowa zasada:** wszystkie zmiany idą **najpierw na dev**, weryfikują się na `dev.lokalni-pl-web.pages.dev`, dopiero potem promocja do `main` (produkcja). Nigdy nie pushuj bezpośrednio na main bez uprzedniej weryfikacji na dev.
 
 ## Zasady bezpieczeństwa
 
@@ -79,7 +79,7 @@ Uwaga na warnings:
 
 ### 3. CF Pages CI (preview deployment)
 
-Push do `dev` triggers CF Pages CI automatycznie. Projekt: `lokalni-pl-web`. Build zwykle 2-5 minut. Preview URL: **`dev.mylokalni.pl`** (custom domain) + `<hash>.lokalni-pl-web.pages.dev` (default preview URL per commit). **Nie jest widoczny z terminala** — user obserwuje w CF Dashboard.
+Push do `dev` triggers CF Pages CI automatycznie. Projekt: `lokalni-pl-web`. Build zwykle 2-5 minut. Preview URL: **`dev.lokalni-pl-web.pages.dev`** (custom domain) + `<hash>.lokalni-pl-web.pages.dev` (default preview URL per commit). **Nie jest widoczny z terminala** — user obserwuje w CF Dashboard.
 
 Jeśli user pokaże że CI padło:
 - Sprawdź czy `packageManager: pnpm@10.15.0` jest w `package.json` (bez tego pnpm 9 wywala z `ERR_PNPM_IGNORED_BUILDS`)
@@ -87,13 +87,13 @@ Jeśli user pokaże że CI padło:
 - Sprawdź czy `pnpm-workspace.yaml` ma `onlyBuiltDependencies` block
 - Sprawdź logi w CF Dashboard → Pages → deployment failed → View logs
 
-### 4. Post-deploy verification na dev.mylokalni.pl (obowiązkowe przed promocją do main)
+### 4. Post-deploy verification na dev.lokalni-pl-web.pages.dev (obowiązkowe przed promocją do main)
 
 Po ~3-5 min od pusha na `dev`, sprawdź trzy kluczowe endpointy na **preview**:
 
 ```bash
 # 1. CSP + X-Robots-Tag na private route
-/usr/bin/curl -sSI --max-time 15 https://dev.mylokalni.pl/dashboard | \
+/usr/bin/curl -sSI --max-time 15 https://dev.lokalni-pl-web.pages.dev/dashboard | \
   grep -iE "^HTTP|content-security-policy|x-robots-tag"
 # oczekiwane:
 #   HTTP/2 200
@@ -102,12 +102,12 @@ Po ~3-5 min od pusha na `dev`, sprawdź trzy kluczowe endpointy na **preview**:
 
 # 2. 404 dla nieistniejących service/profile
 /usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" \
-  https://dev.mylokalni.pl/service/nonexistent-XYZ
+  https://dev.lokalni-pl-web.pages.dev/service/nonexistent-XYZ
 # oczekiwane: HTTP:404
 
 # 3. 200 dla landing pages keyword-city
 /usr/bin/curl -sS --max-time 15 -o /dev/null -w "HTTP:%{http_code}\n" \
-  https://dev.mylokalni.pl/hydraulik-warszawa
+  https://dev.lokalni-pl-web.pages.dev/hydraulik-warszawa
 # oczekiwane: HTTP:200
 ```
 

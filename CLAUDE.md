@@ -85,9 +85,11 @@ npx tsc --noEmit         # TypeScript check (pre-commit hook)
 | Branch | Domena | Rola |
 |---|---|---|
 | `main` | `mylokalni.pl` | Produkcja |
-| `dev` | `dev.mylokalni.pl` | Preview / staging (używa tego samego API `api.mylokalni.pl`) |
+| `dev` | `dev.lokalni-pl-web.pages.dev` | Preview / staging (branch alias CF Pages, używa tego samego API `api.mylokalni.pl`) |
 
-**Workflow (dev-first):** commit na `dev` → `git push origin dev` → CF Pages preview build → verify curl checks na `dev.mylokalni.pl` → merge fast-forward `dev` → `main` → `git push origin main` → CF Pages produkcyjny build → verify na `mylokalni.pl`.
+Custom subdomain `dev.mylokalni.pl` jest **opcjonalny** — obecnie nie skonfigurowany. Preview używa domyślnego branch aliasu CF Pages. Do włączenia: CF Dashboard → DNS → CNAME `dev` → `dev.lokalni-pl-web.pages.dev` (Proxied).
+
+**Workflow (dev-first):** commit na `dev` → `git push origin dev` → CF Pages preview build → verify curl checks na `dev.lokalni-pl-web.pages.dev` → merge fast-forward `dev` → `main` → `git push origin main` → CF Pages produkcyjny build → verify na `mylokalni.pl`.
 
 **Claude Code nie deployuje ręcznie** — user pushuje, CI robi resztę. Deploy API = osobny flow (Docker + SSH, robi user).
 
