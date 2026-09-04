@@ -4,7 +4,81 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(self), microphone=(), geolocation=(self), payment=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://api.cypriantalmon.pl wss://api.cypriantalmon.pl https://accounts.google.com https://maps.googleapis.com; frame-src 'self' https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+/dashboard/*
+  X-Robots-Tag: noindex, nofollow
+
+/booking-form
+  X-Robots-Tag: noindex, nofollow
+/booking-form/*
+  X-Robots-Tag: noindex, nofollow
+
+/support
+  X-Robots-Tag: noindex, nofollow
+/support/*
+  X-Robots-Tag: noindex, nofollow
+
+/chat
+  X-Robots-Tag: noindex, nofollow
+/chat/*
+  X-Robots-Tag: noindex, nofollow
+
+/calendar
+  X-Robots-Tag: noindex, nofollow
+/calendar/*
+  X-Robots-Tag: noindex, nofollow
+
+/favorites
+  X-Robots-Tag: noindex, nofollow
+/favorites/*
+  X-Robots-Tag: noindex, nofollow
+
+/delete-account
+  X-Robots-Tag: noindex, nofollow
+/delete-account/*
+  X-Robots-Tag: noindex, nofollow
+
+/delete-account-confirm
+  X-Robots-Tag: noindex, nofollow
+/delete-account-confirm/*
+  X-Robots-Tag: noindex, nofollow
+
+/verify-email
+  X-Robots-Tag: noindex, nofollow
+/verify-email/*
+  X-Robots-Tag: noindex, nofollow
+
+/review
+  X-Robots-Tag: noindex, nofollow
+/review/*
+  X-Robots-Tag: noindex, nofollow
+
+/invite
+  X-Robots-Tag: noindex, nofollow
+/invite/*
+  X-Robots-Tag: noindex, nofollow
+
+/r
+  X-Robots-Tag: noindex, nofollow
+/r/*
+  X-Robots-Tag: noindex, nofollow
+
+/auth
+  X-Robots-Tag: noindex, nofollow
+/auth/*
+  X-Robots-Tag: noindex, nofollow
+
+/reset-password
+  X-Robots-Tag: noindex, nofollow
+
+/zgoda-rodzica
+  X-Robots-Tag: noindex, nofollow
