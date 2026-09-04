@@ -1,12 +1,10 @@
 'use client';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
-import { IS_SAFARI_WEB, createSafariOverlay, revealAfterUnmount } from '../../../utils/safariNavOverlay';
 import { apiClient } from '../../../services/apiClient';
 import { mapApiService } from '../../../services/serviceService';
 import { createSlug } from '../../../utils/helpers';
@@ -16,9 +14,6 @@ import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
-
-const slideIn = { initial: { x: 20, opacity: 0 }, animate: { x: 0, opacity: 1 } } as const;
-const slideTransition = { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const };
 
 const serviceScrollPositions = new Map<string, number>();
 
@@ -51,23 +46,6 @@ function NotFoundView() {
     );
 }
 
-type DocumentWithVT = { startViewTransition?: (fn: () => void | Promise<void>) => { finished: Promise<void> } };
-
-const webNavigate = (doNav: () => void) => {
-    const doc = document as unknown as DocumentWithVT;
-    if (!IS_SAFARI_WEB && typeof doc.startViewTransition === 'function') {
-        document.documentElement.classList.add('vt-running', 'vt-inapp');
-        const vt = doc.startViewTransition(() => { doNav(); return new Promise<void>(resolve => setTimeout(resolve, 20)); });
-        vt.finished.finally(() => document.documentElement.classList.remove('vt-running', 'vt-inapp'));
-    } else {
-        document.documentElement.classList.add('vt-running');
-        const overlay = createSafariOverlay();
-        const sdvRoot = document.querySelector('[data-sdv-root]');
-        doNav();
-        revealAfterUnmount(overlay, sdvRoot, true);
-    }
-};
-
 export default function ServiceDetailsClient() {
     const params = useParams();
     const id = params?.slug as string | undefined;
@@ -81,7 +59,6 @@ export default function ServiceDetailsClient() {
         if (hasHistory) router.back(); else router.push('/');
     }, [router]);
 
-    // Check sessionStorage for fromFullScreen flag (set by NativeNav.push)
     const fromFullScreenRef = useRef(false);
     useEffect(() => {
         const flag = sessionStorage.getItem('__fromFullScreen__');
@@ -91,8 +68,8 @@ export default function ServiceDetailsClient() {
     const handleBack = useCallback(async () => {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-            doNav();
-        } else webNavigate(doNav);
+        }
+        doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
@@ -115,18 +92,6 @@ export default function ServiceDetailsClient() {
         placeholderData: placeholder,
     });
 
-    const wasLoadingRef = useRef(!service || state.isLoadingApp);
-    const [contentReady, setContentReady] = useState(false);
-    const prevPublicIdRef = useRef(publicId);
-
-    useEffect(() => {
-        if (prevPublicIdRef.current === publicId) return;
-        prevPublicIdRef.current = publicId;
-        if (serviceScrollPositions.has(publicId)) return;
-        setContentReady(false);
-        wasLoadingRef.current = true;
-    }, [publicId]);
-
     useEffect(() => {
         if (!service || (service as Service & { __deleted?: boolean }).__deleted) return;
         const cityPart = service.city ? ` w ${service.city}` : '';
@@ -143,7 +108,6 @@ export default function ServiceDetailsClient() {
         }
     }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Check sessionStorage for openChat flag (set by booking-form page)
     useEffect(() => {
         const openChatId = sessionStorage.getItem('__openChat__');
         if (!openChatId) return;
@@ -158,31 +122,22 @@ export default function ServiceDetailsClient() {
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Signal native that content is ready (once per service)
+    const signalSentRef = useRef(false);
     useEffect(() => {
-        if (!contentReady || !Capacitor.isNativePlatform()) return;
+        if (!service || !Capacitor.isNativePlatform() || signalSentRef.current) return;
+        signalSentRef.current = true;
         let r2 = 0;
         const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
-    }, [contentReady]);
+    }, [service]);
 
+    // Restore scroll position on native after back-navigation
     useEffect(() => {
-        if (!service || state.isLoadingApp || contentReady) return;
-        if (Capacitor.isNativePlatform() && !wasLoadingRef.current) { setContentReady(true); return; }
-        const firstImageUrl: string | undefined = service.images?.[0] || service.image;
-        const reveal = () => { setContentReady(true); window.dispatchEvent(new CustomEvent('sdv:ready')); };
-        const go = () => {
-            if (firstImageUrl) { const img = new Image(); img.src = firstImageUrl; img.onload = reveal; img.onerror = reveal; }
-            else reveal();
-        };
-        if (wasLoadingRef.current) { const t = setTimeout(go, 280); return () => clearTimeout(t); }
-        else go();
-    }, [service, state.isLoadingApp, contentReady]);
-
-    useEffect(() => {
-        if (!contentReady || !Capacitor.isNativePlatform()) return;
+        if (!service || !Capacitor.isNativePlatform()) return;
         const saved = serviceScrollPositions.get(publicId);
         if (saved !== undefined) { serviceScrollPositions.delete(publicId); window.scrollTo(0, saved); }
-    }, [contentReady, publicId]);
+    }, [service, publicId]);
 
     const handleOpenService = useCallback((svc: Service) => {
         if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
@@ -207,7 +162,10 @@ export default function ServiceDetailsClient() {
     if ((service as Service & { __deleted?: boolean })?.__deleted) return <DeletedServiceView onBack={doNav} />;
     if (!isPending && service === null) return <NotFoundView />;
 
-    const sdvEl = contentReady && service ? (
+    const isNative = Capacitor.isNativePlatform();
+    const showContent = !!service && !state.isLoadingApp;
+
+    const sdvEl = showContent ? (
         <ServiceDetailsView
             service={service}
             isFavorite={state.favorites.includes(service.publicId ?? '') || (state.isLoggedIn && !!service.isFavorite)}
@@ -218,7 +176,7 @@ export default function ServiceDetailsClient() {
             onStartChat={handleStartChat}
             onEdit={actions.openEditServiceModal}
             onBook={async () => {
-                if (Capacitor.isNativePlatform()) {
+                if (isNative) {
                     serviceScrollPositions.set(publicId, window.scrollY);
                     await NativeNav.push().catch(() => {});
                 }
@@ -232,7 +190,7 @@ export default function ServiceDetailsClient() {
             onReportReview={(rId) => actions.openReportModal('review', rId)}
             onOpenSupport={async () => {
                 if (state.isLoggedIn) {
-                    if (Capacitor.isNativePlatform()) {
+                    if (isNative) {
                         serviceScrollPositions.set(publicId, window.scrollY);
                         await NativeNav.push({ fullScreen: true }).catch(() => {});
                         router.push('/support');
@@ -251,19 +209,11 @@ export default function ServiceDetailsClient() {
         />
     ) : null;
 
-    const content = sdvEl
-        ? (Capacitor.isNativePlatform()
-            ? <div>{sdvEl}</div>
-            : <motion.div {...slideIn} transition={slideTransition}>{sdvEl}</motion.div>)
-        : null;
-
-    const isNative = Capacitor.isNativePlatform();
-
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            <LoadingScreen isVisible={state.isLoadingApp || (!contentReady && !service)} />
-            {content}
+            <LoadingScreen isVisible={!showContent && !!(isPending || state.isLoadingApp)} />
+            {sdvEl && (isNative ? <div>{sdvEl}</div> : sdvEl)}
         </>
     );
 }

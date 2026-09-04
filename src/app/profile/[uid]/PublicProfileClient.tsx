@@ -1,22 +1,17 @@
 'use client';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { UserX, ArrowLeft } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
-import { IS_SAFARI_WEB, createSafariOverlay, revealAfterUnmount } from '../../../utils/safariNavOverlay';
-import { apiClient } from '../../../services/apiClient';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
-
-const slideIn = { initial: { x: 20, opacity: 0 }, animate: { x: 0, opacity: 1 } } as const;
-const slideTransition = { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const };
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../../../services/apiClient';
 
 function DeletedAccountView({ onBack }: { onBack: () => void }) {
     return (
@@ -57,8 +52,6 @@ function NotFoundView() {
     );
 }
 
-type DocumentWithVT = { startViewTransition?: (fn: () => void | Promise<void>) => { finished: Promise<void> } };
-
 export default function PublicProfileClient() {
     const params = useParams();
     const uid = params?.uid as string | undefined;
@@ -79,21 +72,8 @@ export default function PublicProfileClient() {
     const handleBack = useCallback(async () => {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-            doNav();
-        } else {
-            const doc = document as unknown as DocumentWithVT;
-            if (!IS_SAFARI_WEB && typeof doc.startViewTransition === 'function') {
-                document.documentElement.classList.add('vt-running', 'vt-inapp');
-                const vt = doc.startViewTransition(() => { doNav(); return new Promise<void>(resolve => setTimeout(resolve, 20)); });
-                vt.finished.finally(() => document.documentElement.classList.remove('vt-running', 'vt-inapp'));
-            } else {
-                document.documentElement.classList.add('vt-running');
-                const overlay = createSafariOverlay();
-                const sdvRoot = document.querySelector('[data-sdv-root]');
-                doNav();
-                revealAfterUnmount(overlay, sdvRoot, true);
-            }
         }
+        doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
@@ -128,11 +108,20 @@ export default function PublicProfileClient() {
         }
     }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const profileReady = !!profile && !isLoading;
+    // Signal native that content is ready (once)
+    const signalSentRef = useRef(false);
+    useEffect(() => {
+        if (!profile || !Capacitor.isNativePlatform() || signalSentRef.current) return;
+        signalSentRef.current = true;
+        let r2 = 0;
+        const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
+        return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
+    }, [profile]);
 
+    // Restore scroll position on web (saved before navigating away from profile)
     const hasRestoredScroll = useRef(false);
     useEffect(() => {
-        if (!profileReady || hasRestoredScroll.current) return;
+        if (!profile || hasRestoredScroll.current) return;
         hasRestoredScroll.current = true;
         const saved = sessionStorage.getItem('nav_scroll_' + window.location.pathname);
         if (!saved) return;
@@ -141,24 +130,15 @@ export default function PublicProfileClient() {
         let r2 = 0;
         const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => window.scrollTo(0, y)); });
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
-    }, [profileReady]);
-
-    useEffect(() => {
-        if (!profileReady) return;
-        window.dispatchEvent(new CustomEvent('ppv:ready'));
-    }, [profileReady]);
-
-    useEffect(() => {
-        if (!profileReady || !Capacitor.isNativePlatform()) return;
-        let r2 = 0;
-        const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
-        return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
-    }, [profileReady]);
+    }, [profile]);
 
     const showLoading = useDelayedLoading(isLoading);
-    if (showLoading || isError) return <LoadingScreen isVisible={true} />;
+    if (showLoading) return <LoadingScreen isVisible={true} />;
+    if (isError || (!profile && !isLoading)) return !profile ? <NotFoundView /> : null;
     if ((profile as { deleted?: boolean })?.deleted) return <DeletedAccountView onBack={doNav} />;
-    if (!profile) return isLoading ? null : <NotFoundView />;
+    if (!profile) return <LoadingScreen isVisible={true} />;
+
+    const isNative = Capacitor.isNativePlatform();
 
     const ppvEl = (
         <PublicProfileView
@@ -178,14 +158,10 @@ export default function PublicProfileClient() {
         />
     );
 
-    const isNative = Capacitor.isNativePlatform();
-
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {isNative
-                ? <div>{ppvEl}</div>
-                : <motion.div {...slideIn} transition={slideTransition}>{ppvEl}</motion.div>}
+            {isNative ? <div>{ppvEl}</div> : ppvEl}
         </>
     );
 }
