@@ -9,6 +9,29 @@ Produkcja: `https://mylokalni.pl`. Backend API: `https://api.mylokalni.pl` (osob
 
 Siostrzany projekt: `/Users/cypriantalmon/Desktop/lokalni projekt/` — starszy Vite/React + Capacitor SPA (iOS/Android). Web wygaszany, ten projekt (`lokalni-web`) przejmuje SEO i przeglądarkę. Duża część kodu (`src/views/*`, `src/components/modals/*`, `src/hooks/*`) jest współdzielona 1:1 z siostrzanym projektem — dzięki cap-stubs (patrz niżej) działa bez Capacitor runtime.
 
+## AI context — `.ai/`
+
+Ten projekt utrzymuje briefy i skille w `.ai/` — Claude Code powinien czytać na start sesji dla kontekstu domenowego, a skille wywoływać gdy zadanie pasuje do opisu.
+
+| Ścieżka | Zawartość |
+|---|---|
+| `.ai/architecture.md` | Ecosystem diagram (5 projektów), request flow, deploy topology, shared code map |
+| `.ai/context/01-project-brief.md` | Cel biznesowy MyLokalni.pl, target users, funkcje, roadmap |
+| `.ai/context/current-state.md` | Snapshot bieżących prac (**szybko się starzeje** — sprawdź `git log` i CF Dashboard dla live state) |
+| `.ai/skills/review-code/SKILL.md` | Procedura review — MCP graph + CF Pages specifics + quality gates |
+| `.ai/skills/deploy-web/SKILL.md` | Flow `git push` → CF Pages CI → post-deploy curl verification |
+| `.ai/skills/build-capacitor/SKILL.md` | Web build + `cap sync` + Xcode/Android Studio dla siostrzanego mobile projektu |
+
+**Konwencje:**
+- `context/` — dokumenty do wczytania (briefy, snapshots, decisions). Numerowane prefixem gdy kolejność ma znaczenie (`01-project-brief.md` przed dowolnym nowym `02-*.md`).
+- `skills/<slug>/SKILL.md` — reusable procedury z YAML frontmatter (`name`, `description`). Każdy skill w swoim folderze (Claude Code convention — dodatkowe pliki `.md` w tym samym folderze są kontekstem skilla, wczytywane po głównym `SKILL.md`).
+- `architecture.md` — pojedynczy source-of-truth diagram; aktualizuj przy strukturalnych zmianach ecosystemu (nowa DB, nowy service, nowa integracja).
+
+**Nowy brief / skill:**
+- Dodaj plik do właściwego folderu, PO ANGIELSKU jeśli reusable między instancjami Claude — po polsku jeśli team-internal
+- Zaktualizuj tabelę wyżej (w tym CLAUDE.md)
+- Krótki commit `docs(ai): dodaj skill <slug>` / `docs(ai): brief <slug>`
+
 ## Commands
 
 Uruchamiać z **project root** (`/Users/cypriantalmon/Desktop/lokalni-web/`).
