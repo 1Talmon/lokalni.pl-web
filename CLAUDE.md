@@ -2,138 +2,164 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## MCP Tools: code-review-graph
+## Project
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+Next.js 15 App Router + React 18, deploy na Cloudflare Pages (`@cloudflare/next-on-pages`).
+Produkcja: `https://mylokalni.pl`. Backend API: `https://api.mylokalni.pl` (osobny projekt).
 
-### When to use graph tools FIRST
-
-- **Exploring code**: `semantic_search_nodes` or `query_graph` instead of Grep
-- **Understanding impact**: `get_impact_radius` instead of manually tracing imports
-- **Code review**: `detect_changes` + `get_review_context` instead of reading entire files
-- **Finding relationships**: `query_graph` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview` + `list_communities`
-
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
-
-### Key Tools
-
-| Tool | Use when |
-| ------ | ---------- |
-| `detect_changes` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context` | Need source snippets for review — token-efficient |
-| `get_impact_radius` | Understanding blast radius of a change |
-| `get_affected_flows` | Finding which execution paths are impacted |
-| `query_graph` | Tracing callers, callees, imports, tests, dependencies |
-| `semantic_search_nodes` | Finding functions/classes by name or keyword |
-| `get_architecture_overview` | Understanding high-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
-
-### Workflow
-
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes` for code review.
-3. Use `get_affected_flows` to understand impact.
-4. Use `query_graph` pattern="tests_for" to check coverage.
-
----
+Siostrzany projekt: `/Users/cypriantalmon/Desktop/lokalni projekt/` — starszy Vite/React + Capacitor SPA (iOS/Android). Web wygaszany, ten projekt (`lokalni-web`) przejmuje SEO i przeglądarkę. Duża część kodu (`src/views/*`, `src/components/modals/*`, `src/hooks/*`) jest współdzielona 1:1 z siostrzanym projektem — dzięki cap-stubs (patrz niżej) działa bez Capacitor runtime.
 
 ## Commands
 
-All commands run from the **project root** (`/Users/cypriantalmon/Desktop/lokalni projekt/`).
+Uruchamiać z **project root** (`/Users/cypriantalmon/Desktop/lokalni-web/`).
 
 ```bash
-bun run dev          # Vite dev server on :5173 (proxies /api → https://api.cypriantalmon.pl)
-bun run build        # Production build → dist/
-bun run lint         # ESLint (0 warnings allowed — enforced by pre-commit hook)
-npx tsc --noEmit     # TypeScript type-check (run from src/ directory)
+npm run dev              # Next dev na :3000
+npm run build            # next build → .next/
+npm run build:cf         # @cloudflare/next-on-pages → .vercel/output/static/ (weryfikuj przed pushem)
+npm run preview:cf       # wrangler pages dev — lokalny preview CF Pages output
+npm run lint             # ESLint (pre-commit hook wywala tsc, nie lint)
+npx tsc --noEmit         # TypeScript check (pre-commit hook)
 ```
 
-No test suite. Type-checking + lint are the primary quality gates — pre-commit runs both automatically via lint-staged + husky on staged `*.ts/tsx` files.
+**Brak test suite.** Type-check + build:cf są głównymi bramkami jakości. Zawsze puszczaj `build:cf` (nie tylko `build`) przed pushem — CF-specific config (`_headers`, edge runtime, static params) sprawdzany jest tylko tam.
 
-**Capacitor (mobile):** after `bun run build`, sync with `npx cap sync ios` or `npx cap sync android`, then open in Xcode/Android Studio.
+## Deploy
 
-**Deploy:** copy `dist/` to `/usr/share/nginx/html/` on the server, then `sudo systemctl reload nginx`. Nginx config lives at `src/nginx.conf`.
+**Automatyczny** — push do `main` na GitHub (`1Talmon/lokalni.pl-web`) → Cloudflare Pages CI zbuduje i zdeployuje. **Claude Code nie deployuje ręcznie** — user pushuje, CI robi resztę.
 
-## Architecture
+Custom domain `mylokalni.pl` → CF Pages project `lokalni-pl-web`.
+Env vars w CF Dashboard: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY`.
 
-### Project layout
-- Config files (`package.json`, `vite.config.ts`, `tailwind.config.ts`, `capacitor.config.ts`) live in the **project root**
-- All source code is in `src/`
-- Git root is the **project root** (not `src/`)
-- App ID: `com.lokalni.app` (Capacitor), App name: `Lokalni.pl`
+## Package manager — pnpm@10 obowiązkowe
 
-### State management — single mega-hook
-`src/hooks/useAppLogic.ts` owns all global state (auth, services, chat, favorites, modals) and exports `{ state: AppState, actions: AppActions }`. Types live in `src/types/appTypes.ts`. Every top-level component receives `state` and `actions` as props — no Context, no Redux.
+`package.json` ma `"packageManager": "pnpm@10.15.0"`. **Nie downgraduj.**
+Vercel CLI (wewnątrz `@cloudflare/next-on-pages`) używa wersji z `packageManager` — pnpm 9 wymaga interactive `pnpm approve-builds` co blokuje CI (`ERR_PNPM_IGNORED_BUILDS` dla `esbuild`, `workerd`). pnpm 10 czyta `onlyBuiltDependencies` z `pnpm-workspace.yaml` non-interactive.
 
-`useMyProfile`, `useNotifications`, `usePublicProfile` are React Query hooks that layer on top.
+## Architektura
 
-### Routing & tab strip
+### Struktura routes (`src/app/`)
 
-`src/routes/AppRoutes.tsx` — all routes. The four main tabs (`/`, `/chat`, `/calendar`, `/favorites`) are rendered as a **CSS scroll-snap strip** inside `MainLayout` — all four are mounted in the DOM simultaneously and never unmounted on tab switch (preserves scroll position). `SWIPE_TABS` and `SWIPE_TAB_NAMES` in `useTabSwipe.ts` define the order.
+Trzy warstwy layoutów, wybierane per-page według rodzaju strony:
 
-Never use `<Navigate>` inside the tab strip — it silently redirects when a hidden tab renders. Route-level guards use conditionally rendered elements (`state.isLoggedIn ? <View/> : authRedirect`).
+```
+src/app/
+├── (app)/                    # AppShell + MainLayout + tab strip + ModalsManager
+│   ├── layout.tsx            # 'use client' - QueryProvider + AppProvider + AppShell
+│   ├── page.tsx              # / (tab home)
+│   ├── chat|calendar|favorites/  # tab routes (render null, treść w AppShell tab strip)
+│   ├── dashboard, booking-form, support, chat/[chatId]
+│   ├── faq, regulamin, polityka-prywatnosci, o-nas, zasady-bezpieczenstwa, jak-to-dziala, zgoda-rodzica
+│   └── _components/          # private (Next.js: `_` prefix skips as route)
+├── (public)/                 # QueryProvider + AppProvider + Suspense (bez chrome-u)
+│   ├── layout.tsx
+│   ├── verify-email/         # jednorazowe, otwierane z maila
+│   ├── delete-account, delete-account-confirm/
+│   └── review/[bookingId]/   # z ReviewClient.tsx (edge runtime)
+├── auth, reset-password/     # top-level bez providerów (auth flow)
+├── invite/[code], r/[code]/  # top-level bez providerów (marketing landings)
+├── service/[slug]/           # top-level edge runtime, SSR metadata + JSON-LD LocalBusiness
+├── profile/[uid]/            # jw.
+├── [slug]/                   # top-level SSG landing pages (city / keyword / keyword-city)
+├── layout.tsx                # root: metadata, JSON-LD Organization + WebSite
+├── error.tsx, not-found.tsx  # global error/404
+├── robots.ts                 # App Router native robots.txt
+└── sitemap*.xml/route.ts     # 4 sitemapy: index + services (edge) + locations + categories
+```
 
-Heavy views outside the strip are **lazy-loaded** (`React.lazy`). `HomeView` and `PublicProfileView` are eagerly imported — Suspense re-mounting breaks WAAPI animations on iOS. `AuthRoute` is a local wrapper inside AppRoutes that manages `authMode` state.
+**Decyzja gdzie umieścić nową stronę:**
+- Ma tab strip + navbar + user-facing app UX → `(app)/`
+- Otwierana z linku/maila, wymaga `useApp()` ale bez chrome — `(public)/`
+- Auth flow albo marketing landing bez `useApp()` — top-level bez grupy
+- Główne strony SEO (service, profile, landing) — top-level (poza grupami), `runtime: 'edge'`, `generateMetadata` + JSON-LD
 
-**Navigation transitions:**
-- Native (iOS/Android): raw navigation, no transitions.
-- Web: View Transitions API (`document.startViewTransition`) with CSS slide animation.
-- Safari web: VT skipped (GPU canvas punch-through bug with Leaflet); a white DOM overlay (`z-index:49`) fades in/out instead.
+**URL vs folder:** grupy `(...)` w Next.js **nie wpływają na URL** — `/(public)/verify-email` → URL `/verify-email`.
 
-### Modal system — two patterns
-1. **Global modals** (`chat_detail`, `add_service`, `report`): `state.activeModal` in `useAppLogic`, rendered by `src/components/modals/ModalsManager.tsx`. Opened via `actions.setActiveModal(...)` or `actions.openReportModal(...)`.
-2. **View-local modals** (`NewsFeedModal`, `CertificatesModal`, `ClientPhotosModal`, `ReportModal` in PublicProfileView): `useState` inside the view, rendered via `createPortal` to `document.body`.
+### State management
 
-### Auth & token security
+`src/hooks/useAppLogic.ts` — mega-hook z całym globalnym stanem (auth, services, chat, favorites, modals). Zwraca `{ state: AppState, actions: AppActions }` (typy w `src/types/appTypes.ts`).
 
-**Access tokens live only in memory** (`src/utils/tokenUtils.ts`, module-level `_memToken`). They are never written to localStorage (XSS-safe). On page refresh the token is gone and must be silently restored.
+`src/providers/AppProvider.tsx` — Context wrapper wokół `useAppLogic()`. Wołany raz w `(app)/layout.tsx` lub `(public)/layout.tsx`. `useApp()` sięga po `state` i `actions` z kontekstu.
 
-**Refresh tokens** are stored in native Keychain/Keystore on mobile (`src/utils/secureStorage.ts` via `capacitor-secure-storage-plugin`), or in an httpOnly cookie on web.
+`src/providers/QueryProvider.tsx` — React Query provider (osobny plik bo `AppProvider` sam by mieszał concerns).
 
-**Startup flow** (`useAppLogic.ts`): if `isLoggedIn=true` in localStorage but no token in memory → `POST /api/auth/refresh` with RT from Keychain/cookie → store new AT in memory. On iOS, if Keychain is empty (old install pre-secureStorage), silently clear session without redirecting.
+`useMyProfile`, `useNotifications`, `usePublicProfile` — React Query hooks nad `useAppLogic`.
 
-`src/services/apiClient.ts` — central HTTP client. Reads JWT via `tokenUtils.get()`, auto-retries 401 with a refreshed token. On second failure dispatches `auth:logout-required` custom event — React handles it without a hard reload (avoids visible native element flicker on iOS).
+### AppShell + MainLayout (`src/components/AppShell.tsx`)
 
-`src/utils/tokenUtils.ts` — in-memory JWT store with validation and expiry checking. `clearAll()` clears both memory and localStorage auth flags.
+Wywoływany tylko z `(app)/layout.tsx`. Obowiązki:
+- Trzyma `MainLayout` z tab strip (`/`, `/chat`, `/calendar`, `/favorites`), Navbar, Footer, BottomNav
+- Renderuje `<ModalsManager>` z globalnymi modałami (`state.activeModal`)
+- Obsługuje deep links (`com.lokalni.app://`, `https://mylokalni.pl/*`), Capacitor `appUrlOpen`
+- Obsługuje Android back button (`CapacitorApp.backButton`)
+- Biometric lock (`useBiometricLock`)
+- Splash screen hiding (native/Android)
 
-`src/utils/logger.ts` — replaces `console.*`. In production `info/debug` are silent. Always use `logger.error/warn/info/debug`.
+Tab routes (`/`, `/chat`, `/calendar`, `/favorites`) mają `page.tsx` które renderują `null` — treść jest w tab strip AppShell-a.
 
-### Real-time (WebSocket)
+### Cap-stubs (`src/lib/cap-stubs/`)
 
-`src/hooks/useWebSocket.ts` maintains a **global singleton** WebSocket (`wss://api.cypriantalmon.pl`). Auto-connects on login, disconnects on logout, reconnects with exponential backoff (1 s → max 30 s). It dispatches typed events (`new_message`, `booking_update`, `online_status`, `typing`, etc.) to registered listeners; `useAppLogic` uses these to call `queryClient.invalidateQueries` and update chat/notification state. There is one WebSocket per app lifetime — do not create additional connections.
+Kluczowe. `tsconfig.json:paths` + `next.config.ts:webpack.resolve.alias` mapują wszystkie `@capacitor/*` importy oraz `capacitor-secure-storage-plugin`, `@aparajita/capacitor-biometric-auth`, `@capacitor-community/facebook-login`, `@codetrix-studio/capacitor-google-auth` na stub-y w `src/lib/cap-stubs/`. Dzięki temu kod współdzielony z siostrzanym projektem Capacitor imports `@capacitor/core` itd. bez błędu — na web dostaje no-op implementation.
 
-### Service location helpers
+**Nie usuwaj cap-stubs.** Nie dodawaj `@capacitor/*` do `dependencies` — nadal będzie brany stub przez alias.
 
-Always use `src/utils/serviceUtils.ts` instead of reading `service.city` or `service.isRemote` directly:
-- `isRemoteService(service)` — single source of truth for remote/online service detection
-- `serviceMatchesLocation(service, location)` — location filter logic
-- `getServiceCoords(service)` — returns `{lat, lng}` with city fallback from `CITY_COORDS`
+### Modele modałów — dwa wzorce
 
-### Data
-- `src/data/constants.ts` — `INITIAL_SERVICES`, `MOCK_REVIEWS`, `CITY_COORDS` (12 Polish cities → lat/lon), `POLISH_CITIES`
-- `src/data/fixtures.ts` — mock data for `PublicProfileView` (posts, reviews, photos, certificates)
-- `src/data/categories.tsx` — 16 service categories with lucide icons
+1. **Globalne** (`state.activeModal`): `chat_detail`, `add_service`, `report`, `support`. Sterowane przez `actions.setActiveModal(...)`, rendered w `ModalsManager`.
+2. **View-local**: `NewsFeedModal`, `CertificatesModal`, `ClientPhotosModal`, `ReportModal` w `PublicProfileView` — `useState` w widoku + `createPortal(document.body)`.
 
-### Key conventions
-- **Path alias**: `@/` maps to `src/`
-- **Tailwind**: utility-first, no CSS modules. Custom colors in `tailwind.config.ts` (primary `#6366F1`, accent `#10B981`)
-- **`usePersistedState`**: localStorage wrapper with prototype pollution protection. Keys: `user_location`, `is_logged_in`, `user_profile`, `user_favorites`, `user_chats`, `all_services_v20`
-- **Map**: `src/components/MapView.tsx` uses `react-leaflet` v4 + Carto Positron tiles. Manual city-based clustering (zoom < 9 = clusters, zoom ≥ 9 = individual markers). Leaflet CSS overrides in `src/App.css` under `.lokalni-popup`.
-- **Mobile HTTP**: `CapacitorHttp.enabled` is intentionally `false` in `capacitor.config.ts`. Do not enable it — it monkey-patches `window.fetch` and breaks `FormData`/file uploads. JSON requests go through `CapacitorHttp.request()` manually; FormData uses native WKWebView fetch directly.
-- **Android splash**: a 160 ms `setTimeout` in `App.tsx` delays rendering until safe-area insets are applied, then hides the native splash with a 300 ms fade. This prevents layout jump.
-- **iOS splash**: `SplashScreen.launchAutoHide: false` — hidden manually in `ServiceDetailsWrapper` once content is ready (waits for `isLoadingApp=false` + data).
-- **Safe area insets**: handled via `env(safe-area-inset-*)` CSS variables in `App.css`. `--total-nav-h` and `--nav-content-h` CSS vars drive MainLayout strip height.
-- **`strict: false`** in `tsconfig.app.json` — TypeScript is lenient; `any` types exist in older dashboard code.
+### SEO
 
-### Security notes
-- CSP, HSTS, X-Frame-Options are nginx HTTP headers, not meta tags — see `src/nginx.conf`
-- `src/components/ui/ErrorBoundary.tsx` wraps `<App>` and `<Routes>` — crashes show Polish fallback UI
+- **Root metadata** w `src/app/layout.tsx` (metadataBase, OG, Twitter, keywords, canonical `/`) + JSON-LD `Organization` + `WebSite` z `SearchAction`.
+- **`/service/[slug]`, `/profile/[uid]`**: `runtime: 'edge'`, `generateMetadata` + JSON-LD `LocalBusiness`. **Muszą wołać `notFound()`** gdy fetch API zwróci null (inaczej Google zaindeksuje puste strony z generic tytułem).
+- **`/[slug]` (landing)**: `dynamicParams = false`, `generateStaticParams` **musi używać `LANDING_SLUGS`** (`src/lib/seo-data.ts`) — Set z 924 valid slugów (48 keywords + 30 cities + 576 keyword-topcity + 270 category-extracity). Jeśli używać samego `ALL_KEYWORDS + ALL_CITIES` (78), 846 URLi z `sitemap-locations.xml` da 404.
+- **`middleware.ts`**: 301 redirect legacy `/{title-PublicId}` (mixed-case) → `/service/{slug}` + 404 na `/_next/data/*` (stara Pages Router pułapka Googlebot cache).
 
-## Crucial Development Rules
-- **NEVER** delete existing code or change visual appearance, styling, or project structure unless explicitly commanded.
-- Modify **ONLY** the specific parts indicated. Keep everything else intact.
+### Security headers — `public/_headers`, NIE `next.config.ts`
+
+**Krytyczne:** `next.config.ts::headers()` **nie jest respektowane** przez `@cloudflare/next-on-pages`. Pages nie ma warstwy Next Server która by je serwowała. Wszystkie headery security (CSP, HSTS, X-Robots-Tag) **muszą** być w `public/_headers` — CF Pages honoruje go natywnie i kopiuje do `.vercel/output/static/_headers` przy build.
+
+`next.config.ts::headers()` zostaje dla `next dev` / lokalnego preview — ale produkcja czyta tylko `_headers`.
+
+CSP zawiera `'unsafe-inline'` w `script-src` bo Next inline'uje bootstrap script. Google Maps callback (`window.initMap`) też przez inline. Nie usuwać `'unsafe-inline'` bez przetestowania.
+
+### Auth & token
+
+`src/services/apiClient.ts` — HTTP client. JWT via `tokenUtils.get()` (in-memory, module-level `_memToken`). Refresh token w httpOnly cookie na web (native: Keychain przez `capacitor-secure-storage-plugin` — nieaktywne bo cap-stub).
+
+Startup: jeśli `is_logged_in=true` w localStorage ale brak tokenu → `POST /api/auth/refresh` z RT z cookie → nowy AT w pamięci.
+
+401 → `apiClient` auto-retry z fresh tokenem. Drugie 401 → `auth:logout-required` custom event → React redirect na `/auth` (bez hard reload).
+
+### WebSocket (`src/hooks/useWebSocket.ts`)
+
+Global singleton na `wss://api.mylokalni.pl`. Auto-connect na login, disconnect na logout, exp. backoff reconnect (1s → 30s). Events: `new_message`, `booking_update`, `online_status`, `typing`. Dispatch do registered listeners, `useAppLogic` używa do invalidateQueries + update chat/notification state. **Jedna instancja na app lifetime.**
+
+## Konwencje
+
+- **Path alias:** `@/*` → `src/*`
+- **Tailwind:** utility-first, custom kolory w `tailwind.config.ts` (primary `#6366F1`, accent `#10B981`)
+- **`strict: true`** w tsconfig — nowszy projekt niż siostrzany, brak `any` w nowo pisanym kodzie
+- **Data:** `src/data/constants.ts` (`CITY_COORDS`, `POLISH_CITIES`), `src/data/categories.tsx`, `src/data/fixtures.ts` (mock dla `PublicProfileView`)
+- **Landing SEO data:** `src/lib/seo-data.ts` — `LANDING_SLUGS`, `CITY_DISPLAY`, `CITY_LOCATIVE`, `KEYWORD_DISPLAY`, `parseLandingSlug`
+- **Logger:** `src/utils/logger.ts` — nie `console.*` (w produkcji `info/debug` są silent)
+- **Service location helpers:** `src/utils/serviceUtils.ts` — `isRemoteService`, `serviceMatchesLocation`, `getServiceCoords` (single source of truth, nie czytaj `service.city`/`service.isRemote` bezpośrednio)
+
+## Pitfalls / traps
+
+- **Nie dodawaj `<Navigate>` w tab strip.** Wszystkie 4 taby są w DOM jednocześnie — Navigate w ukrytym slocie natychmiast zmienia URL. Guardy przez conditional element (`state.isLoggedIn ? <View/> : authRedirect`).
+- **Suspense w `(public)/layout.tsx` jest obowiązkowy.** Widoki `VerifyEmailView`, `DeleteAccountConfirmView` używają `useSearchParams()` który wymaga Suspense boundary przy static generation (Next 15).
+- **`build:cf` != `build`.** `next build` samo nie wygeneruje `.vercel/output/static/`. Zawsze uruchom `build:cf` żeby zweryfikować CF-specific behavior (`_headers`, edge runtime, static pages count).
+- **`packageManager: pnpm@10.15.0`** wpływa też na CI. Zmiana tej wartości wpłynie na deployment.
+- **HSTS w response** — CF nadpisuje `max-age=0`. Fix tylko w CF Dashboard → SSL/TLS → Edge Certificates → HSTS. `_headers` też deklaruje HSTS, ale CF wygrywa.
+
+## Sibling projects na Desktop
+
+- `/Users/cypriantalmon/Desktop/lokalni projekt/` — Vite/React + Capacitor (mobile iOS/Android)
+- `/Users/cypriantalmon/Desktop/Lokalni API/` — backend (`api.mylokalni.pl`), Docker
+- `/Users/cypriantalmon/Desktop/Lokalni Admin/` + `Lokalni Admin API/` — admin panel + backend
+- `/Users/cypriantalmon/Desktop/lokalni-audit/` — dokumentacja audytu migracji (6 faz)
+
+## MCP: code-review-graph
+
+Projekt ma knowledge graph (auto-update przez hooks). Preferuj MCP tools (`semantic_search_nodes`, `query_graph`, `detect_changes`, `get_impact_radius`, `get_affected_flows`) nad Grep/Glob/Read dla exploration i review — szybsze i tańsze tokenowo. Fall back do Grep/Read tylko gdy graf nie pokrywa.
