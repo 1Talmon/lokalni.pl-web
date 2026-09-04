@@ -56,8 +56,7 @@ export default function ServiceDetailsClient() {
     const publicId = id ? id.split('-').pop()! : '';
 
     const doNav = useCallback(() => {
-        const hasHistory = (window.history.state?.idx ?? 0) > 0;
-        if (hasHistory) router.back(); else router.push('/');
+        router.back();
     }, [router]);
 
     const fromFullScreenRef = useRef(false);

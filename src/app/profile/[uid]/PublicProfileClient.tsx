@@ -60,8 +60,7 @@ export default function PublicProfileClient() {
     const { state, actions } = useApp();
 
     const doNav = useCallback(() => {
-        const hasHistory = (window.history.state?.idx ?? 0) > 0;
-        if (hasHistory) router.back(); else router.push('/');
+        router.back();
     }, [router]);
 
     const fromFullScreenRef = useRef(false);
