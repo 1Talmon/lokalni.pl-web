@@ -8,15 +8,12 @@ import {
     API_URL, BASE_URL,
     parseLandingSlug,
     CITY_DISPLAY, CITY_LOCATIVE, KEYWORD_DISPLAY,
-    ALL_KEYWORDS, ALL_CITIES, POPULAR_KEYWORDS,
+    LANDING_SLUGS, POPULAR_KEYWORDS,
 } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 
 export async function generateStaticParams() {
-    return [
-        ...ALL_KEYWORDS.map(slug => ({ slug })),
-        ...ALL_CITIES.map(slug => ({ slug })),
-    ];
+    return Array.from(LANDING_SLUGS).map(slug => ({ slug }));
 }
 
 interface Props {
