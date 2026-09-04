@@ -361,6 +361,17 @@ Po polsku. `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` w trailer g
 - **Deploy state:** CF Dashboard (Pages), server SSH (Docker, nginx)
 - **Bug tracking / roadmap:** Notion + `Lokalni Admin API/AUDIT.md` + `lokalni-audit/*.md`
 
+## Feedback rules (jak z Claude Code współpracować)
+
+Utrwalone zasady użytkownika — dotyczą **każdej** sesji w tym projekcie. Auto-memory (`~/.claude/projects/-Users-cypriantalmon-Desktop-lokalni-web/memory/`) też je zawiera, ale tu w CLAUDE.md są team-shared.
+
+- **Język: polski** — user oczekuje odpowiedzi po polsku. Kod komentarze po angielsku, komunikacja po polsku.
+- **Nie pushuj automatycznie** — po commit **czekaj na wyraźne polecenie** "push". "commit" ≠ "push". Force-push do `main` nigdy bez zgody.
+- **Nie wgrywaj nic ręcznie na serwer** ani nie restartuj API — user robi to sam. Deploy web = git push (CF Pages CI). Deploy API = user robi Docker rebuild + push do ghcr.io + SSH.
+- **API docs = Notion** — nie edytuj lokalnych `.md` w `Lokalni API/` ani innych projektach. Sam `CLAUDE.md` i `.ai/` można edytować.
+- **Docker logi** — API działa w Dockerze. `docker logs lokalni-api-1` (nie systemd, nie journalctl).
+- **Główny branch:** `main` (nie `dev` jak w siostrzanym mobile projekcie). Push idzie direct na main → CF Pages CI zdeployuje.
+
 ## MCP: code-review-graph
 
 Projekt ma knowledge graph (auto-update przez hooks). Preferuj MCP tools (`semantic_search_nodes`, `query_graph`, `detect_changes`, `get_impact_radius`, `get_affected_flows`) nad Grep/Glob/Read dla exploration i review — szybsze i tańsze tokenowo. Fall back do Grep/Read tylko gdy graf nie pokrywa.
