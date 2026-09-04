@@ -47,6 +47,22 @@ Manualne notatki (Historia sesji, Otwarte punkty, Przypomnienia, Audit workflow)
 
 **Efekt uboczny:** po refreshu `git status` może pokazać `.ai/context/current-state.md` jako modified — świadome, w kolejnym commit inny lub osobny `chore(ai): sync current-state`.
 
+### Slash commands (`.claude/commands/`)
+
+Skille z `.ai/skills/` są też wystawione jako **slash commands** Claude Code — piszesz `/nazwa` w input i Claude uruchamia procedurę:
+
+| Command | Delegate → | Co robi |
+|---|---|---|
+| `/deploy-web` | `.ai/skills/deploy-web/SKILL.md` | Pre-flight + push + 3 curl checks |
+| `/review-code` | `.ai/skills/review-code/SKILL.md` | git diff + MCP graph + CF specifics + lint/tsc/build |
+| `/build-capacitor` | `.ai/skills/build-capacitor/SKILL.md` | Sync widoków + bun build + cap sync |
+
+Slash command files w `.claude/commands/*.md` to **thin wrappery** — 15 linii, delegują do `.ai/skills/<name>/SKILL.md` (jedno źródło prawdy). Jeśli edytujesz procedurę — edytuj `.ai/skills/`, nigdy `.claude/commands/`.
+
+**Rejestracja:** slash commands są auto-loadowane przez Claude Code przy starcie sesji. Nowe komendy wymagają restart sesji żeby były widoczne.
+
+**Team-shared:** `.claude/commands/` w git (via `!.claude/commands/` exception w `.gitignore`, obok `settings.json`).
+
 ## Commands
 
 Uruchamiać z **project root** (`/Users/cypriantalmon/Desktop/lokalni-web/`).
