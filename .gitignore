@@ -46,3 +46,6 @@ tsconfig.tsbuildinfo
 !.claude/settings.json
 !.claude/commands/
 .code-review-graph/
+
+# Backup files
+*.bak
