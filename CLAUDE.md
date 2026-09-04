@@ -223,6 +223,18 @@ Global singleton na `wss://api.mylokalni.pl`. Auto-connect na login, disconnect 
 
 Ten CLAUDE.md jest hubem — Claude Code pracujący w `lokalni-web` może z tego poziomu edytować dowolny z siostrzanych projektów na Desktop. Poniższe sekcje podają minimum żeby pracować. Każdy projekt ma osobne git repo — commity osobno.
 
+### GitHub repos (mapa)
+
+| Lokalna ścieżka | GitHub repo | Rola | Visibility |
+|---|---|---|---|
+| `lokalni-web` | `1Talmon/lokalni.pl-web` | Web (Next.js 15 + CF Pages) | Public |
+| `lokalni projekt` | `1Talmon/lokalni.pl-mobile` | Mobile (Vite + Capacitor iOS/Android) | Private |
+| `Lokalni API` | `1Talmon/lokalni.pl-api` | Backend główny (Fastify + Docker) | Private |
+| `Lokalni Admin` | `1Talmon/lokalni.pl-admin` | Admin panel frontend (Vite + Router) | Private |
+| `Lokalni Admin API` | `1Talmon/lokalni.pl-admin-api` | Admin backend (Fastify) | Private |
+
+Legacy `1Talmon/Lokalni.pl` — **ARCHIVED** (pre-cursor Admin panelu, read-only).
+
 **Kolejność startu przy full local dev:**
 1. Postgres + Redis + Meilisearch (via `docker-compose` w Lokalni API)
 2. `Lokalni API` (port 8080)
