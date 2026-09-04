@@ -2,7 +2,7 @@ export const runtime = 'edge';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import PublicProfileNoSSR from './PublicProfileNoSSR';
+import PublicProfileContent from './PublicProfileContent';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
 interface Props {
@@ -103,7 +103,7 @@ export default async function ProfilePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <PublicProfileNoSSR />
+            <PublicProfileContent />
         </>
     );
 }

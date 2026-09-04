@@ -480,7 +480,7 @@ const PublicProfileView = ({
                                     src={avatarUrl || '/default-profile-picture.webp'}
                                     className="w-full h-full object-cover pointer-events-none"
                                     alt="Avatar"
-                                    {...{ fetchpriority: 'high' }}
+                                    fetchPriority="high"
                                     decoding="async"
                                     onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-profile-picture.webp'; }}
                                 />

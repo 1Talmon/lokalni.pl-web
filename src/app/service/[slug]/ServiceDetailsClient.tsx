@@ -257,6 +257,8 @@ export default function ServiceDetailsClient() {
             : <motion.div {...slideIn} transition={slideTransition}>{sdvEl}</motion.div>)
         : null;
 
+    const isNative = Capacitor.isNativePlatform();
+
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />

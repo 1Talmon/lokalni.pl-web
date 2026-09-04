@@ -2,7 +2,7 @@ export const runtime = 'edge';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import ServiceDetailsNoSSR from './ServiceDetailsNoSSR';
+import ServiceDetailsContent from './ServiceDetailsContent';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
 interface Props {
@@ -114,7 +114,7 @@ export default async function ServicePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                 />
             )}
-            <ServiceDetailsNoSSR />
+            <ServiceDetailsContent />
         </>
     );
 }

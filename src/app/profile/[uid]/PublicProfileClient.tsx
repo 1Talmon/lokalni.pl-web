@@ -178,10 +178,12 @@ export default function PublicProfileClient() {
         />
     );
 
+    const isNative = Capacitor.isNativePlatform();
+
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {Capacitor.isNativePlatform()
+            {isNative
                 ? <div>{ppvEl}</div>
                 : <motion.div {...slideIn} transition={slideTransition}>{ppvEl}</motion.div>}
         </>

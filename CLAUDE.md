@@ -218,6 +218,7 @@ Global singleton na `wss://api.mylokalni.pl`. Auto-connect na login, disconnect 
 - **`build:cf` != `build`.** `next build` samo nie wygeneruje `.vercel/output/static/`. Zawsze uruchom `build:cf` żeby zweryfikować CF-specific behavior (`_headers`, edge runtime, static pages count).
 - **`packageManager: pnpm@10.15.0`** wpływa też na CI. Zmiana tej wartości wpłynie na deployment.
 - **HSTS w response** — CF nadpisuje `max-age=0`. Fix tylko w CF Dashboard → SSL/TLS → Edge Certificates → HSTS. `_headers` też deklaruje HSTS, ale CF wygrywa.
+- **Top-level strony poza `(app)/` nie dostają Navbar ani Footer** — `AppShell` (z `Navbar` + `Footer`) jest tylko w `(app)/layout.tsx`. Nowa top-level strona SEO która ma być publiczna (jak `/service/[slug]/`, `/profile/[uid]/`) musi **ręcznie dodać `<Navbar>` i `<Footer>`** w swoim Client-cie, warunkowo `!Capacitor.isNativePlatform()`. Wzorzec: `ServiceDetailsClient.tsx` i `PublicProfileClient.tsx`.
 
 ## Ecosystem — 5 projektów w monorepo-style workspace
 
@@ -299,6 +300,9 @@ npm run lint         # ESLint na src/
 - **WebSocket** na tym samym hoście (`wss://api.mylokalni.pl`) — `@fastify/websocket`.
 - **Docker w produkcji** — sprawdzaj logi przez `docker logs lokalni-api-1` (nie systemd, nie journalctl).
 - **API docs** w Notion (nie w plikach `.md` lokalnych).
+- **Serwery SSH:** `ssh main` = główny serwer (Docker, `/home/cyprian/docker/`), `ssh oracle` = load balancer (nginx, `/etc/nginx/conf.d/lokalni.conf`).
+- **CORS = nginx na oracle**, NIE Fastify. nginx stripuje nagłówki CORS z Fastify i podmienia z `map $http_origin $cors_allow_origin` w `/etc/nginx/conf.d/lokalni.conf`. Żeby dodać domenę do CORS: dodaj ją do tej mapy + `sudo nginx -s reload` na oracle. Zmiana `CORS_ORIGIN` env w api.env na `main` jest drugoplanowa (spójność konfiguracji), ale nie wystarczy sama.
+- **Faktyczny env API:** `/home/cyprian/docker/api.env` na `main` (nie `.env.server` z repo — to przestarzały szablon).
 
 ### 🛡️ Lokalni Admin API (admin backend)
 
@@ -395,6 +399,7 @@ Utrwalone zasady użytkownika — dotyczą **każdej** sesji w tym projekcie. Au
 - **Nie wgrywaj nic ręcznie na serwer** ani nie restartuj API — user robi to sam. Deploy web = git push (CF Pages CI). Deploy API = user robi Docker rebuild + push do ghcr.io + SSH.
 - **API docs = Notion** — nie edytuj lokalnych `.md` w `Lokalni API/` ani innych projektach. Sam `CLAUDE.md` i `.ai/` można edytować.
 - **Docker logi** — API działa w Dockerze. `docker logs lokalni-api-1` (nie systemd, nie journalctl).
+- **Serwery:** `ssh main` (Docker host — `/home/cyprian/docker/`) + `ssh oracle` (nginx LB — `/etc/nginx/conf.d/lokalni.conf`). CORS zarządza nginx na oracle, nie Fastify.
 - **Branche:** `dev` (working branch, deploy → `dev.mylokalni.pl`) + `main` (produkcja, deploy → `mylokalni.pl`). Nowe commity ZAWSZE na `dev`. `main` jest deployowany tylko przez fast-forward merge z zweryfikowanego dev.
 
 ## MCP: code-review-graph
