@@ -18,6 +18,7 @@ import { chatService, type ApiChatSession, type ApiMessage } from '../services/c
 import { apiClient } from '../services/apiClient';
 import { unregisterPushToken, takePendingNavigation, setActiveChatId } from '../services/pushNotificationService';
 import { createServiceUrl } from '../utils/helpers';
+import { navTransition } from '../utils/navTransition';
 import { isRemoteService, serviceMatchesLocation } from '../utils/serviceUtils';
 import { CITY_COORDS } from '../data/constants';
 import { Service, UserProfile, ToastNotification, ToastType } from '../types';
@@ -715,8 +716,10 @@ export const useAppLogic = () => {
             if (Capacitor.isNativePlatform()) {
                 sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY));
                 await NativeNav.push().catch(() => {});
+                router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
+            } else {
+                navTransition('push', () => router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`));
             }
-            router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
         },
         toggleFavorite: (publicId: string) => {
             if (!isLoggedIn) { router.push('/auth'); return; }

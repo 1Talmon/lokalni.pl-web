@@ -369,15 +369,24 @@ input[type="range"]::-webkit-slider-thumb:hover {
     backface-visibility: hidden;
 }
 
-/* View Transitions — przycisk "Wróć" w aplikacji (webNavigate + html.vt-inapp):
-   Old zostaje w pełni widoczny (animation:none), new wchodzi na wierzch (fade-in).
-   Cross-fade (oboje częściowo przeźroczyści) powoduje flash w Safari gdy canvas
-   Leaflet nie jest poprawnie uchwycony w screenshocie VT. */
-html.vt-inapp ::view-transition-old(root) {
-    animation: none;
+/* View Transitions — forward push (HomeView → ServiceDetails → PublicProfile) */
+html[data-nav-dir="push"] ::view-transition-old(root) {
+    animation: 200ms ease-in both vt-exit-left;
 }
-html.vt-inapp ::view-transition-new(root) {
-    animation: 100ms ease-out both vt-fade-in;
+html[data-nav-dir="push"] ::view-transition-new(root) {
+    animation: 200ms ease-out both vt-enter-right;
 }
-@keyframes vt-fade-in { from { opacity: 0; } }
+
+/* View Transitions — back pop */
+html[data-nav-dir="pop"] ::view-transition-old(root) {
+    animation: 160ms ease-in both vt-exit-right;
+}
+html[data-nav-dir="pop"] ::view-transition-new(root) {
+    animation: 160ms ease-out both vt-enter-left;
+}
+
+@keyframes vt-exit-left   { to   { transform: translateX(-24px); opacity: 0; } }
+@keyframes vt-enter-right { from { transform: translateX(24px);  opacity: 0; } }
+@keyframes vt-exit-right  { to   { transform: translateX(24px);  opacity: 0; } }
+@keyframes vt-enter-left  { from { transform: translateX(-24px); opacity: 0; } }
 

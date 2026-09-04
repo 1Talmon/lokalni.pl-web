@@ -12,6 +12,7 @@ import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
+import { navTransition } from '../../../utils/navTransition';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 
@@ -68,8 +69,10 @@ export default function ServiceDetailsClient() {
     const handleBack = useCallback(async () => {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
+            doNav();
+        } else {
+            navTransition('pop', doNav);
         }
-        doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
@@ -146,11 +149,14 @@ export default function ServiceDetailsClient() {
 
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
+        const url = `/profile/${service.provider.uid || createSlug(service.provider.name)}`;
         if (Capacitor.isNativePlatform()) {
             serviceScrollPositions.set(publicId, window.scrollY);
             await NativeNav.push().catch(() => {});
+            router.push(url);
+        } else {
+            navTransition('push', () => router.push(url));
         }
-        router.push(`/profile/${service.provider.uid || createSlug(service.provider.name)}`);
     }, [publicId, service, router]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
