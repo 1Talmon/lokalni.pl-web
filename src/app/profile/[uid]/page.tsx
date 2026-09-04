@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import PublicProfileNoSSR from './PublicProfileNoSSR';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
@@ -29,13 +30,7 @@ function normalizeMediaUrl(url: string | null | undefined): string | null {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { uid } = await params;
     const d = await fetchProfile(uid);
-
-    if (!d) {
-        return {
-            title: 'Profil specjalisty | MyLokalni.pl',
-            description: 'Znajdź lokalnych specjalistów na MyLokalni.pl.',
-        };
-    }
+    if (!d) notFound();
 
     const name = [d.imie, d.nazwisko].filter(Boolean).join(' ');
     const title = name ? `${name} – specjalista | MyLokalni.pl` : 'Profil specjalisty | MyLokalni.pl';
@@ -70,10 +65,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProfilePage({ params }: Props) {
     const { uid } = await params;
     const d = await fetchProfile(uid);
+    if (!d) notFound();
 
     let jsonLd: object | null = null;
 
-    if (d) {
+    {
         const name = [d.imie, d.nazwisko].filter(Boolean).join(' ');
         const image = normalizeMediaUrl(d.profilowe || d.zdjecieTla) ?? `${BASE_URL}/og-image.png`;
         const avgRating = parseFloat(d.avgRating) || 0;

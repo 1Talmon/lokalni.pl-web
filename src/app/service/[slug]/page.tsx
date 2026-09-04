@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import ServiceDetailsNoSSR from './ServiceDetailsNoSSR';
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 
@@ -35,13 +36,7 @@ function normalizeMediaUrl(url: string | null | undefined): string | null {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const d = await fetchService(slug);
-
-    if (!d) {
-        return {
-            title: 'Usługa | MyLokalni.pl',
-            description: 'Znajdź lokalnych specjalistów na MyLokalni.pl.',
-        };
-    }
+    if (!d) notFound();
 
     const cityPart = d.city ? ` w ${d.city}` : '';
     const title = `${d.title}${cityPart} | MyLokalni.pl`;
@@ -76,10 +71,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ServicePage({ params }: Props) {
     const { slug } = await params;
     const d = await fetchService(slug);
+    if (!d) notFound();
 
     let jsonLd: object | null = null;
 
-    if (d) {
+    {
         const cityPart = d.city ? ` w ${d.city}` : '';
         const image = normalizeMediaUrl(d.image || d.images?.[0] || d.provider?.profilowe) ?? `${BASE_URL}/og-image.png`;
         const rating = parseFloat(d.rating) || 0;
