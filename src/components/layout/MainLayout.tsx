@@ -5,6 +5,7 @@ import { NativeBottomNav, useNativeBottomNav } from '../../hooks/useNativeBottom
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useRouter, usePathname } from 'next/navigation';
+import { navDirection, setNavDirection } from '../../utils/navDirection';
 import { useMotionValue } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Navbar } from './Navbar';
@@ -79,24 +80,15 @@ export const MainLayout = ({
     const router = useRouter();
     const pathname = usePathname();
 
-    // Track navigation direction (POP vs PUSH) for CSS animations
-    const [navType, setNavType] = useState<'PUSH' | 'POP'>('PUSH');
-    const prevPathnameRef = useRef(pathname);
+    // navDirection jest zmienną modułową — czytana synchronicznie podczas renderu,
+    // więc setNavDirection('pop') w handleBack zadziała przed zamontowaniem nowej strony.
+    const enterClass = navDirection === 'pop' ? 'page-pop-back' : 'page-enter-forward';
+    useEffect(() => { setNavDirection('push'); }, [pathname]);
     useEffect(() => {
-        const prevIdx = SWIPE_TABS.indexOf(prevPathnameRef.current as typeof SWIPE_TABS[number]);
-        const currIdx = SWIPE_TABS.indexOf(pathname as typeof SWIPE_TABS[number]);
-        if (prevIdx !== -1 && currIdx !== -1 && prevIdx !== currIdx) {
-            setNavType(currIdx < prevIdx ? 'POP' : 'PUSH');
-        }
-        prevPathnameRef.current = pathname;
-    }, [pathname]);
-    useEffect(() => {
-        const onPop = () => setNavType('POP');
+        const onPop = () => setNavDirection('pop');
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
     }, []);
-
-    const enterClass = navType === 'POP' ? 'page-pop-back' : 'page-enter-forward';
     const isIos = Capacitor.getPlatform() === 'ios';
     const NO_GLOBAL_BACK = useMemo(() => new Set([...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard']), []);
     const showGlobalBack = !isIos
@@ -276,7 +268,9 @@ export const MainLayout = ({
     }, []);
 
     const hideFooterOn = ['/chat', '/dashboard', '/calendar', '/bookings', '/favorites', '/booking-form'];
-    const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation;
+    const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation
+        && !pathname.startsWith('/service/')
+        && !pathname.startsWith('/profile/');
 
     return (
         <div className="flex flex-col min-h-screen">

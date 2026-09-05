@@ -1,15 +1,16 @@
 'use client';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { UserX, ArrowLeft } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
-import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
+import { setNavDirection } from '../../../utils/navDirection';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
+import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 
@@ -30,15 +31,6 @@ function DeletedAccountView({ onBack }: { onBack: () => void }) {
     );
 }
 
-function useDelayedLoading(isLoading: boolean) {
-    const [show, setShow] = React.useState(false);
-    React.useEffect(() => {
-        if (!isLoading) { setShow(false); return; }
-        const t = setTimeout(() => setShow(true), 150);
-        return () => clearTimeout(t);
-    }, [isLoading]);
-    return show;
-}
 
 function NotFoundView() {
     const router = useRouter();
@@ -62,6 +54,8 @@ export default function PublicProfileClient() {
         router.back();
     }, [router]);
 
+    useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
+
     const fromFullScreenRef = useRef(false);
     useEffect(() => {
         const flag = sessionStorage.getItem('__fromFullScreen__');
@@ -72,6 +66,7 @@ export default function PublicProfileClient() {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
         }
+        setNavDirection('pop');
         doNav();
     }, [doNav]);
 
@@ -131,8 +126,7 @@ export default function PublicProfileClient() {
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }, [profile]);
 
-    const showLoading = useDelayedLoading(isLoading);
-    if (showLoading) return <LoadingScreen isVisible={true} />;
+    if (isLoading) return <LoadingScreen isVisible={true} />;
     if (isError || (!profile && !isLoading)) return !profile ? <NotFoundView /> : null;
     if ((profile as { deleted?: boolean })?.deleted) return <DeletedAccountView onBack={doNav} />;
     if (!profile) return <LoadingScreen isVisible={true} />;

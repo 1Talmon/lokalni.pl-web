@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
 import { apiClient } from '../../../services/apiClient';
@@ -10,8 +10,9 @@ import { mapApiService } from '../../../services/serviceService';
 import { createSlug } from '../../../utils/helpers';
 import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
-import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
+import { setNavDirection } from '../../../utils/navDirection';
+import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 
@@ -50,7 +51,6 @@ export default function ServiceDetailsClient() {
     const params = useParams();
     const id = params?.slug as string | undefined;
     const router = useRouter();
-    const queryClient = useQueryClient();
     const { state, actions } = useApp();
 
     const publicId = id ? id.split('-').pop()! : '';
@@ -58,6 +58,8 @@ export default function ServiceDetailsClient() {
     const doNav = useCallback(() => {
         router.back();
     }, [router]);
+
+    useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
     const fromFullScreenRef = useRef(false);
     useEffect(() => {
@@ -69,12 +71,11 @@ export default function ServiceDetailsClient() {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
         }
+        setNavDirection('pop');
         doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
-
-    const placeholder = state.selectedService?.publicId === publicId ? state.selectedService : undefined;
 
     const { data: service, isPending, isError } = useQuery({
         queryKey: ['service', publicId],
@@ -89,7 +90,6 @@ export default function ServiceDetailsClient() {
         enabled: !!publicId,
         staleTime: 1000 * 60,
         retry: false,
-        placeholderData: placeholder,
     });
 
     useEffect(() => {
@@ -146,43 +146,13 @@ export default function ServiceDetailsClient() {
 
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
-        const providerUid = service.provider.uid;
-        const url = `/profile/${providerUid || createSlug(service.provider.name)}`;
-
-        if (providerUid) {
-            const p = service.provider as import('../../../types').ProviderProfile;
-            queryClient.setQueryData(['public-profile', providerUid], {
-                imie: p.imie || p.name?.split(' ')[0] || '',
-                nazwisko: p.nazwisko || p.name?.split(' ').slice(1).join(' ') || '',
-                profilowe: p.profilowe || p.avatar || null,
-                bio: p.description || null,
-                online: false,
-                statusAktywnosci: '',
-                email: p.email ?? null,
-                telefon: p.telefon ?? null,
-                uid: providerUid,
-                deleted: p.deleted ?? false,
-                reviewsCount: p.reviewsCount,
-                avgRating: p.avgRating ?? p.rating,
-                servicesCount: p.servicesCount,
-                joinedYear: p.joinedYear ?? null,
-                joinedAt: p.joinedAt ?? null,
-                isPremium: p.isPremium ?? false,
-                zdjecieTla: p.zdjecieTla ?? null,
-                facebook: p.facebook ?? null,
-                instagram: p.instagram ?? null,
-                tiktok: p.tiktok ?? null,
-                website: p.website ?? null,
-            });
-            queryClient.invalidateQueries({ queryKey: ['public-profile', providerUid] });
-        }
-
+        const url = `/profile/${service.provider.uid || createSlug(service.provider.name)}`;
         if (Capacitor.isNativePlatform()) {
             serviceScrollPositions.set(publicId, window.scrollY);
             await NativeNav.push().catch(() => {});
         }
         router.push(url);
-    }, [publicId, service, router, queryClient]);
+    }, [publicId, service, router]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
         if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
@@ -192,11 +162,10 @@ export default function ServiceDetailsClient() {
     if (isError && !service) return null;
     if ((service as Service & { __deleted?: boolean })?.__deleted) return <DeletedServiceView onBack={doNav} />;
     if (!isPending && service === null) return <NotFoundView />;
+    if (isPending || state.isLoadingApp || !service) return <LoadingScreen isVisible={true} />;
 
     const isNative = Capacitor.isNativePlatform();
-    const showContent = !!service && !state.isLoadingApp;
-
-    const sdvEl = showContent ? (
+    const sdvEl = (
         <ServiceDetailsView
             service={service}
             isFavorite={state.favorites.includes(service.publicId ?? '') || (state.isLoggedIn && !!service.isFavorite)}
@@ -238,13 +207,12 @@ export default function ServiceDetailsClient() {
             isSupportOpen={state.activeModal === 'support'}
             showNotificationsOpen={state.showNotifications}
         />
-    ) : null;
+    );
 
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            <LoadingScreen isVisible={!showContent && !!(isPending || state.isLoadingApp)} />
-            {sdvEl && (isNative ? <div>{sdvEl}</div> : sdvEl)}
+            {isNative ? <div>{sdvEl}</div> : sdvEl}
         </>
     );
 }

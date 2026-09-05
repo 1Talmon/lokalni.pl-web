@@ -345,26 +345,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* ── Animacja wejścia strony (CSS — synchroniczna, bez WAAPI race) ─ */
 @keyframes pageEnterFade {
-    from { transform: translateX(20px); }
-    to   { transform: translateX(0); }
+    from { transform: translateX(20px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
 }
 .page-enter-forward {
-    animation: pageEnterFade 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-    will-change: transform;
+    animation: pageEnterFade 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    will-change: transform, opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
 
-/* Nawigacja wstecz (POP) — transform slide, opacity=1 przez cały czas.
-   Opacity < 1 pozwala starym GPU teksturom (mapa, zdjęcia) "przeświecać" przez
-   nową stronę w iOS WebKit compositor — transform tego nie robi bo warstwa jest zawsze nieprzezroczysta. */
 @keyframes pagePopSlide {
-    from { transform: translateX(-16px); }
-    to   { transform: translateX(0); }
+    from { transform: translateX(-16px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
 }
 .page-pop-back {
-    animation: pagePopSlide 0.13s ease-out both;
-    will-change: transform;
+    animation: pagePopSlide 0.15s ease-out both;
+    will-change: transform, opacity;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
