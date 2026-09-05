@@ -96,9 +96,7 @@ export const MainLayout = ({
         return () => window.removeEventListener('popstate', onPop);
     }, []);
 
-    // CSS fallback dla Firefox (brak VT). Chrome/Safari używają View Transitions z navTransition().
-    const supportsVT = typeof document !== 'undefined' && 'startViewTransition' in document;
-    const enterClass = supportsVT ? '' : (navType === 'POP' ? 'page-pop-back' : 'page-enter-forward');
+    const enterClass = navType === 'POP' ? 'page-pop-back' : 'page-enter-forward';
     const isIos = Capacitor.getPlatform() === 'ios';
     const NO_GLOBAL_BACK = useMemo(() => new Set([...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard']), []);
     const showGlobalBack = !isIos

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import NextTopLoader from 'nextjs-toploader';
 import '../index.css';
 import '../App.css';
 
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="pl" className={font.variable}>
             <body className={font.className}>
+                <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
                 {children}

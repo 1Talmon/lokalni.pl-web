@@ -12,7 +12,6 @@ import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
-import { navTransition } from '../../../utils/navTransition';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 
@@ -68,10 +67,8 @@ export default function ServiceDetailsClient() {
     const handleBack = useCallback(async () => {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-            doNav();
-        } else {
-            navTransition('pop', doNav);
         }
+        doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
@@ -154,7 +151,7 @@ export default function ServiceDetailsClient() {
             await NativeNav.push().catch(() => {});
             router.push(url);
         } else {
-            navTransition('push', () => router.push(url));
+            router.push(url);
         }
     }, [publicId, service, router]);
 

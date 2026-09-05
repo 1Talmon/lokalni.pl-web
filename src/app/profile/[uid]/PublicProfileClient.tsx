@@ -8,7 +8,6 @@ import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useApp } from '../../../providers/AppProvider';
-import { navTransition } from '../../../utils/navTransition';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
 import { useQuery } from '@tanstack/react-query';
@@ -72,10 +71,8 @@ export default function PublicProfileClient() {
     const handleBack = useCallback(async () => {
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-            doNav();
-        } else {
-            navTransition('pop', doNav);
         }
+        doNav();
     }, [doNav]);
 
     useNativeSwipeBack(doNav);
