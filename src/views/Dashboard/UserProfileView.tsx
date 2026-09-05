@@ -170,7 +170,7 @@ export const UserProfileView = ({
             const navEl = document.querySelector('[data-fixed-nav]') as HTMLElement | null;
             const navH = navEl ? navEl.getBoundingClientRect().height : 73;
             const contentTop = contentEl.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({ top: contentTop - navH - 22, behavior: 'smooth' });
+            window.scrollTo({ top: contentTop - navH - 20, behavior: 'smooth' });
         }
     };
 
