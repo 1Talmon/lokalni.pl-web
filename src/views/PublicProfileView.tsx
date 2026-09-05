@@ -35,6 +35,7 @@ import { useWsEvent } from '../hooks/useWebSocket';
 import { useSwipeBack } from '../hooks/useSwipeBack';
 import { useNativeNavBar, nativeShare } from '../hooks/useNativeNavBar';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
+import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 
 interface PublicProfileViewProps {
     provider: ProviderProfile | null;
@@ -161,6 +162,20 @@ const PublicProfileView = ({
         hidden: (isChatOpen && !reportConfig.isOpen) || galleryOpen || showReviewForm || showNotificationsOpen || profileViewerOpen || (newsFeedOpen && newsFeedLightboxOpen),
         isMapOpen: reportConfig.isOpen || certListOpen || newsFeedOpen,
     });
+
+    // Biały overlay na popstate: przykrywa canvas GPU layer, sticky nav i wszystko inne.
+    // Odpala się tylko dla browser-back / swipe-back (nie dla webNavigate z vt-running).
+    useEffect(() => {
+        const handlePop = () => {
+            if (document.documentElement.classList.contains('vt-running')) return;
+            if (isNative) return;
+            const overlay = createSafariOverlay();
+            const sdvRoot = document.querySelector('[data-sdv-root]');
+            revealAfterUnmount(overlay, sdvRoot);
+        };
+        window.addEventListener('popstate', handlePop, { capture: true });
+        return () => window.removeEventListener('popstate', handlePop, { capture: true });
+    }, [isNative]);
 
     useEffect(() => {
         const updateLimit = () => setVisibleLimit(window.innerWidth < 768 ? 3 : 6);
@@ -410,9 +425,21 @@ const PublicProfileView = ({
                 <ClientPortal>
                     <div
                         data-fixed-nav-px4
-                        className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-end px-4 h-12 pointer-events-none"
+                        className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
                         style={{ top: 'var(--total-nav-h, 73px)' }}
                     >
+                        {!isNative ? (
+                            <button
+                                onClick={onBack}
+                                type="button"
+                                aria-label="Wróć"
+                                className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
+                                style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm || reportConfig.isOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
+                            >
+                                <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
+                                <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
+                            </button>
+                        ) : <div />}
                         <button
                             onClick={handleShare}
                             type="button"

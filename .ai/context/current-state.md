@@ -7,18 +7,19 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-05 09:35 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-05 14:44 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **1**
-- Ahead of origin: **6** commits
+- Uncommitted files: **5**
+- Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
+98fb870 chore(ai): sync current-state.md po sesji
 8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
 dd0c057 perf(nav): instant navigation gdy dane są w React Query cache
 18971a3 fix(nav): overlay LoadingScreen na poziomie AppShell (poza CSS transform)
@@ -28,12 +29,28 @@ d430cbf perf(nav): płynna nawigacja push/pop — toploader + CSS + LoadingScree
 7b839bc perf(nav): pre-seed React Query cache przed przejściem na PublicProfile
 e069760 perf(nav): usuń API fetche z (app)/service i (app)/profile page.tsx
 05fcc75 fix(nav): zastąp View Transitions API progresem + animacją CSS
-c684425 fix(nav): napraw cofanie i opóźnienie przy przejściu między stronami
 ```
 
 <!-- AI_AUTO_END -->
 
 ## Historia sesji
+
+### 2026-09-05 (sesja 2) — UI fixes + scroll lock refactor
+
+**Zmiany (niezcommitowane, na dev):**
+
+1. **`AddServiceModal.tsx`** — layout Kategoria / Cena / Rozliczenie przepisany z `grid-cols-1 + nested flex` na płaski `grid-cols-1 sm:grid-cols-3`. Na mobile każde pole full-width (poprzednio Cena i Rozliczenie były po 50% ściśnięte obok siebie).
+
+2. **`scrollLock.ts`** — usunięty `position: fixed; top: -scrollY; width: 100%` z web-path lockScroll. Root cause jumpa: `position: fixed` wyjmuje body z normal flow co powoduje reflow w Next.js. Nowe podejście: tylko CSS class — `body { overflow: hidden }` propaguje do viewportu (browser quirk), zamrażając scroll bez layout shift. `window.scrollTo(0, savedScrollY)` jako safety net w unlock.
+
+3. **`App.css`** — usunięty `scrollbar-gutter: stable` z `body {}`. Był przyczyną podwójnej kompensacji: spec CSS zachowuje gutter przy `overflow: hidden`, więc body miał już 1265px szerokości — dodatkowy `padding-right: 15px` z klasy `scroll-locked` zawężał go do 1250px → treść skakała w lewo.
+
+4. **`MainLayout.tsx`** — przywrócony footer na `/service/*` i `/profile/*`. Był explicite wykluczony w `shouldShowFooter` (`&& !pathname.startsWith('/service/')` itp.). Footer pojawia się tylko `hidden md:block` (desktop), co jest ok.
+
+**Do zrobienia:**
+- Commit + push na `dev` → verify → merge main
+
+---
 
 ### 2026-09-05 — fix nawigacji service/profile + prefetch cache
 

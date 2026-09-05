@@ -527,49 +527,47 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                                 ))}
                                             </select>
                                         </div>
-                                        <div className="sm:col-span-2 flex gap-3">
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1.5">
-                                                    <label className={LABEL.replace('mb-1.5', '')}>{isOffer ? 'Cena' : 'Budżet'}</label>
-                                                    {(isFetchingPriceHint || isSuggestingCategory) && <Loader2 size={11} className="animate-spin text-indigo-400" />}
-                                                    {!isFetchingPriceHint && !isSuggestingCategory && priceHint && (
-                                                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
-                                                            <Sparkles size={10} />
-                                                            {priceHint.min === priceHint.max
-                                                                ? `~${priceHint.min} zł`
-                                                                : `${priceHint.min}–${priceHint.max} zł`}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number" name="price" required min="1" step="1"
-                                                        defaultValue={editingService ? parsePrice(editingService.price) : ''}
-                                                        className={INPUT + " pl-7"}
-                                                        placeholder="1"
-                                                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Podaj kwotę bez groszy, co najmniej 1 zł')}
-                                                        onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                                                    />
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">zł</span>
-                                                </div>
+                                        <div>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <label className={LABEL.replace('mb-1.5', '')}>{isOffer ? 'Cena' : 'Budżet'}</label>
+                                                {(isFetchingPriceHint || isSuggestingCategory) && <Loader2 size={11} className="animate-spin text-indigo-400" />}
+                                                {!isFetchingPriceHint && !isSuggestingCategory && priceHint && (
+                                                    <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
+                                                        <Sparkles size={10} />
+                                                        {priceHint.min === priceHint.max
+                                                            ? `~${priceHint.min} zł`
+                                                            : `${priceHint.min}–${priceHint.max} zł`}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1.5">
-                                                    <label className={LABEL.replace('mb-1.5', '')}>Rozliczenie</label>
-                                                    {isSuggestingCategory && <Loader2 size={11} className="animate-spin text-indigo-400" />}
-                                                    {!isSuggestingCategory && priceUnitAutoSet && (
-                                                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
-                                                            <Sparkles size={10} /> Sugerowane
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <select name="priceUnit" value={priceUnitValue} onChange={e => { setPriceUnitValue(e.target.value); setPriceUnitAutoSet(false); }} className={INPUT}>
-                                                    <option value="za usługę">za usługę</option>
-                                                    <option value="za godzinę">za godzinę</option>
-                                                    <option value="za m²">za m²</option>
-                                                    <option value="za sztukę">za sztukę</option>
-                                                </select>
+                                            <div className="relative">
+                                                <input
+                                                    type="number" name="price" required min="1" step="1"
+                                                    defaultValue={editingService ? parsePrice(editingService.price) : ''}
+                                                    className={INPUT + " pl-7"}
+                                                    placeholder="1"
+                                                    onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Podaj kwotę bez groszy, co najmniej 1 zł')}
+                                                    onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
+                                                />
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">zł</span>
                                             </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <label className={LABEL.replace('mb-1.5', '')}>Rozliczenie</label>
+                                                {isSuggestingCategory && <Loader2 size={11} className="animate-spin text-indigo-400" />}
+                                                {!isSuggestingCategory && priceUnitAutoSet && (
+                                                    <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
+                                                        <Sparkles size={10} /> Sugerowane
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <select name="priceUnit" value={priceUnitValue} onChange={e => { setPriceUnitValue(e.target.value); setPriceUnitAutoSet(false); }} className={INPUT}>
+                                                <option value="za usługę">za usługę</option>
+                                                <option value="za godzinę">za godzinę</option>
+                                                <option value="za m²">za m²</option>
+                                                <option value="za sztukę">za sztukę</option>
+                                            </select>
                                         </div>
                                     </div>
 

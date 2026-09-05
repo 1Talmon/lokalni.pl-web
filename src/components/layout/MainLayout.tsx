@@ -95,6 +95,7 @@ export const MainLayout = ({
         && !NO_GLOBAL_BACK.has(pathname)
         && !pathname.startsWith('/service/')
         && !pathname.startsWith('/profile/');
+    const isDetailRoute = pathname.startsWith('/service/') || pathname.startsWith('/profile/');
     const [isFooterVisible, setIsFooterVisible] = useState(false);
     const [, setNativeNavActive] = useState(false);
     const footerRef = useRef<HTMLElement>(null);
@@ -268,9 +269,7 @@ export const MainLayout = ({
     }, []);
 
     const hideFooterOn = ['/chat', '/dashboard', '/calendar', '/bookings', '/favorites', '/booking-form'];
-    const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation
-        && !pathname.startsWith('/service/')
-        && !pathname.startsWith('/profile/');
+    const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation;
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -289,7 +288,7 @@ export const MainLayout = ({
                     </button>
                 </div>
             )}
-            <div ref={navWrapperRef} data-fixed-nav style={{ paddingTop: 'env(safe-area-inset-top, 0px)', backgroundColor: '#FFFFFF' }} className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 min-w-[300px]">
+            <div ref={navWrapperRef} data-fixed-nav style={{ paddingTop: 'env(safe-area-inset-top, 0px)', backgroundColor: isDetailRoute ? 'transparent' : '#FFFFFF' }} className={`fixed top-0 left-0 right-0 z-50 min-w-[300px]${isDetailRoute ? '' : ' border-b border-gray-100'}`}>
                 <Navbar
                     userProfile={userProfile}
                     isLoggedIn={isLoggedIn}
