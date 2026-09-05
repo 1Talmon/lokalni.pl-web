@@ -74,15 +74,15 @@ export default function PublicProfileClient() {
 
     const { profile, isOnline, activityStatus, isLoading, isError } = usePublicProfile(uid);
 
-    // Show AppShell-level nav loading overlay (outside any CSS transform context)
+    // Show AppShell-level nav loading overlay — only when there's no cached data
     useEffect(() => {
-        actions.setNavLoading(true);
+        if (isLoading) actions.setNavLoading(true);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => {
-        if (!isLoading && profile !== undefined && !state.isLoadingApp) {
+        if (!isLoading && !state.isLoadingApp) {
             actions.setNavLoading(false);
         }
-    }, [isLoading, profile, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isLoading, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const { data: servicesData } = useQuery({
         queryKey: ['provider-services', uid],

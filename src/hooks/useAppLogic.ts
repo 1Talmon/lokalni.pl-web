@@ -716,7 +716,10 @@ export const useAppLogic = () => {
         removeToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
         onServiceClick: async (s: Service) => {
             setSelectedService(s);
-            if (!Capacitor.isNativePlatform()) setIsNavLoading(true);
+            if (!Capacitor.isNativePlatform()) {
+                const cached = queryClient.getQueryData(['service', s.publicId]);
+                if (!cached) setIsNavLoading(true);
+            }
             if (Capacitor.isNativePlatform()) {
                 sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY));
                 await NativeNav.push().catch(() => {});

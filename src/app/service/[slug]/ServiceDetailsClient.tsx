@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
 import { apiClient } from '../../../services/apiClient';
@@ -50,6 +50,7 @@ export default function ServiceDetailsClient() {
     const params = useParams();
     const id = params?.slug as string | undefined;
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { state, actions } = useApp();
 
     const publicId = id ? id.split('-').pop()! : '';
@@ -92,9 +93,9 @@ export default function ServiceDetailsClient() {
         retry: false,
     });
 
-    // Show AppShell-level nav loading overlay (outside any CSS transform context)
+    // Show AppShell-level nav loading overlay — only when there's no cached data
     useEffect(() => {
-        actions.setNavLoading(true);
+        if (isPending) actions.setNavLoading(true);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!isPending && (service !== undefined || isError) && !state.isLoadingApp) {
@@ -156,14 +157,18 @@ export default function ServiceDetailsClient() {
 
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
-        const url = `/profile/${service.provider.uid || createSlug(service.provider.name)}`;
-        if (!Capacitor.isNativePlatform()) actions.setNavLoading(true);
+        const uid = service.provider.uid || createSlug(service.provider.name);
+        const url = `/profile/${uid}`;
+        if (!Capacitor.isNativePlatform()) {
+            const cached = queryClient.getQueryData(['public-profile', uid]);
+            if (!cached) actions.setNavLoading(true);
+        }
         if (Capacitor.isNativePlatform()) {
             serviceScrollPositions.set(publicId, window.scrollY);
             await NativeNav.push().catch(() => {});
         }
         router.push(url);
-    }, [publicId, service, router, actions]);
+    }, [publicId, service, router, actions, queryClient]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
         if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
