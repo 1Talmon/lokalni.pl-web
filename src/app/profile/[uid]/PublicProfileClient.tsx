@@ -10,16 +10,9 @@ import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
+import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
-
-function PageSpinner() {
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="w-8 h-8 border-2 border-indigo-500 rounded-full border-t-transparent animate-spin" />
-        </div>
-    );
-}
 
 function DeletedAccountView({ onBack }: { onBack: () => void }) {
     return (
@@ -133,10 +126,10 @@ export default function PublicProfileClient() {
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }, [profile]);
 
-    if (isLoading) return <PageSpinner />;
+    if (isLoading) return <LoadingScreen isVisible={true} />;
     if (isError || (!profile && !isLoading)) return !profile ? <NotFoundView /> : null;
     if ((profile as { deleted?: boolean })?.deleted) return <DeletedAccountView onBack={doNav} />;
-    if (!profile) return <PageSpinner />;
+    if (!profile) return <LoadingScreen isVisible={true} />;
 
     const isNative = Capacitor.isNativePlatform();
 

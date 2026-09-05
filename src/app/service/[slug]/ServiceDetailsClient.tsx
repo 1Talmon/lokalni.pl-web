@@ -12,18 +12,11 @@ import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
+import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 
 const serviceScrollPositions = new Map<string, number>();
-
-function PageSpinner() {
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="w-8 h-8 border-2 border-indigo-500 rounded-full border-t-transparent animate-spin" />
-        </div>
-    );
-}
 
 function DeletedServiceView({ onBack }: { onBack: () => void }) {
     return (
@@ -169,7 +162,7 @@ export default function ServiceDetailsClient() {
     if (isError && !service) return null;
     if ((service as Service & { __deleted?: boolean })?.__deleted) return <DeletedServiceView onBack={doNav} />;
     if (!isPending && service === null) return <NotFoundView />;
-    if (isPending || state.isLoadingApp || !service) return <PageSpinner />;
+    if (isPending || state.isLoadingApp || !service) return <LoadingScreen isVisible={true} />;
 
     const isNative = Capacitor.isNativePlatform();
     const sdvEl = (
