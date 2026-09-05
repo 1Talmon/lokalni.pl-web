@@ -83,6 +83,8 @@ export const UserProfileView = ({
     const mobileNavRef = useRef<HTMLDivElement>(null);
     const desktopScrollAnchorRef = useRef<HTMLDivElement>(null);
     const profileCardRef = useRef<HTMLDivElement>(null);
+    const sidebarSpacerRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     // NAPRAWA TYPU USERDATA
     const userData = user;
@@ -391,6 +393,54 @@ export const UserProfileView = ({
         setDashBgUrl(zdjecieTla);
     }, [zdjecieTla]);
 
+    useEffect(() => {
+        const spacer = sidebarSpacerRef.current;
+        const sidebar = sidebarRef.current;
+        if (!spacer || !sidebar) return;
+
+        let isFixed = false;
+
+        const update = (isResize = false) => {
+            const rect = spacer.getBoundingClientRect();
+            const navH = parseFloat(
+                getComputedStyle(document.documentElement).getPropertyValue('--total-nav-h')
+            ) || 73;
+            const shouldFix = rect.top <= navH + 20;
+
+            if (shouldFix && !isFixed) {
+                isFixed = true;
+                sidebar.style.position = 'fixed';
+                sidebar.style.top = `calc(var(--total-nav-h, 73px) + 20px)`;
+                sidebar.style.width = `${spacer.offsetWidth}px`;
+                sidebar.style.left = `${rect.left}px`;
+            } else if (!shouldFix && isFixed) {
+                isFixed = false;
+                sidebar.style.position = '';
+                sidebar.style.top = '';
+                sidebar.style.width = '';
+                sidebar.style.left = '';
+            } else if (isFixed && isResize) {
+                sidebar.style.width = `${spacer.offsetWidth}px`;
+                sidebar.style.left = `${spacer.getBoundingClientRect().left}px`;
+            }
+        };
+
+        update();
+        const onScroll = () => update(false);
+        const onResize = () => update(true);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
+        return () => {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onResize);
+            if (isFixed) {
+                sidebar.style.position = '';
+                sidebar.style.top = '';
+                sidebar.style.width = '';
+                sidebar.style.left = '';
+            }
+        };
+    }, []);
 
     const handleCopyLink = () => {
         if (currentUid) {
@@ -774,8 +824,11 @@ export const UserProfileView = ({
                 </div>
 
                 <div ref={contentAnchorRef} className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative mt-6">
-                    <div className="hidden lg:block lg:col-span-3 self-start sticky" style={{ top: 'calc(var(--total-nav-h, 73px) + 20px)' }}>
-                    <div className="flex flex-col gap-6 z-[20]">
+                    <div ref={sidebarSpacerRef} className="hidden lg:block lg:col-span-3">
+                    <div
+                        ref={sidebarRef}
+                        className="flex flex-col gap-6 z-[20]"
+                    >
                         <nav className="hidden lg:flex bg-white p-3 rounded-[2rem] shadow-sm border border-gray-100 flex-col gap-1 overflow-hidden">
                             <NavBtn active={activeTab === 'dashboard'} onClick={() => handleTabChange('dashboard')} icon={<Layout size={20}/>} label="Pulpit" />
                             <NavBtn active={activeTab === 'orders'} onClick={() => handleTabChange('orders')} icon={<ClipboardList size={20}/>} label="Rezerwacje" />
