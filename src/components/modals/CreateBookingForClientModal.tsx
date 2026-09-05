@@ -89,7 +89,7 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
     ).flat();
 
     return createPortal(
-        <div className="fixed inset-0 z-[300]">
+        <div className="fixed inset-0 z-[100002]">
             {/* Backdrop — fades in real time with drag gesture */}
             <motion.div
                 style={{ opacity: backdropOpacity }}
