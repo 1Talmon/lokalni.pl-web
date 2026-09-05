@@ -4,10 +4,9 @@ import { BASE_URL, ALL_KEYWORDS } from '@/lib/seo-data';
 export const dynamic = 'force-static';
 export const revalidate = 86400;
 
-const LAST_MODIFIED = '2025-06-01';
-
 function u(loc: string, priority: string, changefreq: string) {
-    return `  <url><loc>${loc}</loc><lastmod>${LAST_MODIFIED}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+    const today = new Date().toISOString().slice(0, 10);
+    return `  <url><loc>${loc}</loc><lastmod>${today}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
 }
 
 export function GET() {
