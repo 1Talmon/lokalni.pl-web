@@ -28,7 +28,6 @@
 
 html {
   height: -webkit-fill-available;
-  scrollbar-gutter: stable;
 }
 
 html.scroll-locked body {

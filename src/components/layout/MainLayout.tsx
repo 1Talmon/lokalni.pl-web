@@ -270,6 +270,8 @@ export const MainLayout = ({
 
     const hideFooterOn = ['/chat', '/dashboard', '/calendar', '/bookings', '/favorites', '/booking-form'];
     const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation;
+    // Route-only check — stable during modal open (doesn't depend on hideNavigation or isFooterVisible)
+    const hasRouteFooter = !isOnTabRoute && !hideFooterOn.includes(pathname);
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -308,8 +310,8 @@ export const MainLayout = ({
                 className="flex-grow bg-[#F4F4F9]"
                 style={{
                     paddingTop: 'var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px)))',
-                    // Native strip extends to screen bottom; non-strip routes need bottom padding
-                    paddingBottom: isNativeTabStrip ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
+                    // hasRouteFooter: stable (pathname-only), never changes on modal open → no layout jump
+                    paddingBottom: (isNativeTabStrip || hasRouteFooter) ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
                 }}
             >
                 <Suspense fallback={Capacitor.isNativePlatform() ? <LoadingScreen isVisible={true} /> : null}>
@@ -361,6 +363,7 @@ export const MainLayout = ({
                                     <div
                                         key={pathname}
                                         className={(pathname === '/support' || pathname.startsWith('/chat/') || pathname === '/dashboard') ? '' : enterClass}
+                                        style={hasRouteFooter ? { paddingBottom: 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))' } : undefined}
                                         onAnimationEnd={(e) => {
                                             if (e.currentTarget === e.target) {
                                                 const el = e.currentTarget as HTMLDivElement;
