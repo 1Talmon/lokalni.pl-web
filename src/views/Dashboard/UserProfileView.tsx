@@ -398,7 +398,6 @@ export const UserProfileView = ({
         const sidebar = sidebarRef.current;
         if (!spacer || !sidebar) return;
 
-        const naturalH = sidebar.offsetHeight;
         let isFixed = false;
 
         const update = (isResize = false) => {
@@ -406,19 +405,16 @@ export const UserProfileView = ({
             const navH = parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue('--total-nav-h')
             ) || 73;
-            const threshold = navH + 20;
-            const shouldFix = rect.top <= threshold;
+            const shouldFix = rect.top <= navH + 20;
 
             if (shouldFix && !isFixed) {
                 isFixed = true;
-                spacer.style.minHeight = `${naturalH}px`;
                 sidebar.style.position = 'fixed';
                 sidebar.style.top = `calc(var(--total-nav-h, 73px) + 20px)`;
                 sidebar.style.width = `${spacer.offsetWidth}px`;
                 sidebar.style.left = `${rect.left}px`;
             } else if (!shouldFix && isFixed) {
                 isFixed = false;
-                spacer.style.minHeight = '';
                 sidebar.style.position = '';
                 sidebar.style.top = '';
                 sidebar.style.width = '';
@@ -437,6 +433,12 @@ export const UserProfileView = ({
         return () => {
             window.removeEventListener('scroll', onScroll);
             window.removeEventListener('resize', onResize);
+            if (isFixed) {
+                sidebar.style.position = '';
+                sidebar.style.top = '';
+                sidebar.style.width = '';
+                sidebar.style.left = '';
+            }
         };
     }, []);
 
