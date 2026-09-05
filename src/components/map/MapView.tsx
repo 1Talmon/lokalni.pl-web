@@ -374,7 +374,12 @@ export const MapView = ({
                     map.panTo(cityCoords);
                     map.setZoom(11);
                 } else {
-                    map.fitBounds(bounds, 80);
+                    // Na mobile bottom sheet zakrywa ~35% ekranu — padding asymetryczny
+                    const isMobile = window.innerWidth < 768;
+                    const padding = isMobile
+                        ? { top: 40, right: 20, bottom: Math.round(window.innerHeight * 0.35), left: 20 }
+                        : 80;
+                    map.fitBounds(bounds, padding);
                 }
             } else {
                 map.panTo(cityCoords);

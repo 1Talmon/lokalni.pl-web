@@ -7,18 +7,20 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-05 16:26 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-05 17:12 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **0**
-- Ahead of origin: **6** commits
+- Uncommitted files: **1**
+- Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
+f898365 fix(scrollLock): napraw fałszywy window.scrollTo przy odmontowaniu komponentu
+34a5b98 chore(ai): sync current-state.md
 2946427 Revert "fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item"
 7cab805 fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item
 945ccb1 fix(dashboard): usuń minHeight ze spacera — grid CSS sam utrzymuje layout
@@ -27,13 +29,26 @@ c9dfa45 fix(dashboard): napraw sticky sidebar — position fixed przez scroll li
 f6bd03b fix(ui): przezroczysty navbar + floating pillsy na service/profile + back button na PublicProfile mobile
 98fb870 chore(ai): sync current-state.md po sesji
 8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
-dd0c057 perf(nav): instant navigation gdy dane są w React Query cache
-18971a3 fix(nav): overlay LoadingScreen na poziomie AppShell (poza CSS transform)
 ```
 
 <!-- AI_AUTO_END -->
 
 ## Historia sesji
+
+### 2026-09-05 (sesja 3) — fix: scrollLock spurious restore przy nawigacji z dashboard subviews
+
+**Problem:** Po wejściu w Zarobki / Opinie / Wyświetlenia, otwarciu prawego sidebara, zamknięciu go i przejściu do innej strony — powrót na Dashboard nie scrollował do góry.
+
+**Root cause:** `unlockScroll()` w `scrollLock.ts` zawsze wywoływał `window.scrollTo(0, _savedScrollY)` gdy `_savedScrollY > 0`. Cleanup React (`return () => unlockScroll()`) odpala się przy odmontowaniu komponentu (np. `EarningsDetail` znika gdy user przechodzi do innego tabu) — w tym momencie `_savedScrollY` ciągle przechowywał starą pozycję scrolla z czasu blokady, więc `window.scrollTo` strzelał do niej podczas przejścia Next.js.
+
+**Fix:** `scrollLock.ts` — `unlockScroll` sprawdza `wasLocked` (czy klasa `scroll-locked` faktycznie była na `<html>`) zanim wywoła `window.scrollTo`. Gdy cleanup odpala po normalnym zamknięciu sidebara, klasa jest już usunięta → `wasLocked = false` → brak fałszywego scroll restore.
+
+**Porównanie z lokalni projekt:** Mobile używa `body{position:fixed}` — `unlockScroll` sprawdza `wasFixed = document.body.style.position === 'fixed'` jako guard. Lokalni-web usunął `position:fixed` (słusznie, bo reflow w Next.js) ale nie dodał ekwiwalentu — naprawione przez użycie klasy CSS jako state trackera.
+
+**Commit:** `f898365` — `fix(scrollLock): napraw fałszywy window.scrollTo przy odmontowaniu komponentu`
+**Status:** commit na dev, pushed ✅
+
+---
 
 ### 2026-09-05 (sesja 2) — UI fixes + scroll lock refactor
 

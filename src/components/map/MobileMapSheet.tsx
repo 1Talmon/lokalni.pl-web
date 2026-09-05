@@ -396,10 +396,6 @@ export const MobileMapSheet = ({ services, onServiceClick, location, onClose }: 
 
     const handleMapReady = useCallback((map: google.maps.Map) => {
         mapRef.current = map;
-        // Na mobile przesuń mapę do góry ekranu, żeby domyślny bottom sheet nie zakrywał klastrów
-        if (window.innerWidth < 768) {
-            setTimeout(() => { map.panBy(0, Math.round(window.innerHeight * 0.14)); }, 350);
-        }
     }, []);
     const handleBoundsChange = useCallback((visible: Service[]) => {
         visibleServicesRef.current = visible;
@@ -542,7 +538,7 @@ export const MobileMapSheet = ({ services, onServiceClick, location, onClose }: 
                 {/* Body */}
                 <div className="flex-1 overflow-hidden flex">
                     {/* Mapa */}
-                    <div className="flex-1 overflow-hidden relative">
+                    <div className="flex-1 overflow-hidden relative" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
                         <MapFallback
                             services={services}
                             onServiceClick={onServiceClick}
