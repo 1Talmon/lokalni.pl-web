@@ -13,6 +13,8 @@ import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
+import { NavbarPublic } from '../../../components/layout/NavbarPublic';
+import { Footer } from '../../../components/layout/Footer';
 import type { Service } from '../../../types';
 
 const serviceScrollPositions = new Map<string, number>();
@@ -228,7 +230,15 @@ export default function ServiceDetailsClient() {
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {isNative ? <div>{sdvEl}</div> : sdvEl}
+            {isNative ? (
+                <div>{sdvEl}</div>
+            ) : (
+                <div className="min-h-screen flex flex-col bg-[#F4F4F9]">
+                    <NavbarPublic />
+                    <div className="flex-1">{sdvEl}</div>
+                    <Footer />
+                </div>
+            )}
         </>
     );
 }

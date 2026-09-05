@@ -10,6 +10,8 @@ import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
+import { NavbarPublic } from '../../../components/layout/NavbarPublic';
+import { Footer } from '../../../components/layout/Footer';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 
@@ -164,7 +166,15 @@ export default function PublicProfileClient() {
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {isNative ? <div>{ppvEl}</div> : ppvEl}
+            {isNative ? (
+                <div>{ppvEl}</div>
+            ) : (
+                <div className="min-h-screen flex flex-col bg-[#F4F4F9]">
+                    <NavbarPublic />
+                    <div className="flex-1">{ppvEl}</div>
+                    <Footer />
+                </div>
+            )}
         </>
     );
 }
