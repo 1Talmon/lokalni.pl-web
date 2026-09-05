@@ -7,33 +7,63 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-04 14:10 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-05 09:35 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **0**
-- Ahead of origin: **0** commits
+- Uncommitted files: **1**
+- Ahead of origin: **6** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-0e71621 chore(cf-pages): cleanup wrangler.json do Pages-only format
-462d0d1 chore(gitignore): ignore *.bak (pnpm-lock.yaml.bak i podobne)
-ed88e0a docs(deploy): preview URL to dev.lokalni-pl-web.pages.dev (branch alias, bez custom domain)
-eced143 docs(deploy): dev-first workflow — push dev → dev.mylokalni.pl preview → merge do main
-e5abc6b docs(claude): sekcja Feedback rules — utrwalone zasady współpracy team-shared
-be00e61 feat(ai): slash commands /deploy-web /review-code /build-capacitor (thin wrappers)
-1af16bf feat(ai): auto-refresh .ai/context/current-state.md via Claude Code SessionStart hook
-51a98cd docs(ai): wypełnij .ai/ brief + skille + architecture + link z CLAUDE.md
-fce2c73 docs(claude): rozszerz CLAUDE.md o cross-project hub (5 projektów ecosystemu)
-9cbeb2c docs(claude): przepisz CLAUDE.md od zera pod Next.js/CF Pages, usuń przestarzały src/CLAUDE.md
+8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
+dd0c057 perf(nav): instant navigation gdy dane są w React Query cache
+18971a3 fix(nav): overlay LoadingScreen na poziomie AppShell (poza CSS transform)
+b664106 fix(nav): przywróć LoadingScreen (startup spinner) podczas ładowania service/profile
+1ee93c6 fix(nav): zamień LoadingScreen splash na prosty spinner podczas ładowania stron
+d430cbf perf(nav): płynna nawigacja push/pop — toploader + CSS + LoadingScreen
+7b839bc perf(nav): pre-seed React Query cache przed przejściem na PublicProfile
+e069760 perf(nav): usuń API fetche z (app)/service i (app)/profile page.tsx
+05fcc75 fix(nav): zastąp View Transitions API progresem + animacją CSS
+c684425 fix(nav): napraw cofanie i opóźnienie przy przejściu między stronami
 ```
 
 <!-- AI_AUTO_END -->
 
 ## Historia sesji
+
+### 2026-09-05 — fix nawigacji service/profile + prefetch cache
+
+**Problem:** LoadingScreen przy przejściu na `/service/*` i `/profile/*` "wjeżdżał z prawej" zamiast pokrywać cały ekran. Root cause: `position:fixed` wewnątrz przodka z `transform:translateX` (animacja `page-enter-forward`) pozycjonuje się względem rodzica, nie viewportu.
+
+**Rozwiązanie — navigation overlay pattern:**
+- `isNavLoading: boolean` dodany do `AppState` + `setNavLoading` do `AppActions`
+- `LoadingScreen` renderowany w `AppShell` (przed `<MainLayout>`) — poza jakimkolwiek transform context
+- `onServiceClick` + `handleOpenProfile`: `setNavLoading(true)` **przed** `router.push` — overlay instant na klik
+- `ServiceDetailsClient` / `PublicProfileClient`: `setNavLoading(true)` na mount (fallback), `setNavLoading(false)` gdy dane gotowe
+- `handleBack`: `setNavLoading(false)` przed cofaniem (brak overlay przy back navigation)
+- Safety net w AppShell: reset przy każdej zmianie pathname poza `/service/` i `/profile/`
+- `isNavLoading` inicjalizowany `true` przy direct URL (brak flesza startup→page loading)
+
+**Cache / prefetch fix:**
+- Prefetch on hover w `HomeView` (już istniał, 150ms debounce) — naprawiono queryFn: używa `mapApiService` zamiast surowych danych API (był bug: cache zapisywał `imie/nazwisko/profilowe`, component oczekiwał `provider.name/avatar`)
+- `staleTime: 10 * 60 * 1000` wszędzie (service, publicProfile, prefetch) — spójność
+- Warm cache → zero loading screen (check `queryClient.getQueryData` przed `setNavLoading`)
+
+**Commity sesji (na dev, nie pushowane):**
+```
+8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
+dd0c057 perf(nav): instant navigation gdy dane są w React Query cache
+18971a3 fix(nav): overlay LoadingScreen na poziomie AppShell (poza CSS transform)
+```
+
+**Do zrobienia:**
+- Push na dev → verify preview → merge --ff-only main → push main
+
+---
 
 ### 2026-09-04 — audit Vite → Next.js, fazy 1-4 + infra hygiene
 
