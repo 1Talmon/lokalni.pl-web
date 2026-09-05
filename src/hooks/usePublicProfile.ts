@@ -32,7 +32,7 @@ export const usePublicProfile = (uid: string | undefined) => {
     queryKey: ['public-profile', uid],
     queryFn: () => authService.fetchPublicProfile(uid!),
     enabled: !!uid,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 10 * 60 * 1000,
     retry: false,
   });
 

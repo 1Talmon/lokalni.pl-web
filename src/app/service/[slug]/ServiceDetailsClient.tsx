@@ -89,7 +89,7 @@ export default function ServiceDetailsClient() {
             try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
         },
         enabled: !!publicId,
-        staleTime: 1000 * 60,
+        staleTime: 10 * 60 * 1000,
         retry: false,
     });
 

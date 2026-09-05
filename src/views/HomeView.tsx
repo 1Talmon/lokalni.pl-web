@@ -16,7 +16,7 @@ import { Service, Category } from '../types';
 import { createServiceUrl } from '../utils/helpers';
 import { MobileMapSheet } from '../components/map/MobileMapSheet';
 import { UserAvatar } from '../components/ui/UserAvatar';
-import { serviceService } from '../services/serviceService';
+import { serviceService, mapApiService } from '../services/serviceService';
 import { apiClient } from '../services/apiClient';
 
 
@@ -167,8 +167,13 @@ const HomeView = ({
         prefetchTimerRef.current = setTimeout(() => {
             queryClient.prefetchQuery({
                 queryKey: ['service', publicId],
-                queryFn: () => apiClient.get(`/services/${publicId}`).then(r => r.json()).then(j => j.data ?? j),
-                staleTime: 60 * 1000,
+                queryFn: async () => {
+                    const res = await apiClient.get(`/services/${publicId}`);
+                    if (!res.ok) throw new Error(`server_${res.status}`);
+                    const json = await res.json();
+                    return mapApiService(json.data ?? json);
+                },
+                staleTime: 10 * 60 * 1000,
             });
         }, 150);
     };
