@@ -12,7 +12,6 @@ import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
-import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 
@@ -68,12 +67,13 @@ export default function ServiceDetailsClient() {
     }, []);
 
     const handleBack = useCallback(async () => {
+        actions.setNavLoading(false);
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
         }
         setNavDirection('pop');
         doNav();
-    }, [doNav]);
+    }, [doNav, actions]);
 
     useNativeSwipeBack(doNav);
 
@@ -91,6 +91,16 @@ export default function ServiceDetailsClient() {
         staleTime: 1000 * 60,
         retry: false,
     });
+
+    // Show AppShell-level nav loading overlay (outside any CSS transform context)
+    useEffect(() => {
+        actions.setNavLoading(true);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (!isPending && (service !== undefined || isError) && !state.isLoadingApp) {
+            actions.setNavLoading(false);
+        }
+    }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (!service || (service as Service & { __deleted?: boolean }).__deleted) return;
@@ -147,12 +157,13 @@ export default function ServiceDetailsClient() {
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
         const url = `/profile/${service.provider.uid || createSlug(service.provider.name)}`;
+        if (!Capacitor.isNativePlatform()) actions.setNavLoading(true);
         if (Capacitor.isNativePlatform()) {
             serviceScrollPositions.set(publicId, window.scrollY);
             await NativeNav.push().catch(() => {});
         }
         router.push(url);
-    }, [publicId, service, router]);
+    }, [publicId, service, router, actions]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
         if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
@@ -162,7 +173,7 @@ export default function ServiceDetailsClient() {
     if (isError && !service) return null;
     if ((service as Service & { __deleted?: boolean })?.__deleted) return <DeletedServiceView onBack={doNav} />;
     if (!isPending && service === null) return <NotFoundView />;
-    if (isPending || state.isLoadingApp || !service) return <LoadingScreen isVisible={true} />;
+    if (isPending || state.isLoadingApp || !service) return null;
 
     const isNative = Capacitor.isNativePlatform();
     const sdvEl = (

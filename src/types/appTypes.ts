@@ -50,6 +50,7 @@ export interface AppState {
     favServices: Service[];
     homeProps: HomeProps;
     isFullScreen: boolean;
+    isNavLoading: boolean;
 }
 
 export interface HomeActions {
@@ -99,4 +100,5 @@ export interface AppActions {
     handleBookingReschedule: (chatId: string | null, bookingId: number | string, newDate: string, newTime?: string) => void | Promise<void>;
     handleCreateBookingForClient: (sessionId: string, date: string, time: string | undefined, servicePublicId: string, recurrence?: { interval: 'weekly' | 'biweekly' | 'monthly'; count: number }) => Promise<void>;
     handleUpgradeToPremium: () => void;
+    setNavLoading: (v: boolean) => void;
 }

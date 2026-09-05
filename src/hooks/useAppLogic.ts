@@ -127,6 +127,10 @@ export const useAppLogic = () => {
     // gone → we silently restore it via the httpOnly refreshToken cookie before
     // rendering any authenticated content or opening the WebSocket.
     const [isLoadingApp, setIsLoadingApp] = useState(true);
+    // Start true on service/profile routes so there's no flash between startup loading and page loading
+    const [isNavLoading, setIsNavLoading] = useState(
+        () => pathname.startsWith('/service/') || pathname.startsWith('/profile/')
+    );
 
     useEffect(() => {
         if (!isLoggedIn) { setIsLoadingApp(false); return; }
@@ -694,7 +698,7 @@ export const useAppLogic = () => {
         isLoggedIn, userProfile, freshUser, unreadNotifications, hasUnreadMessages, notificationList,
         showNotifications, location, favorites: Array.from(effectiveFavoriteIds), chatSessions, selectedService,
         isBookingLoading, servicesLoading, toasts, activeModal, currentChatId, currentChatServiceId,
-        initialChatText, editingServiceId, editingServiceFull, allServices, reportData, supportContext, activeSupportTicketId, isLoadingApp,
+        initialChatText, editingServiceId, editingServiceFull, allServices, reportData, supportContext, activeSupportTicketId, isLoadingApp, isNavLoading,
         myDashboardServices: myServices,
         favServices,
         homeProps: {
@@ -712,6 +716,7 @@ export const useAppLogic = () => {
         removeToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
         onServiceClick: async (s: Service) => {
             setSelectedService(s);
+            if (!Capacitor.isNativePlatform()) setIsNavLoading(true);
             if (Capacitor.isNativePlatform()) {
                 sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY));
                 await NativeNav.push().catch(() => {});
@@ -871,6 +876,7 @@ export const useAppLogic = () => {
         setShowNotifications,
         setCurrentChatId,
         setActiveModal,
+        setNavLoading: setIsNavLoading,
         handleAvatarUpdate: async (url: string) => {
             setUserProfile(prev => prev ? { ...prev, avatar: url } : prev);
         },

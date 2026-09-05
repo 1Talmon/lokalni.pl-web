@@ -218,7 +218,13 @@ function AppShellContent({ children }: AppShellProps) {
         ) : null,
     ];
 
-    const showLoadingScreen = !Capacitor.isNativePlatform() && !!state.isLoadingApp;
+    const showLoadingScreen = !Capacitor.isNativePlatform() && (!!state.isLoadingApp || !!state.isNavLoading);
+
+    // Safety net — reset nav loading when leaving service/profile routes
+    useEffect(() => {
+        const isNavRoute = pathname.startsWith('/service/') || pathname.startsWith('/profile/');
+        if (!isNavRoute) actions.setNavLoading(false);
+    }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <ErrorBoundary context="App">

@@ -10,7 +10,6 @@ import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
-import { LoadingScreen } from '../../../components/ui/LoadingScreen';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 
@@ -63,16 +62,27 @@ export default function PublicProfileClient() {
     }, []);
 
     const handleBack = useCallback(async () => {
+        actions.setNavLoading(false);
         if (Capacitor.isNativePlatform()) {
             await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
         }
         setNavDirection('pop');
         doNav();
-    }, [doNav]);
+    }, [doNav, actions]);
 
     useNativeSwipeBack(doNav);
 
     const { profile, isOnline, activityStatus, isLoading, isError } = usePublicProfile(uid);
+
+    // Show AppShell-level nav loading overlay (outside any CSS transform context)
+    useEffect(() => {
+        actions.setNavLoading(true);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (!isLoading && profile !== undefined && !state.isLoadingApp) {
+            actions.setNavLoading(false);
+        }
+    }, [isLoading, profile, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const { data: servicesData } = useQuery({
         queryKey: ['provider-services', uid],
@@ -126,10 +136,10 @@ export default function PublicProfileClient() {
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }, [profile]);
 
-    if (isLoading) return <LoadingScreen isVisible={true} />;
-    if (isError || (!profile && !isLoading)) return !profile ? <NotFoundView /> : null;
+    if (isLoading) return null;
+    if (isError) return null;
     if ((profile as { deleted?: boolean })?.deleted) return <DeletedAccountView onBack={doNav} />;
-    if (!profile) return <LoadingScreen isVisible={true} />;
+    if (!profile) return <NotFoundView />;
 
     const isNative = Capacitor.isNativePlatform();
 
