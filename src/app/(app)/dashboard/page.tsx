@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../../providers/AppProvider';
 import { UserProfileView } from '../../../views/Dashboard/UserProfileView';
@@ -8,6 +9,12 @@ import { NativeNav } from '../../../plugins/NativeNav';
 export default function DashboardPage() {
     const { state, actions } = useApp();
     const router = useRouter();
+
+    useEffect(() => {
+        if (!state.isLoggedIn && !state.isLoadingApp) {
+            router.replace('/auth');
+        }
+    }, [state.isLoggedIn, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openChat = async (chatId: string) => {
         if (Capacitor.isNativePlatform()) {
@@ -28,10 +35,7 @@ export default function DashboardPage() {
         }
     };
 
-    if (!state.isLoggedIn && !state.isLoadingApp) {
-        router.replace('/auth');
-        return null;
-    }
+    if (!state.isLoggedIn && !state.isLoadingApp) return null;
 
     return (
         <UserProfileView

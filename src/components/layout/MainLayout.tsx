@@ -358,7 +358,18 @@ export const MainLayout = ({
                             </div>
                             {!isOnTabRoute && (
                                 <>
-                                    <div key={pathname} className={(pathname === '/support' || pathname.startsWith('/chat/')) ? '' : enterClass}>
+                                    <div
+                                        key={pathname}
+                                        className={(pathname === '/support' || pathname.startsWith('/chat/') || pathname === '/dashboard') ? '' : enterClass}
+                                        onAnimationEnd={(e) => {
+                                            if (e.currentTarget === e.target) {
+                                                const el = e.currentTarget as HTMLDivElement;
+                                                el.style.willChange = 'auto';
+                                                el.style.backfaceVisibility = 'visible';
+                                                (el.style as unknown as Record<string, string>).webkitBackfaceVisibility = 'visible';
+                                            }
+                                        }}
+                                    >
                                         {children}
                                     </div>
                                     {shouldShowFooter && (

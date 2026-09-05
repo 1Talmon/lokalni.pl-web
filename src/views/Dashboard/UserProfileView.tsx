@@ -84,8 +84,7 @@ export const UserProfileView = ({
     const desktopScrollAnchorRef = useRef<HTMLDivElement>(null);
     const profileCardRef = useRef<HTMLDivElement>(null);
     const sidebarSpacerRef = useRef<HTMLDivElement>(null);
-    const [sidebarFixed, setSidebarFixed] = useState(false);
-    const [sidebarFixedRect, setSidebarFixedRect] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     // NAPRAWA TYPU USERDATA
     const userData = user;
@@ -396,20 +395,48 @@ export const UserProfileView = ({
 
     useEffect(() => {
         const spacer = sidebarSpacerRef.current;
-        if (!spacer) return;
-        const update = () => {
+        const sidebar = sidebarRef.current;
+        if (!spacer || !sidebar) return;
+
+        const naturalH = sidebar.offsetHeight;
+        let isFixed = false;
+
+        const update = (isResize = false) => {
             const rect = spacer.getBoundingClientRect();
-            const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--total-nav-h')) || 73;
+            const navH = parseFloat(
+                getComputedStyle(document.documentElement).getPropertyValue('--total-nav-h')
+            ) || 73;
             const threshold = navH + 20;
-            setSidebarFixed(rect.top <= threshold);
-            setSidebarFixedRect({ left: rect.left, width: rect.width });
+            const shouldFix = rect.top <= threshold;
+
+            if (shouldFix && !isFixed) {
+                isFixed = true;
+                spacer.style.minHeight = `${naturalH}px`;
+                sidebar.style.position = 'fixed';
+                sidebar.style.top = `calc(var(--total-nav-h, 73px) + 20px)`;
+                sidebar.style.width = `${spacer.offsetWidth}px`;
+                sidebar.style.left = `${rect.left}px`;
+            } else if (!shouldFix && isFixed) {
+                isFixed = false;
+                spacer.style.minHeight = '';
+                sidebar.style.position = '';
+                sidebar.style.top = '';
+                sidebar.style.width = '';
+                sidebar.style.left = '';
+            } else if (isFixed && isResize) {
+                sidebar.style.width = `${spacer.offsetWidth}px`;
+                sidebar.style.left = `${spacer.getBoundingClientRect().left}px`;
+            }
         };
+
         update();
-        window.addEventListener('scroll', update, { passive: true });
-        window.addEventListener('resize', update);
+        const onScroll = () => update(false);
+        const onResize = () => update(true);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
         return () => {
-            window.removeEventListener('scroll', update);
-            window.removeEventListener('resize', update);
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onResize);
         };
     }, []);
 
@@ -696,7 +723,7 @@ export const UserProfileView = ({
                                     <img
                                         key={currentAvatarUrl}
                                         src={currentAvatarUrl}
-                                        {...{ fetchpriority: 'high' }}
+                                        fetchPriority="high"
                                         onLoadStart={() => {
                                             imgTimerRef.current = setTimeout(() => setIsImgLoading(true), 250);
                                         }}
@@ -797,16 +824,8 @@ export const UserProfileView = ({
                 <div ref={contentAnchorRef} className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative mt-6">
                     <div ref={sidebarSpacerRef} className="hidden lg:block lg:col-span-3">
                     <div
+                        ref={sidebarRef}
                         className="flex flex-col gap-6 z-[20]"
-                        style={sidebarFixed ? {
-                            position: 'fixed',
-                            top: 'calc(var(--total-nav-h, 73px) + 20px)',
-                            left: sidebarFixedRect.left,
-                            width: sidebarFixedRect.width,
-                        } : {
-                            position: 'sticky',
-                            top: 'calc(var(--total-nav-h, 73px) + 20px)',
-                        }}
                     >
                         <nav className="hidden lg:flex bg-white p-3 rounded-[2rem] shadow-sm border border-gray-100 flex-col gap-1 overflow-hidden">
                             <NavBtn active={activeTab === 'dashboard'} onClick={() => handleTabChange('dashboard')} icon={<Layout size={20}/>} label="Pulpit" />
