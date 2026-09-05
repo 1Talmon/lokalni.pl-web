@@ -2,7 +2,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
 import { NativeNav } from '../../../plugins/NativeNav';
 import { apiClient } from '../../../services/apiClient';
@@ -50,6 +50,7 @@ export default function ServiceDetailsClient() {
     const params = useParams();
     const id = params?.slug as string | undefined;
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { state, actions } = useApp();
 
     const publicId = id ? id.split('-').pop()! : '';
@@ -145,15 +146,43 @@ export default function ServiceDetailsClient() {
 
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
-        const url = `/profile/${service.provider.uid || createSlug(service.provider.name)}`;
+        const providerUid = service.provider.uid;
+        const url = `/profile/${providerUid || createSlug(service.provider.name)}`;
+
+        if (providerUid) {
+            const p = service.provider as import('../../../types').ProviderProfile;
+            queryClient.setQueryData(['public-profile', providerUid], {
+                imie: p.imie || p.name?.split(' ')[0] || '',
+                nazwisko: p.nazwisko || p.name?.split(' ').slice(1).join(' ') || '',
+                profilowe: p.profilowe || p.avatar || null,
+                bio: p.description || null,
+                online: false,
+                statusAktywnosci: '',
+                email: p.email ?? null,
+                telefon: p.telefon ?? null,
+                uid: providerUid,
+                deleted: p.deleted ?? false,
+                reviewsCount: p.reviewsCount,
+                avgRating: p.avgRating ?? p.rating,
+                servicesCount: p.servicesCount,
+                joinedYear: p.joinedYear ?? null,
+                joinedAt: p.joinedAt ?? null,
+                isPremium: p.isPremium ?? false,
+                zdjecieTla: p.zdjecieTla ?? null,
+                facebook: p.facebook ?? null,
+                instagram: p.instagram ?? null,
+                tiktok: p.tiktok ?? null,
+                website: p.website ?? null,
+            });
+            queryClient.invalidateQueries({ queryKey: ['public-profile', providerUid] });
+        }
+
         if (Capacitor.isNativePlatform()) {
             serviceScrollPositions.set(publicId, window.scrollY);
             await NativeNav.push().catch(() => {});
-            router.push(url);
-        } else {
-            router.push(url);
         }
-    }, [publicId, service, router]);
+        router.push(url);
+    }, [publicId, service, router, queryClient]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
         if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
