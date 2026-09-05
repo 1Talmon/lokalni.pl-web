@@ -16,7 +16,7 @@ import { UserProfile, NotificationItem } from '@/types';
 
 // Strip fills from below the top navbar to the physical screen bottom.
 // Slots add paddingBottom = native tab bar height so content scrolls above the bar.
-const STRIP_H = 'calc(100vh - var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))) - var(--web-bottom-nav-h, 0px))';
+const STRIP_H = 'calc(100vh - var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))))';
 
 interface MainLayoutProps {
     userProfile: UserProfile | null;
@@ -316,7 +316,7 @@ export const MainLayout = ({
                     {tabElements ? (
                         <>
                             {/* Tab strip — zawsze zamontowany; display:none na sub-stronach zachowuje drzewo React */}
-                            <div style={{ height: STRIP_H, display: isOnTabRoute ? 'block' : 'none' }}>
+                            <div style={{ height: STRIP_H, display: isOnTabRoute ? 'block' : 'none', background: 'white' }}>
                                 <div
                                     ref={tabScrollRef}
                                     onScroll={handleTabScroll}
@@ -327,6 +327,7 @@ export const MainLayout = ({
                                         overflowY: 'hidden',
                                         display: 'flex',
                                         scrollSnapType: 'x mandatory',
+                                        paddingBottom: 'var(--web-bottom-nav-h, 0px)',
                                     }}
                                 >
                                     {SWIPE_TABS.map((tab, i) => (
