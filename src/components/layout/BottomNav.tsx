@@ -58,7 +58,7 @@ export const BottomNav = ({ currentView, onChangeView, onAddClick, hasUnreadMess
     const baseClass = 'w-full min-h-[56px] lg:min-h-[48px] flex flex-col items-center justify-center gap-1 active:opacity-60';
 
     return (
-        <nav className="relative w-full px-6 pt-3 pb-0 lg:px-6 lg:pt-2 lg:pb-0 lg:mx-auto lg:mb-6 lg:w-[95%] lg:max-w-lg lg:rounded-2xl lg:bg-white lg:shadow-2xl lg:border lg:border-gray-200">
+        <nav className="relative w-full px-6 pt-3 pb-0 lg:px-6 lg:pt-2 lg:pb-0 lg:mx-auto lg:mb-6 lg:w-[95%] lg:max-w-lg lg:rounded-2xl lg:bg-white lg:shadow-2xl lg:border lg:border-gray-200 lg:pointer-events-auto">
             {scrollProgress && <SwipeIndicator scrollProgress={scrollProgress} />}
             <div className="grid grid-cols-5 items-center">
                 <motion.button

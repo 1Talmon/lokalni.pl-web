@@ -268,16 +268,6 @@ export const MainLayout = ({
         return () => clearTimeout(scrollDebounceRef.current);
     }, []);
 
-    const handleNavWheel = useCallback((e: React.WheelEvent) => {
-        if (!isOnTabRoute) return;
-        const idx = SWIPE_TABS.indexOf(pathnameRef.current as typeof SWIPE_TABS[number]);
-        if (idx < 0) return;
-        const slot = tabScrollRef.current?.children[idx] as HTMLElement | undefined;
-        if (!slot) return;
-        const delta = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * slot.clientHeight : e.deltaY;
-        slot.scrollBy({ top: delta, left: 0 });
-    }, [isOnTabRoute]);
-
     const hideFooterOn = ['/chat', '/dashboard', '/calendar', '/bookings', '/favorites', '/booking-form'];
     const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation;
 
@@ -402,9 +392,8 @@ export const MainLayout = ({
                 <div
                     ref={bottomNavWrapperRef}
                     data-fixed-bottom-nav
-                    onWheel={handleNavWheel}
                     style={{ paddingBottom: 'var(--bottom-nav-pb, 0px)' }}
-                    className={`fixed bottom-0 left-0 right-0 z-50 min-w-[300px] bg-white/80 backdrop-blur-xl border-t border-gray-200/50 lg:bg-transparent lg:backdrop-blur-none lg:border-t-0 transition-[transform,opacity] duration-150 transform ${
+                    className={`fixed bottom-0 left-0 right-0 z-50 min-w-[300px] bg-white/80 backdrop-blur-xl border-t border-gray-200/50 lg:bg-transparent lg:backdrop-blur-none lg:border-t-0 lg:pointer-events-none transition-[transform,opacity] duration-150 transform ${
                         (isFooterVisible && pathname !== '/calendar')
                             ? 'translate-y-full opacity-0 pointer-events-none'
                             : 'translate-y-0 opacity-100'
