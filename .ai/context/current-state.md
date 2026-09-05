@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-05 14:44 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-05 16:26 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **5**
-- Ahead of origin: **0** commits
+- Uncommitted files: **0**
+- Ahead of origin: **6** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
+2946427 Revert "fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item"
+7cab805 fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item
+945ccb1 fix(dashboard): usuń minHeight ze spacera — grid CSS sam utrzymuje layout
+d3f7220 fix(dashboard): wyrównaj offset scroll-to z progiem fixowania sidebara
+c9dfa45 fix(dashboard): napraw sticky sidebar — position fixed przez scroll listener
+f6bd03b fix(ui): przezroczysty navbar + floating pillsy na service/profile + back button na PublicProfile mobile
 98fb870 chore(ai): sync current-state.md po sesji
 8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
 dd0c057 perf(nav): instant navigation gdy dane są w React Query cache
 18971a3 fix(nav): overlay LoadingScreen na poziomie AppShell (poza CSS transform)
-b664106 fix(nav): przywróć LoadingScreen (startup spinner) podczas ładowania service/profile
-1ee93c6 fix(nav): zamień LoadingScreen splash na prosty spinner podczas ładowania stron
-d430cbf perf(nav): płynna nawigacja push/pop — toploader + CSS + LoadingScreen
-7b839bc perf(nav): pre-seed React Query cache przed przejściem na PublicProfile
-e069760 perf(nav): usuń API fetche z (app)/service i (app)/profile page.tsx
-05fcc75 fix(nav): zastąp View Transitions API progresem + animacją CSS
 ```
 
 <!-- AI_AUTO_END -->
