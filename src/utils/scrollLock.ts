@@ -23,13 +23,15 @@ export const lockScroll = (): void => {
 };
 
 export const unlockScroll = (): void => {
+    const wasLocked = document.documentElement.classList.contains('scroll-locked');
     document.documentElement.classList.remove('scroll-locked');
     document.documentElement.style.removeProperty('--scrollbar-w');
 
     if (Capacitor.isNativePlatform()) {
         document.documentElement.style.overflow = '';
-    } else if (_savedScrollY > 0) {
-        // Safety net: restore scroll position in case browser reset it.
+    } else if (wasLocked && _savedScrollY > 0) {
+        // Restore scroll only if we actually locked it — prevents spurious
+        // window.scrollTo calls from unmount cleanup after scroll is already restored.
         window.scrollTo(0, _savedScrollY);
     }
 };
