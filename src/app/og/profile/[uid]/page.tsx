@@ -55,6 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: bio,
             ...(image ? { images: [image] } : {}),
         },
+        other: { 'fb:app_id': '1082296997226159' },
     };
 }
 

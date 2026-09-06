@@ -47,6 +47,7 @@ export const metadata: Metadata = {
         canonical: BASE_URL,
         languages: { 'pl': BASE_URL },
     },
+    other: { 'fb:app_id': '1082296997226159' },
     manifest: '/manifest.json',
     appleWebApp: {
         capable: true,
