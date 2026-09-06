@@ -13,7 +13,7 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
         name: s.title,
         description: typeof s.description === 'string' ? s.description.slice(0, 500) : undefined,
         url: `${BASE_URL}/service/${slug}`,
-        image: s.image || (Array.isArray(s.images) ? s.images[0] : undefined) || undefined,
+        image: s.ogImage || s.image || (Array.isArray(s.images) ? s.images[0] : undefined) || undefined,
         offers: s.price ? {
             '@type': 'Offer',
             price: String(s.price),
