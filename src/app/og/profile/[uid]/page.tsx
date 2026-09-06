@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? `${profile.bio.slice(0, 155).trimEnd()}…`
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
     const url = `${BASE_URL}/profile/${uid}`;
-    const image = (profile.profilowe || profile.avatar) as string | undefined;
+    const image = (profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined;
 
     return {
         title,
