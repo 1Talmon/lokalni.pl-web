@@ -1,35 +1,30 @@
 import { NextResponse } from 'next/server';
-import { BASE_URL, ALL_KEYWORDS, CATEGORIES, TOP_CITIES, EXTRA_CITIES, ALL_CITIES } from '@/lib/seo-data';
+import { API_URL } from '@/lib/seo-data';
 
-export const dynamic = 'force-static';
+export const runtime = 'edge';
 export const revalidate = 86400;
 
-const LAST_MODIFIED = '2025-06-01';
-
-function u(loc: string, priority: string, changefreq: string) {
-    return `  <url><loc>${loc}</loc><lastmod>${LAST_MODIFIED}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
-}
-
-export function GET() {
-    const urls: string[] = [
-        ...ALL_CITIES.map(city => u(`${BASE_URL}/${city}`, '0.8', 'daily')),
-    ];
-
-    for (const kw of ALL_KEYWORDS) {
-        for (const city of TOP_CITIES) {
-            urls.push(u(`${BASE_URL}/${kw}-${city}`, '0.9', 'daily'));
+export async function GET() {
+    try {
+        const res = await fetch(`${API_URL}/public/sitemap/locations`, {
+            headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
+            next: { revalidate: 86400 },
+        });
+        if (res.ok) {
+            const xml = await res.text();
+            return new NextResponse(xml, {
+                headers: {
+                    'Content-Type': 'application/xml; charset=utf-8',
+                    'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+                },
+            });
         }
+    } catch {
+        // API unavailable — return empty sitemap
     }
 
-    for (const cat of CATEGORIES) {
-        for (const city of EXTRA_CITIES) {
-            urls.push(u(`${BASE_URL}/${cat}-${city}`, '0.8', 'daily'));
-        }
-    }
-
-    const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
-
-    return new NextResponse(body, {
+    const empty = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>`;
+    return new NextResponse(empty, {
         headers: { 'Content-Type': 'application/xml; charset=utf-8' },
     });
 }

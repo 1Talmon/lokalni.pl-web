@@ -61,6 +61,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const url = `${BASE_URL}/${slug}`;
 
+    const services = parsed.type === 'city'
+        ? await fetchServices(null, parsed.city)
+        : await fetchServices(parsed.keyword, parsed.city ?? null);
+    const noindex = services.length === 0 ? { robots: { index: false, follow: true } } : {};
+
     if (parsed.type === 'city') {
         const city = CITY_DISPLAY[parsed.city] ?? parsed.city;
         const cityLoc = CITY_LOCATIVE[parsed.city] ?? city;
@@ -71,6 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             alternates: { canonical: url },
             openGraph: { title, description, url, type: 'website', images: [{ url: `${BASE_URL}/og-image.png` }], siteName: 'MyLokalni.pl', locale: 'pl_PL' },
             twitter: { card: 'summary_large_image', title, description },
+            ...noindex,
         };
     }
 
@@ -89,6 +95,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         alternates: { canonical: url },
         openGraph: { title, description, url, type: 'website', images: [{ url: `${BASE_URL}/og-image.png` }], siteName: 'MyLokalni.pl', locale: 'pl_PL' },
         twitter: { card: 'summary_large_image', title, description },
+        ...noindex,
     };
 }
 
