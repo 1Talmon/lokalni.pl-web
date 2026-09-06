@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import { BASE_URL, API_URL } from '@/lib/seo-data';
+import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? `${profile.bio.slice(0, 155).trimEnd()}…`
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
     const url = `${BASE_URL}/profile/${uid}`;
-    const image = (profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined;
+    const image = ((profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined) ?? DEFAULT_OG_IMAGE;
 
     return {
         title,

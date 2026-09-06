@@ -1,7 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import { BASE_URL, API_URL } from '@/lib/seo-data';
+import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import ServiceDetailsContent from './ServiceDetailsContent';
 
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const description = buildDescription(service);
     const url = `${BASE_URL}/service/${slug}`;
     // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
-    const image = (service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined;
+    const image = ((service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined) ?? DEFAULT_OG_IMAGE;
 
     return {
         title,
