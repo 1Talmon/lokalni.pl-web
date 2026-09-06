@@ -20,7 +20,7 @@ async function fetchServices(keyword: string | null, city: string | null) {
     try {
         const params = new URLSearchParams({ limit: '24', sort: 'rating' });
         if (city) params.set('city', CITY_DISPLAY[city] ?? city);
-        if (keyword) params.set('search', KEYWORD_DISPLAY[keyword] ?? keyword.replace(/-/g, ' '));
+        if (keyword) params.set('query', KEYWORD_DISPLAY[keyword] ?? keyword.replace(/-/g, ' '));
 
         const res = await fetch(`${API_URL}/services?${params}`, {
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
