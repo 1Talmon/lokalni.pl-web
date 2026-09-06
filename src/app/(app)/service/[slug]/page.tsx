@@ -38,7 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = `${service.title}${city} | MyLokalni.pl`;
     const description = buildDescription(service);
     const url = `${BASE_URL}/service/${slug}`;
-    const image = (service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined;
+    // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
+    const image = (service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined;
 
     return {
         title,
