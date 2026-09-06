@@ -1,4 +1,4 @@
-export const dynamicParams = false;
+export const runtime = 'edge';
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -8,13 +8,9 @@ import {
     API_URL, BASE_URL,
     parseLandingSlug,
     CITY_DISPLAY, CITY_LOCATIVE, KEYWORD_DISPLAY,
-    LANDING_SLUGS, POPULAR_KEYWORDS,
+    POPULAR_KEYWORDS,
 } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
-
-export async function generateStaticParams() {
-    return Array.from(LANDING_SLUGS).map(slug => ({ slug }));
-}
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -128,10 +124,24 @@ export default async function SlugPage({ params }: Props) {
             ],
         };
 
+        const itemListJsonLd = services.length > 0 ? {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: h1,
+            numberOfItems: services.length,
+            itemListElement: (services as Record<string, unknown>[]).slice(0, 10).map((s, i) => {
+                const id = (s.publicId ?? s.id) as string | undefined;
+                const title = s.title as string | undefined;
+                const svcSlug = id && title ? createServiceUrl(title, id) : null;
+                return { '@type': 'ListItem', position: i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
+            }).filter(item => item.url),
+        } : null;
+
         return (
             <>
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+                {itemListJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />}
                 <div className="min-h-screen bg-gray-50">
                     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -220,10 +230,24 @@ export default async function SlugPage({ params }: Props) {
         ],
     };
 
+    const itemListJsonLd = services.length > 0 ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: h1,
+        numberOfItems: services.length,
+        itemListElement: (services as Record<string, unknown>[]).slice(0, 10).map((s, i) => {
+            const id = (s.publicId ?? s.id) as string | undefined;
+            const title = s.title as string | undefined;
+            const svcSlug = id && title ? createServiceUrl(title, id) : null;
+            return { '@type': 'ListItem', position: i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
+        }).filter(item => item.url),
+    } : null;
+
     return (
         <>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+            {itemListJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />}
             <div className="min-h-screen bg-gray-50">
                 <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
