@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description,
             url,
             type: 'website',
-            ...(image ? { images: [{ url: image }] } : {}),
+            ...(image ? { images: [{ url: image, width: 1200, height: 630 }] } : {}),
         },
         twitter: {
             card: 'summary_large_image',
