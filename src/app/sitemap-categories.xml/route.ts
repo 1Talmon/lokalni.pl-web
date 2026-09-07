@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { BASE_URL, ALL_KEYWORDS } from '@/lib/seo-data';
+import { BASE_URL, ALL_KEYWORDS, ALL_CITIES } from '@/lib/seo-data';
 
 export const dynamic = 'force-static';
-export const revalidate = 86400;
 
-const LAST_MODIFIED = '2025-06-01';
+const TODAY = new Date().toISOString().slice(0, 10);
 
 function u(loc: string, priority: string, changefreq: string) {
-    return `  <url><loc>${loc}</loc><lastmod>${LAST_MODIFIED}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
+    return `  <url><loc>${loc}</loc><lastmod>${TODAY}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
 }
 
 export function GET() {
@@ -20,6 +19,7 @@ export function GET() {
         u(`${BASE_URL}/regulamin`,             '0.5', 'monthly'),
         u(`${BASE_URL}/polityka-prywatnosci`,  '0.5', 'monthly'),
         ...ALL_KEYWORDS.map(kw => u(`${BASE_URL}/${kw}`, '0.9', 'daily')),
+        ...ALL_CITIES.map(city => u(`${BASE_URL}/${city}`, '0.8', 'weekly')),
     ];
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
