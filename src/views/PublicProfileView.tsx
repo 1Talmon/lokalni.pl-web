@@ -222,7 +222,7 @@ const PublicProfileView = ({
         enabled: !!provider?.uid,
     });
 
-    const { data: feedData, refetch: refetchFeed } = useQuery({
+    const { data: feedData, isPending: isFeedPending, refetch: refetchFeed } = useQuery({
         queryKey: ['user-feed', provider?.uid],
         queryFn: async () => {
             const res = await apiClient.get(`/users/${provider!.uid}/feed`);
@@ -655,12 +655,22 @@ const PublicProfileView = ({
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Aktualności</span>
                                 <span className="ml-auto text-[9px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
-                                    {feed.length} wpisów <ChevronRight size={10} />
+                                    {!isFeedPending && <>{feed.length} wpisów <ChevronRight size={10} /></>}
                                 </span>
                             </div>
 
                             <div className="h-[140px] flex flex-col justify-center">
-                                {feed.length === 0 ? (
+                                {isFeedPending ? (
+                                    <div className="space-y-5">
+                                        {[0, 1].map((i) => (
+                                            <div key={i} className="relative pl-5 border-l border-slate-700/50">
+                                                <div className="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-slate-700" />
+                                                <div className="h-2 w-16 bg-slate-800 rounded mb-2 animate-pulse" />
+                                                <div className="h-3 bg-slate-800 rounded animate-pulse" style={{ width: i === 0 ? '80%' : '60%' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : feed.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center gap-3 text-center">
                                         <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center">
                                             <Send size={18} className="text-slate-600" />
