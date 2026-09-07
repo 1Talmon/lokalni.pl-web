@@ -101,7 +101,7 @@ export default function PublicProfileClient() {
         const p = profile as { name?: string; bio?: string; profilowe?: string; avatar?: string };
         const name = p.name ?? 'Specjalista';
         const bio = p.bio ? `${p.bio.slice(0, 148).trimEnd()}…` : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
-        setPageMeta({ title: `${name} – specjalista | MyLokalni.pl`, description: bio, url: `https://mylokalni.pl/profile/${uid}`, image: p.profilowe || p.avatar });
+        setPageMeta({ title: `${name} | MyLokalni.pl`, description: bio, url: `https://mylokalni.pl/profile/${uid}`, image: p.profilowe || p.avatar });
         return resetPageMeta;
     }, [profile, uid]);
 

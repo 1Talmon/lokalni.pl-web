@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!profile || profile.deleted) return { title: 'Profil | MyLokalni.pl' };
 
     const name = buildProfileName(profile);
-    const title = `${name} – specjalista | MyLokalni.pl`;
+    const title = `${name} | MyLokalni.pl`;
     const bio = typeof profile.bio === 'string' && profile.bio
         ? `${profile.bio.slice(0, 155).trimEnd()}…`
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: bio,
         alternates: { canonical: url },
         openGraph: {
-            title: `${name} – specjalista`,
+            title: `${name}`,
             description: bio,
             url,
             type: 'profile',
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${name} – specjalista`,
+            title: `${name}`,
             description: bio,
             ...(image ? { images: [image] } : {}),
         },
