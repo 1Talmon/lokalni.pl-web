@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { BASE_URL, ALL_KEYWORDS, ALL_CITIES } from '@/lib/seo-data';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
