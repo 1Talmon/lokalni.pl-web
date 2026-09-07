@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { API_URL, BASE_URL, LANDING_SLUGS } from '@/lib/seo-data';
 
 export const runtime = 'edge';
-export const revalidate = 86400;
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
