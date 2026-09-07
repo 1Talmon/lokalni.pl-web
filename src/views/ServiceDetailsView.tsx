@@ -895,8 +895,6 @@ const ServiceDetailsView = ({
 
     return (
         <>
-            <style>{`html { scrollbar-gutter: stable; }`}</style>
-
             {/* ── GALERIA GŁÓWNA ── */}
             <ClientPhotosModal
                 isOpen={galleryOpen}
