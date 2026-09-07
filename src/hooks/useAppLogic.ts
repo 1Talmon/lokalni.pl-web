@@ -25,6 +25,7 @@ import type { ReportType } from '../types/appTypes';
 import { tokenUtils } from '../utils/tokenUtils';
 import { secureStorage } from '../utils/secureStorage';
 import { dataUrlToFile } from '../utils/imageUtils';
+import { findLandingSlug } from '../lib/seo-data';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 
@@ -845,6 +846,16 @@ export const useAppLogic = () => {
             setActiveCategory, setSearchQuery, setSearchDisplay, setLocation, setFilterType,
             setSortBy, setLoadedCount, setShowOnlineOnly,
             setLocationCoords: setPickedCoords,
+            onSearch: (phrase: string, category: string) => {
+                setSearchDisplay(phrase);
+                setSearchQuery(phrase);
+                if (category && category !== 'all') {
+                    setActiveCategory(category);
+                    serviceService.trackEvent('search', category).catch(() => {});
+                }
+                const slug = findLandingSlug(phrase, location || null);
+                if (slug) { router.push('/' + slug); return; }
+            },
             onToggleFavorite: (publicId: string) => {
                 if (!isLoggedIn) { router.push('/auth'); return; }
                 toggleFavoriteMutation.mutate({ publicId, remove: effectiveFavoriteIds.has(publicId) });

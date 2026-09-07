@@ -108,6 +108,7 @@ interface HomeViewProps {
     isLoggedIn: boolean;
     showOnlineOnly: boolean;
     setShowOnlineOnly: (val: boolean) => void;
+    onSearch?: (phrase: string, category: string) => void;
 }
 
 const HomeView = ({
@@ -134,7 +135,8 @@ const HomeView = ({
     favorites: _favorites,
     isLoggedIn,
     showOnlineOnly,
-    setShowOnlineOnly
+    setShowOnlineOnly,
+    onSearch,
 }: HomeViewProps) => {
     const { isNative, isIos } = usePlatform();
 
@@ -230,6 +232,9 @@ const HomeView = ({
             setSearchQuery('');
             setSearchDisplay('');
             setActiveCategory('all');
+        } else if (onSearch) {
+            onSearch(searchDisplay.trim(), '');
+            return;
         }
         const resultsSection = document.getElementById('results-section');
         resultsSection?.scrollIntoView({ behavior: 'smooth' });
@@ -294,6 +299,7 @@ const HomeView = ({
                         value={searchDisplay}
                         onChange={(v) => { setSearchDisplay(v); setSearchQuery(v); }}
                         onSelect={(phrase, category) => {
+                            if (onSearch) { onSearch(phrase, category ?? ''); return; }
                             setSearchDisplay(phrase);
                             setSearchQuery(phrase);
                             if (category && category !== 'all') {

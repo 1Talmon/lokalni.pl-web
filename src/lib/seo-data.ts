@@ -110,6 +110,26 @@ export const LANDING_SLUGS: Set<string> = new Set([
     ...CATEGORIES.flatMap(cat => EXTRA_CITIES.map(c => `${cat}-${c}`)),
 ]);
 
+/**
+ * Given a free-text phrase and optional city display name, returns the matching
+ * LANDING_SLUG if one exists — used to drive URL navigation from the search bar.
+ */
+export function findLandingSlug(phrase: string, cityDisplay: string | null): string | null {
+    const kwSlug = phrase.toLowerCase()
+        .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
+        .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+    const citySlug = cityDisplay
+        ? (Object.keys(CITY_DISPLAY).find(k => CITY_DISPLAY[k].toLowerCase() === cityDisplay.toLowerCase()) ?? null)
+        : null;
+
+    if (citySlug && LANDING_SLUGS.has(`${kwSlug}-${citySlug}`)) return `${kwSlug}-${citySlug}`;
+    if (LANDING_SLUGS.has(kwSlug)) return kwSlug;
+    if (citySlug && LANDING_SLUGS.has(citySlug)) return citySlug;
+    return null;
+}
+
 /** Normalize API media URL — replaces localhost with production domain */
 export function normalizeMediaUrl(url: string | null | undefined): string | null {
     if (!url) return null;
