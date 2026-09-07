@@ -7,7 +7,7 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-05 17:12 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-07 10:39 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
@@ -19,16 +19,16 @@ _Regenerated: **2026-09-05 17:12 UTC** przez `scripts/ai-refresh.sh`_
 ### Ostatnie 10 commitów
 
 ```
-f898365 fix(scrollLock): napraw fałszywy window.scrollTo przy odmontowaniu komponentu
-34a5b98 chore(ai): sync current-state.md
-2946427 Revert "fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item"
-7cab805 fix(dashboard): zastąp position:fixed+JS czystym sticky na grid item
-945ccb1 fix(dashboard): usuń minHeight ze spacera — grid CSS sam utrzymuje layout
-d3f7220 fix(dashboard): wyrównaj offset scroll-to z progiem fixowania sidebara
-c9dfa45 fix(dashboard): napraw sticky sidebar — position fixed przez scroll listener
-f6bd03b fix(ui): przezroczysty navbar + floating pillsy na service/profile + back button na PublicProfile mobile
-98fb870 chore(ai): sync current-state.md po sesji
-8b1735a fix(perf): napraw prefetch queryFn i zwiększ staleTime do 10 min
+116ed8a fix(scroll-lock): usuń data-fixed-nav-px4 z mobile nav na detail routes
+c3c6020 fix(scroll-lock): usuń data-fixed-nav z detail routes, przywróć compensacje w App.css
+18ffe84 fix(layout): usun niepotrzebne padding-right z fixed elementow przy scroll-lock
+6b4336b fix(layout): usun data-fixed-nav na detail routes — zapobiega skokowi w lewo przy modalach
+3d979ab fix(map): popraw nazwe klucza w komunikacie bledu (VITE_ → NEXT_PUBLIC_)
+41e75f1 fix(profile): usun '– specjalista' z tytulu profilu
+6e48906 fix(seo): fb:app_id jako raw <meta property> + popraw OG dla /og routes
+b9ab677 fix(seo): dodaj fb:app_id do OG metadata
+80ef30a fix(seo): DEFAULT_OG_IMAGE fallback gdy brak zdjecia/avatara
+09738dc fix(seo): profile og:image używa ogAvatar (JPEG) zamiast WebP
 ```
 
 <!-- AI_AUTO_END -->
