@@ -4,30 +4,38 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug, CITY_DISPLAY } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
-import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from './_lib/shared';
-import { LandingAppWrapper } from './_components/LandingAppWrapper';
+import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '../_lib/shared';
+import { LandingAppWrapper } from '../_components/LandingAppWrapper';
 
 interface Props {
-    params: Promise<{ slug: string }>;
+    params: Promise<{ slug: string; page: string }>;
+}
+
+function parsePage(raw: string): number | null {
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 2 && String(n) === raw ? n : null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+    const { slug, page: pageRaw } = await params;
+    const page = parsePage(pageRaw);
+    if (!page) return {};
+
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams);
+    const offset = (page - 1) * PAGE_SIZE;
+    const services = await fetchServices(fetchParams, offset);
 
-    const url = `${BASE_URL}/${slug}`;
+    const baseUrl = `${BASE_URL}/${slug}`;
+    const url = `${baseUrl}/${page}`;
     const noindex = services.length >= 2
         ? { robots: { index: true, follow: true } }
         : { robots: { index: false, follow: true } };
 
     const h1 = buildH1(parsed);
     const count = services.length;
-    const title = count >= 2
-        ? `${count} ofert: ${h1} | MyLokalni.pl`
-        : `${h1} | MyLokalni.pl`;
-    const description = `Porównaj ${count > 0 ? count : ''} ofert${count === 1 ? 'ę' : ''}: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny, szybki kontakt na MyLokalni.pl.`.trim();
+    const title = `Strona ${page}: ${h1} | MyLokalni.pl`;
+    const description = `Strona ${page} — ${count} ofert${count === 1 ? 'a' : count < 5 ? 'y' : ''}: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny, szybki kontakt na MyLokalni.pl.`;
 
     return {
         title,
@@ -39,11 +47,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
 }
 
-export default async function SlugPage({ params }: Props) {
-    const { slug } = await params;
+export default async function SlugPageN({ params }: Props) {
+    const { slug, page: pageRaw } = await params;
+    const page = parsePage(pageRaw);
+    if (!page) notFound();
+
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams);
+    const offset = (page - 1) * PAGE_SIZE;
+    const services = await fetchServices(fetchParams, offset);
 
     if (services.length === 0) notFound();
 
@@ -52,61 +64,47 @@ export default async function SlugPage({ params }: Props) {
     const citySlug = parsed.type === 'keyword' ? null : (parsed.type === 'city' || parsed.type === 'keyword-city' || parsed.type === 'search' ? parsed.citySlug : null);
     const cityDisplay = citySlug ? (CITY_DISPLAY[citySlug] ?? null) : null;
 
-    const ratings = services
-        .map(s => parseFloat(s.rating as string) || 0)
-        .filter(r => r > 0);
-    const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
-
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
             { '@type': 'ListItem', position: 2, name: h1, item: `${BASE_URL}/${slug}` },
+            { '@type': 'ListItem', position: 3, name: `Strona ${page}`, item: `${BASE_URL}/${slug}/${page}` },
         ],
     };
 
     const itemListJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        name: h1,
+        name: `${h1} — strona ${page}`,
         numberOfItems: services.length,
         itemListElement: services.slice(0, 10).map((s, i) => {
             const id = (s.publicId ?? s.id) as string | undefined;
             const title = s.title as string | undefined;
             const svcSlug = id && title ? createServiceUrl(title, id) : null;
-            return { '@type': 'ListItem', position: i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
+            return { '@type': 'ListItem', position: offset + i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
         }).filter(item => item.url),
     };
 
-    const aggregateRatingJsonLd = avgRating ? {
-        '@context': 'https://schema.org',
-        '@type': 'Service',
-        name: h1,
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: avgRating,
-            reviewCount: ratings.length,
-            bestRating: '5',
-            worstRating: '1',
-        },
-    } : null;
-
+    const baseUrl = `${BASE_URL}/${slug}`;
+    const prevUrl = page === 2 ? baseUrl : `${baseUrl}/${page - 1}`;
     const hasMore = services.length === PAGE_SIZE;
 
     return (
         <>
-            {hasMore && <link rel="next" href={`${BASE_URL}/${slug}/2`} />}
+            <link rel="prev" href={prevUrl} />
+            {hasMore && <link rel="next" href={`${baseUrl}/${page + 1}`} />}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
-            {aggregateRatingJsonLd && (
-                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
-            )}
             <LandingAppWrapper
                 initialServices={services}
                 keyword={keyword}
                 city={cityDisplay ?? citySlug}
                 slug={slug}
+                page={page}
+                prevUrl={prevUrl}
+                nextUrl={hasMore ? `${baseUrl}/${page + 1}` : null}
             />
         </>
     );

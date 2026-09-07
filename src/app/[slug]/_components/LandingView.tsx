@@ -16,6 +16,9 @@ interface Props {
     keyword: string | null;
     city: string | null;
     slug: string;
+    page?: number;
+    prevUrl?: string | null;
+    nextUrl?: string | null;
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -35,7 +38,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     );
 }
 
-export function LandingView({ initialServices, keyword, city, slug }: Props) {
+export function LandingView({ initialServices, keyword, city, slug, page, prevUrl, nextUrl }: Props) {
     const router = useRouter();
     const { state, actions } = useApp();
 
@@ -82,7 +85,9 @@ export function LandingView({ initialServices, keyword, city, slug }: Props) {
 
             <section className="bg-white border-b border-gray-100 py-8 px-4">
                 <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{h1}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        {h1}{page && page > 1 ? ` — strona ${page}` : ''}
+                    </h1>
                     <p className="text-gray-500 text-sm">
                         {initialServices.length} {initialServices.length === 1 ? 'oferta' : initialServices.length < 5 ? 'oferty' : 'ofert'} · MyLokalni.pl
                     </p>
@@ -101,6 +106,22 @@ export function LandingView({ initialServices, keyword, city, slug }: Props) {
                     isLoggedIn={state.isLoggedIn}
                     onToggleFavorite={actions.toggleFavorite}
                 />
+                {/* Pagination nav */}
+                {(prevUrl || nextUrl) && (
+                    <nav aria-label="Paginacja" className="mt-10 flex justify-center gap-4">
+                        {prevUrl && (
+                            <Link href={prevUrl} className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-indigo-400 transition-colors">
+                                ← Poprzednia strona
+                            </Link>
+                        )}
+                        {nextUrl && (
+                            <Link href={nextUrl} className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-indigo-400 transition-colors">
+                                Następna strona →
+                            </Link>
+                        )}
+                    </nav>
+                )}
+
                 <div className="mt-10 text-center">
                     <Link
                         href={ctaUrl}

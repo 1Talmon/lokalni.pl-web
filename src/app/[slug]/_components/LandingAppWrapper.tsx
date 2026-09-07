@@ -8,9 +8,12 @@ interface Props {
     keyword: string | null;
     city: string | null;
     slug: string;
+    page?: number;
+    prevUrl?: string | null;
+    nextUrl?: string | null;
 }
 
-export function LandingAppWrapper({ initialServices, keyword, city, slug }: Props) {
+export function LandingAppWrapper({ initialServices, keyword, city, slug, page, prevUrl, nextUrl }: Props) {
     return (
         <QueryProvider>
             <AppProvider>
@@ -19,6 +22,9 @@ export function LandingAppWrapper({ initialServices, keyword, city, slug }: Prop
                     keyword={keyword}
                     city={city}
                     slug={slug}
+                    page={page}
+                    prevUrl={prevUrl}
+                    nextUrl={nextUrl}
                 />
             </AppProvider>
         </QueryProvider>
