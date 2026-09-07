@@ -50,7 +50,11 @@ export default function PublicProfileClient() {
     const { state, actions } = useApp();
 
     const doNav = useCallback(() => {
-        router.back();
+        if (!Capacitor.isNativePlatform() && window.history.length <= 1) {
+            router.replace('/');
+        } else {
+            router.back();
+        }
     }, [router]);
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
