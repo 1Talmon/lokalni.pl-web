@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-07 10:39 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-07 20:53 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **1**
-- Ahead of origin: **0** commits
+- Uncommitted files: **5**
+- Ahead of origin: **1** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-116ed8a fix(scroll-lock): usuń data-fixed-nav-px4 z mobile nav na detail routes
-c3c6020 fix(scroll-lock): usuń data-fixed-nav z detail routes, przywróć compensacje w App.css
-18ffe84 fix(layout): usun niepotrzebne padding-right z fixed elementow przy scroll-lock
-6b4336b fix(layout): usun data-fixed-nav na detail routes — zapobiega skokowi w lewo przy modalach
-3d979ab fix(map): popraw nazwe klucza w komunikacie bledu (VITE_ → NEXT_PUBLIC_)
-41e75f1 fix(profile): usun '– specjalista' z tytulu profilu
-6e48906 fix(seo): fb:app_id jako raw <meta property> + popraw OG dla /og routes
-b9ab677 fix(seo): dodaj fb:app_id do OG metadata
-80ef30a fix(seo): DEFAULT_OG_IMAGE fallback gdy brak zdjecia/avatara
-09738dc fix(seo): profile og:image używa ogAvatar (JPEG) zamiast WebP
+a3f3081 feat(seo): dynamiczne strony wyszukiwania z indeksowaniem i auto-redirect
+1ffd67b fix(ux): landing pages nigdy nie nawigują między sobą — zawsze apka
+57a91ed revert(ux): cofnij nawigację URL z wyszukiwania w apce
+ca0748c feat(ux): unifikacja landing pages z wyglądem apki + URL-driven search
+16ab0f4 fix(seo): noindex na wszystkich pustych landing pages — nie tylko keyword-city
+a0bb78d feat(sitemap): sitemap-categories dynamicznie z API — usuń hardcoded keywords/miasta
+da05bcb fix(seo): wymusz nowy hash buildu — v2 komentarz w sitemap-categories
+ef87fdb fix(seo): sitemap-categories force-dynamic — fix stale static cache CF Pages
+a9a11b0 fix(seo): noindex tylko dla pustych keyword-city + sitemap-categories z miastami
+69356c9 fix(seo): force-dynamic na sitemap edge routes — bypass CF Cache API
 ```
 
 <!-- AI_AUTO_END -->

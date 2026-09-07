@@ -486,16 +486,15 @@ MUSZĄ być w `public/_headers`. `next.config.ts::headers()` nie działa na CF P
 - [ ] PageSpeed Insights dla /sprzatanie-warszawa (mobile + desktop) — dopiero po Fazie 3
 - [ ] LCP, CLS, INP — napraw cokolwiek < 50 punktów
 
-**F4-B — Content layer na landing pages (~1 tydzień)**
-- [ ] Statyczne opisy per kategoria (15 tekstów)
-- [ ] Agregowane stats: COUNT, AVG(price), AVG(rating) per kategoria+miasto
-- [ ] Sekcja FAQ per kategoria (5–7 pytań)
-- [ ] Linki "powiązane kategorie" i "to samo w innych miastach"
+**F4-B — Content layer na landing pages ✅ ZROBIONE**
+- [x] `src/lib/landing-content.ts` — 15 kategorii z opisem, 5 FAQ, 4 powiązane + `TOP_CITIES_DISPLAY`
+- [x] `LandingView.tsx` — sekcja opisu, FAQ accordion, "w innych miastach", "powiązane kategorie"
 - Efekt: strony mają realną wartość informacyjną → Google rankuje wyżej
 
-**F4-C — Paginacja dla dużych kategorii (gdy skala wzrośnie)**
-- [ ] `/sprzatanie/2`, `/sprzatanie/3` z `rel="next/prev"`
-- [ ] Rozszerzyć `[slug]/page.tsx` o opcjonalny segment `[page]`
+**F4-C — Paginacja dla dużych kategorii ✅ ZROBIONE**
+- [x] `src/app/[slug]/[page]/page.tsx` — trasa dla stron 2+, offset API, rel prev/next
+- [x] `src/app/[slug]/_lib/shared.ts` — wspólne helpers + `PAGE_SIZE = 24`
+- [x] `LandingView` — nawigacja ← Poprzednia / Następna →, numer strony w H1
 
 ---
 
