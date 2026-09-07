@@ -1,30 +1,46 @@
 import { NextResponse } from 'next/server';
-import { BASE_URL, ALL_KEYWORDS, ALL_CITIES } from '@/lib/seo-data';
+import { API_URL, BASE_URL } from '@/lib/seo-data';
 
-// v2 — force-dynamic, includes ALL_CITIES
+// v3 — fully dynamic: static pages hardcoded, keywords/cities from API
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const STATIC: [string, string, string][] = [
+    ['/', '1.0', 'daily'],
+    ['/jak-to-dziala', '0.8', 'monthly'],
+    ['/faq', '0.8', 'monthly'],
+    ['/o-nas', '0.7', 'monthly'],
+    ['/zasady-bezpieczenstwa', '0.6', 'monthly'],
+    ['/regulamin', '0.5', 'monthly'],
+    ['/polityka-prywatnosci', '0.5', 'monthly'],
+];
 
-function u(loc: string, priority: string, changefreq: string) {
-    return `  <url><loc>${loc}</loc><lastmod>${TODAY}</lastmod><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
-}
+export async function GET() {
+    const today = new Date().toISOString().slice(0, 10);
 
-export function GET() {
-    const urls = [
-        u(`${BASE_URL}/`,                      '1.0', 'daily'),
-        u(`${BASE_URL}/jak-to-dziala`,         '0.8', 'monthly'),
-        u(`${BASE_URL}/faq`,                   '0.8', 'monthly'),
-        u(`${BASE_URL}/o-nas`,                 '0.7', 'monthly'),
-        u(`${BASE_URL}/zasady-bezpieczenstwa`, '0.6', 'monthly'),
-        u(`${BASE_URL}/regulamin`,             '0.5', 'monthly'),
-        u(`${BASE_URL}/polityka-prywatnosci`,  '0.5', 'monthly'),
-        ...ALL_KEYWORDS.map(kw => u(`${BASE_URL}/${kw}`, '0.9', 'daily')),
-        ...ALL_CITIES.map(city => u(`${BASE_URL}/${city}`, '0.8', 'weekly')),
-    ];
+    const staticUrls = STATIC.map(
+        ([path, pri, freq]) =>
+            `  <url><loc>${BASE_URL}${path}</loc><lastmod>${today}</lastmod><changefreq>${freq}</changefreq><priority>${pri}</priority></url>`,
+    );
 
-    const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
+    try {
+        const res = await fetch(`${API_URL}/public/sitemap/categories`, {
+            headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
+            cache: 'no-store',
+        });
+        if (res.ok) {
+            const xml = await res.text();
+            const urlBlocks = xml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
+            const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${staticUrls.join('\n')}\n${urlBlocks.join('\n')}\n</urlset>`;
+            return new NextResponse(body, {
+                headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+            });
+        }
+    } catch {
+        // API unavailable — return static pages only
+    }
 
+    const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${staticUrls.join('\n')}\n</urlset>`;
     return new NextResponse(body, {
         headers: { 'Content-Type': 'application/xml; charset=utf-8' },
     });
