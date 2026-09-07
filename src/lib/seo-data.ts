@@ -144,3 +144,52 @@ export function normalizeMediaUrl(url: string | null | undefined): string | null
     if (!url) return null;
     return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
 }
+
+// ─── Elastic slug parser (Faza 3 — replaces parseLandingSlug) ─────────────────
+
+export type SlugParseResult =
+    | { type: 'keyword'; keyword: string; citySlug: null }
+    | { type: 'city'; keyword: null; citySlug: string }
+    | { type: 'keyword-city'; keyword: string; citySlug: string }
+    | { type: 'search'; query: string; citySlug: string | null };
+
+const SORTED_KEYWORDS = [...ALL_KEYWORDS].sort((a, b) => b.length - a.length);
+const SORTED_CITIES   = [...ALL_CITIES].sort((a, b) => b.length - a.length);
+
+export function parseSlug(slug: string): SlugParseResult {
+    if (ALL_KEYWORDS.includes(slug)) return { type: 'keyword', keyword: slug, citySlug: null };
+    if (ALL_CITIES.includes(slug))   return { type: 'city', keyword: null, citySlug: slug };
+
+    for (const kw of SORTED_KEYWORDS) {
+        if (slug.startsWith(kw + '-')) {
+            return { type: 'keyword-city', keyword: kw, citySlug: slug.slice(kw.length + 1) };
+        }
+    }
+
+    // Strip known city from end → treat rest as search query
+    for (const city of SORTED_CITIES) {
+        if (slug.endsWith('-' + city) && slug.length > city.length + 1) {
+            const query = slug.slice(0, slug.length - city.length - 1).replace(/-/g, ' ');
+            if (query.length >= 2) return { type: 'search', query, citySlug: city };
+        }
+    }
+
+    return { type: 'search', query: slug.replace(/-/g, ' '), citySlug: null };
+}
+
+function toUrlSlug(s: string): string {
+    return s.toLowerCase()
+        .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
+        .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/** Build a landing page URL slug from a phrase and optional city display name */
+export function buildLandingSlug(phrase: string, cityDisplay: string | null): string {
+    const kwSlug = toUrlSlug(phrase);
+    if (!cityDisplay) return kwSlug;
+    const citySlug = Object.keys(CITY_DISPLAY).find(
+        k => CITY_DISPLAY[k].toLowerCase() === cityDisplay.toLowerCase()
+    ) ?? toUrlSlug(cityDisplay);
+    return citySlug ? `${kwSlug}-${citySlug}` : kwSlug;
+}

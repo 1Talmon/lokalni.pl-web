@@ -23,8 +23,15 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 
 type ServiceRecord = Record<string, unknown>;
 
-function LandingServiceCard({ s, svcSlug }: { s: ServiceRecord; svcSlug: string | null }) {
+function LandingServiceCard({ s, svcSlug, isFavorite, isLoggedIn, onToggleFavorite }: {
+    s: ServiceRecord;
+    svcSlug: string | null;
+    isFavorite?: boolean;
+    isLoggedIn?: boolean;
+    onToggleFavorite?: (id: string) => void;
+}) {
     const title = s.title as string | undefined;
+    const publicId = (s.publicId ?? s.id) as string | undefined;
     const imgRaw = (s.image ?? (s.images as string[] | undefined)?.[0] ?? (s.provider as ServiceRecord | undefined)?.profilowe) as string | undefined;
     const image = normalizeMediaUrl(imgRaw);
     const rating = parseFloat(s.rating as string) || 0;
@@ -65,43 +72,63 @@ function LandingServiceCard({ s, svcSlug }: { s: ServiceRecord; svcSlug: string 
                     <span className="text-[#6366F1] font-semibold text-sm">
                         {s.price ? `${s.price as string} zł${s.priceUnit ? `/${s.priceUnit as string}` : ''}` : 'Zapytaj o cenę'}
                     </span>
-                    {svcSlug && (
-                        <Link
-                            href={`/service/${svcSlug}`}
-                            className="bg-gray-900 text-white text-sm px-4 py-2 rounded-xl font-semibold hover:bg-gray-700 transition-colors"
-                        >
-                            Zarezerwuj
-                        </Link>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {onToggleFavorite && publicId && (
+                            <button
+                                onClick={() => {
+                                    if (!isLoggedIn) return;
+                                    onToggleFavorite(publicId);
+                                }}
+                                aria-label={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+                                className={`p-1.5 rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                </svg>
+                            </button>
+                        )}
+                        {svcSlug && (
+                            <Link
+                                href={`/service/${svcSlug}`}
+                                className="bg-gray-900 text-white text-sm px-4 py-2 rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+                            >
+                                Zarezerwuj
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
         </article>
     );
 }
 
-export function LandingServiceGrid({ services, createServiceUrl }: {
+export function LandingServiceGrid({ services, createServiceUrl, favorites, isLoggedIn, onToggleFavorite }: {
     services: ServiceRecord[];
     createServiceUrl: (title: string, id: string) => string;
+    favorites?: string[];
+    isLoggedIn?: boolean;
+    onToggleFavorite?: (id: string) => void;
 }) {
+    if (services.length === 0) {
+        return <p className="text-center text-gray-500 py-12">Brak ofert w tej kategorii.</p>;
+    }
     return (
-        <>
-            <p className="text-sm text-gray-500 mb-4">{services.length} ogłoszeń</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {services.map((s) => {
-                    const id = (s.publicId ?? s.id) as string | undefined;
-                    const title = s.title as string | undefined;
-                    const svcSlug = id && title ? createServiceUrl(title, id) : null;
-                    return <LandingServiceCard key={id ?? Math.random()} s={s} svcSlug={svcSlug} />;
-                })}
-            </div>
-            <div className="mt-10 text-center">
-                <Link
-                    href="/"
-                    className="inline-block bg-[#6366F1] text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700 transition-colors"
-                >
-                    Zobacz więcej ogłoszeń
-                </Link>
-            </div>
-        </>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {services.map((s) => {
+                const id = (s.publicId ?? s.id) as string | undefined;
+                const title = s.title as string | undefined;
+                const svcSlug = id && title ? createServiceUrl(title, id) : null;
+                return (
+                    <LandingServiceCard
+                        key={id ?? Math.random()}
+                        s={s}
+                        svcSlug={svcSlug}
+                        isFavorite={id ? (favorites ?? []).includes(id) : false}
+                        isLoggedIn={isLoggedIn}
+                        onToggleFavorite={onToggleFavorite}
+                    />
+                );
+            })}
+        </div>
     );
 }

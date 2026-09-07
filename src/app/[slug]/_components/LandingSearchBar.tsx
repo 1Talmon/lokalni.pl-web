@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { ALL_CITIES, CITY_DISPLAY } from '@/lib/seo-data';
+import { ALL_CITIES, CITY_DISPLAY, buildLandingSlug } from '@/lib/seo-data';
 
 interface Props {
     defaultKeyword: string;
@@ -17,10 +17,11 @@ export function LandingSearchBar({ defaultKeyword, defaultCity }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const qParams = new URLSearchParams();
-        if (keyword.trim()) qParams.set('q', keyword.trim());
-        if (city) qParams.set('city', city);
-        router.push(`/?${qParams}`);
+        const kw = keyword.trim();
+        if (!kw) return;
+        // Navigate to landing page URL — SEO-friendly
+        const slug = buildLandingSlug(kw, city || null);
+        router.push(`/${slug}`);
     };
 
     return (
