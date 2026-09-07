@@ -7,9 +7,11 @@ export const revalidate = 86400;
 export function GET() {
     const body = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>${BASE_URL}/sitemap-static.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-categories.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-services.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-search.xml</loc></sitemap>
+  <sitemap><loc>${BASE_URL}/sitemap-keywords.xml</loc></sitemap>
 </sitemapindex>`;
 
     return new NextResponse(body, {

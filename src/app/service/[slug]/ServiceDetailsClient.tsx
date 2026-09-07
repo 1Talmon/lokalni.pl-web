@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Capacitor } from '@capacitor/core';
@@ -13,6 +14,7 @@ import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
+import { CATEGORY_SLUG, KEYWORD_DISPLAY } from '../../../lib/seo-data';
 import type { Service } from '../../../types';
 
 const serviceScrollPositions = new Map<string, number>();
@@ -229,9 +231,22 @@ export default function ServiceDetailsClient() {
         />
     );
 
+    const categorySlug = CATEGORY_SLUG[service.category as string];
+    const categoryDisplay = categorySlug ? (KEYWORD_DISPLAY[categorySlug] ?? categorySlug) : null;
+
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
+            {!isNative && categorySlug && (
+                <nav aria-label="Breadcrumb" className="max-w-2xl mx-auto px-4 pt-3 pb-0">
+                    <Link
+                        href={`/${categorySlug}`}
+                        className="text-sm text-indigo-600 hover:underline"
+                    >
+                        ← Wszystkie: {categoryDisplay}
+                    </Link>
+                </nav>
+            )}
             {isNative ? <div>{sdvEl}</div> : sdvEl}
         </>
     );

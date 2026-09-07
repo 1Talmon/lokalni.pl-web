@@ -2,6 +2,15 @@ export const BASE_URL = 'https://mylokalni.pl';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.mylokalni.pl/api';
 export const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
+/** Maps internal API category names → URL slugs */
+export const CATEGORY_SLUG: Record<string, string> = {
+    cleaning: 'sprzatanie', home: 'dom-ogrod', construction: 'budowa',
+    auto: 'auto', transport: 'transport', beauty: 'uroda', tech: 'it-naprawy',
+    edu: 'edukacja', health: 'zdrowie', pets: 'zwierzeta',
+    finance: 'finanse', care: 'opieka', art: 'sztuka', events: 'eventy',
+    garden: 'inne', other: 'inne',
+};
+
 export const CATEGORIES = [
     'sprzatanie', 'dom-ogrod', 'budowa', 'auto', 'transport',
     'uroda', 'it-naprawy', 'edukacja', 'zdrowie', 'zwierzeta',

@@ -1,485 +1,600 @@
 # SEO Architecture — MyLokalni.pl
 
-Kompletna dokumentacja jak działa SEO, sitemapy, generowanie stron i Meilisearch w projekcie `lokalni-web` (Next.js 15 + CF Pages) w połączeniu z backendem `Lokalni API` (Fastify + Postgres + Meilisearch).
+Kompletna dokumentacja SEO + plan refaktoru. Source of truth dla każdej sesji pracy.
 
-**Cel biznesowy SEO:** każdy realny post w bazie powinien być odkrywalny przez Google — zarówno przez indywidualną stronę (`/service/[slug]`), jak i przez dynamiczne strony kategorii+miasto (`/kategoria-miasto`) generowane wyłącznie z prawdziwych danych. Puste kombinacje nigdy nie powinny istnieć w indeksie Google.
+**Cel biznesowy:** każde aktywne ogłoszenie discoverable przez Google. Landing pages są PEŁNĄ aplikacją (jak OLX) — nie przekierowaniem. Jeden spójny system, zero granicy między "landing page" a "apką".
 
-**Filozofia:** brak hardkodowanych list. Wszystko generowane live z Postgres/Meilisearch. Zero pustych stron w Google. User z Google zawsze ląduje w apce (HomeView) z pre-fillowanym wyszukiwaniem.
+**Filozofia architektoniczna:** zero hardkodowanych list. Wszystko generowane live z Postgres. Strona istnieje jeśli ma >= 2 aktywnych serwisów — nie istnieje jeśli ma 0 (404).
 
 ---
 
-## 1. Ecosystem — kto co robi
+## 1. Docelowa mapa URL-i
+
+| Typ | Przykład | Skala | Status |
+|---|---|---|---|
+| Indywidualny post | `/service/koszenie-trawnika-abc123` | tyle ile postów w DB | ✅ działa |
+| Kategoria | `/sprzatanie` | ~15 stron | ❌ brak w sitemap |
+| Kategoria + miasto | `/sprzatanie-warszawa` | ~15 × N miast z DB | ⚠️ tylko 30 miast |
+| Fraza z search_phrases | `/koszenie-trawnika` | top N fraz (count≥3) | ❌ nie zbudowane |
+| Fraza + miasto | `/koszenie-trawnika-warszawa` | top N fraz × N miast | ❌ nie zbudowane |
+| Strony statyczne | `/`, `/faq`, `/o-nas`, ... | 7 stron | ✅ działa |
+
+**Trzy typy wyników Google (cel):**
+1. `"koszenie trawnika warszawa"` → `/service/koszenie-trawnika-abc123` — bezpośrednio do posta ✅
+2. `"sprzątanie Gdańsk"` → `/sprzatanie-gdansk` — listing kategorii+miasto ⚠️
+3. `"usługi sprzątanie"` → `/sprzatanie` — listing kategorii ❌
+
+---
+
+## 2. Architektura docelowa — Droga B (pełna unifikacja)
+
+### Obecny stan (problem)
+
+```
+(app)/layout.tsx  ←  AppProvider + AppShell + useAppLogic
+    /              ←  HomeView (pełna apka)
+    /chat          ←  pełna apka
+    ...
+
+[slug]/page.tsx   ←  OSOBNY route, brak AppProvider, tylko SSR
+    /sprzatanie-warszawa  ←  lite landing page → auto-redirect do apki
+```
+
+Dwie oddzielne rzeczy. User z Google ląduje w "lite" wersji i musi przejść do apki.
+
+### Docelowy stan (Droga B)
+
+```
+[slug]/page.tsx (edge SSR)
+    generateMetadata()    ←  metadata + JSON-LD dla Google (server)
+    fetchServices()       ←  initial data dla Google (server)
+         ↓
+    <LandingAppWrapper    ←  client component
+        initialServices={services}
+        keyword={kw}
+        city={city}
+    />
+         ↓
+    AppProvider           ←  ten sam co w (app)/ — useAppLogic, auth, WebSocket
+         ↓
+    LandingView           ←  nowy view: listing + search + filtry + auth
+```
+
+**Efekt:** `/sprzatanie-warszawa` ładuje SSR HTML (szybkie, Google to widzi), potem hydruje do pełnej apki z `useAppLogic`. User może się zalogować, dodać do ulubionych, zarezerwować — bez opuszczania URL-a.
+
+### Co to oznacza dla architektury
+
+- `LandingAutoRedirect` — **usuwamy całkowicie**
+- `LandingNavbar` — **usuwamy**, zastąpione przez app `Navbar`
+- `AppProvider` w `(app)/layout.tsx` — zostaje bez zmian
+- `AppProvider` w `[slug]/LandingAppWrapper` — **nowa instancja** (poza (app)/ group, nie koliduje)
+- Tab strip (`/chat`, `/calendar`, `/favorites`) — **nie pojawia się** na landing pages (LandingView ma własny layout bez tab strip)
+- Apka (`/?q=...`) — nadal istnieje dla zaawansowanych filtrów i mapy, dostępna via link z landing pages
+
+### Flow dla użytkownika (docelowy)
+
+```
+Google → /sprzatanie-warszawa
+    ↓ SSR HTML (natychmiastowe)
+    ↓ JS hydruje → AppProvider → useAppLogic ładuje auth, WebSocket
+    ↓ User widzi: listing serwisów, searchbar, filtry, navbar
+    ↓ Może: szukać w miejscu, klikać w serwisy, logować się, bookować
+    ↓ Opcja: "Pokaż na mapie / zaawansowane filtry →" otwiera /?q=...
+```
+
+---
+
+## 3. Ecosystem
 
 ```
 Google Bot
    ↓ crawluje
-mylokalni.pl (CF Pages / Next.js)
-   ↓ sitemap proxy
+mylokalni.pl (CF Pages / Next.js edge)
+   ↓ SSR initial HTML + sitemap proxy
 api.mylokalni.pl (Docker / Fastify)
    ↓ query
-Postgres  ← soft-delete (is_deleted), status='active'
+Postgres  ← source of truth (is_deleted, status, category, city, title, public_id)
    ↓ sync
-Meilisearch (index 'services')  ← full-text search
+Meilisearch  ← full-text search, zasila /services?query=... (SSR + client)
+Redis  ← cache sitemaps 1h–12h
 ```
-
-**Odpowiedzialności:**
 
 | Warstwa | Co robi |
 |---|---|
-| Next.js (`lokalni-web`) | Renderuje strony SSR/SSG dla Google, sitemap-y XML, canonical URLs, metadata, JSON-LD |
-| Fastify (`Lokalni API`) | Query do Postgres, cache Redis, generuje XML sitemap-services + endpoint search-pages |
-| Postgres | Source of truth — `services` table z `is_deleted`, `status`, `category`, `city`, `title`, `public_id` |
-| Meilisearch | Full-text search dla apki użytkownika (nie dla SEO — SEO idzie przez SSR z Postgres) |
+| Next.js `[slug]/page.tsx` | Edge SSR: generateMetadata, initial HTML, JSON-LD (dla Google) |
+| `LandingAppWrapper` | Client hydration: AppProvider + pełna apka na landing URL |
+| `LandingView` | Nowy widok: listing + in-place search + filtry kategorii/miast |
+| Fastify | Postgres/Meilisearch queries, Redis cache, sitemap endpoints |
+| Postgres | Source of truth — sitemaps z tego generowane |
+| Meilisearch | Fuzzy search dla SSR fetch i in-place search na landing pages |
 
 ---
 
-## 2. Wejścia z Google — pełna mapa URL
-
-Wszystkie ścieżki którymi Google może sprowadzić użytkownika na serwis:
-
-| URL | Typ strony | Rendering | Zawartość dla Google | Kliknięcie → |
-|---|---|---|---|---|
-| `/` | Homepage | Client (app) | Meta tagi, JSON-LD Organization+WebSite | HomeView |
-| `/service/[slug]` | Konkretne ogłoszenie | Edge SSR | Pełny content: title, opis, cena, JSON-LD LocalBusiness | Widok szczegółowy ogłoszenia |
-| `/[category-city]` | Dynamiczna strona kategorii+miasta (NEW) | Edge SSR | Lista serwisów z tej kombinacji, metadata | Auto-redirect do `/?q=...&city=...` → HomeView z pre-fillem |
-| `/faq`, `/o-nas`, `/regulamin`, `/polityka-prywatnosci`, `/jak-to-dziala`, `/zasady-bezpieczenstwa` | Strony informacyjne | Static | Statyczna treść | Ta sama strona |
-
-**Nie indexowane (celowo):**
-- `/[slug]` w obecnej formie (hardkodowane 924 landing pages) — `noindex`, wygaszane na rzecz dynamic search pages
-- `/?q=...&city=...` — client-only, brak SSR contentu, brak metadata
-- `/auth`, `/dashboard`, `/chat`, `/favorites`, `/calendar` — strony wymagające logowania
-- `/invite/[code]`, `/r/[code]` — jednorazowe linki marketingowe
-- `/verify-email`, `/reset-password`, `/delete-account*` — flow auth
-- `/booking-form`, `/support` — akcje wewnątrz apki
-
----
-
-## 3. Sitemap architecture
-
-Sitemap index (`/sitemap.xml`) wskazuje na 2 sub-sitemapy:
+## 4. Sitemap architecture (docelowa)
 
 ```
 sitemap.xml (index)
-├── sitemap-categories.xml  — 7 statycznych stron (/, /faq, /jak-to-dziala, ...)
-└── sitemap-services.xml    — wszystkie aktywne ogłoszenia z Postgres
+├── sitemap-static.xml      — 7 stron informacyjnych      (RENAME z sitemap-categories.xml)
+├── sitemap-categories.xml  — /sprzatanie, /auto, ...     (NOWE — real kategorie z DB)
+├── sitemap-services.xml    — każdy aktywny post           ✅ działa
+├── sitemap-search.xml      — keyword×miasto z DB          ✅ działa (fix miast w toku)
+└── sitemap-keywords.xml    — frazy search_phrases×miasto  (NOWE)
 ```
 
-**Docelowo dojdzie:**
-```
-└── sitemap-search.xml      — dynamiczne strony kategoria×miasto (z realnych danych)
-```
+### sitemap-static.xml
+7 statycznych stron: `/` (1.0), `/jak-to-dziala`, `/faq` (0.8), `/o-nas` (0.7), `/zasady-bezpieczenstwa` (0.6), `/regulamin`, `/polityka-prywatnosci` (0.5).
 
-### 3.1 `sitemap-services.xml` — realne ogłoszenia
+### sitemap-categories.xml (NOWE)
+Backend: `GET /public/sitemap/category-pages` — `SELECT DISTINCT category HAVING COUNT(*) >= 2`, Redis 6h.
+Format: `/${CATEGORY_SLUG[category]}` → `/sprzatanie`, `/auto`, `/transport`...
 
-**Frontend:** `src/app/sitemap-services.xml/route.ts` — edge runtime, `force-dynamic`, proxy do API.
+### sitemap-services.xml ✅
+Backend: `GET /public/sitemap/services` — aktywne posty, Redis 1h. Format: `/service/${toSlug(title)}-${public_id}`.
 
-**Backend:** `GET /public/sitemap/services` w `Lokalni API`:
-- Query: `SELECT public_id, title, updated_at FROM services WHERE is_deleted = FALSE AND status = 'active' AND deleted_at IS NULL ORDER BY updated_at DESC`
-- Cache: Redis, klucz `sitemap:services:v2`, TTL 1h
-- URL format: `${BASE}/service/${toSlug(title)}-${public_id}`
-- `<lastmod>` z `updated_at`
+### sitemap-search.xml ✅
+Backend: `GET /public/sitemap/search-pages` — `GROUP BY category, city HAVING COUNT(*) >= 2`, Redis 6h.
+Format: `/${CATEGORY_SLUG[category]}-${toSlug(city)}`.
 
-**Auto-refresh:**
-- Post dodany → `INSERT` w Postgres → **po max 1h** znika Redis cache → nowy XML zawiera post
-- Post usunięty (`is_deleted=TRUE`) → **po max 1h** znika z sitemap
-- Post edytowany → `updated_at` się zmienia, `<lastmod>` się zmieni **po max 1h**
-
-**Uwaga:** można dodać `redis.del('sitemap:services:v2')` w routes `POST/PATCH/DELETE /services` żeby refresh był natychmiastowy — obecnie nie jest, ale Google crawluje sitemapy co kilka dni więc 1h to komfortowe okno.
-
-### 3.2 `sitemap-categories.xml` — strony informacyjne
-
-**Frontend:** `src/app/sitemap-categories.xml/route.ts` — statyczna lista 7 URL-i:
-- `/` (priority 1.0, daily)
-- `/jak-to-dziala`, `/faq` (0.8, monthly)
-- `/o-nas` (0.7, monthly)
-- `/zasady-bezpieczenstwa` (0.6, monthly)
-- `/regulamin`, `/polityka-prywatnosci` (0.5, monthly)
-
-**Nie ma landing pages kategorii** (`/auto`, `/edukacja`, etc.) — usunięte, bo landing pages są `noindex`.
-
-### 3.3 `sitemap-search.xml` — DYNAMICZNE strony kategoria×miasto (do wdrożenia)
-
-**Docelowo:**
-- Frontend: `src/app/sitemap-search.xml/route.ts` — proxy do API
-- Backend: `GET /public/sitemap/search-pages` — zwraca unikalne kombinacje `category × city` które mają realne aktywne serwisy
-- Query source of truth:
-  ```sql
-  SELECT DISTINCT category, city
-  FROM services
-  WHERE is_deleted = FALSE AND status = 'active' AND deleted_at IS NULL
-    AND category IS NOT NULL AND category != ''
-    AND city IS NOT NULL AND city != ''
-  ```
-- Cache Redis, klucz `sitemap:search-pages:v1`, TTL 6h (rzadziej się zmienia niż individual services)
-- Format URL: `/${toSlug(category)}-${toSlug(city)}` (np. `/rejsy-rowy`, `/hydraulik-warszawa`)
+### sitemap-keywords.xml (NOWE)
+Backend: `GET /public/sitemap/keyword-pages` — `search_phrases WHERE count >= 3` × aktywne miasta, Redis 12h.
+Format: `/${toSlug(phrase)}` + `/${toSlug(phrase)}-${toSlug(city)}`.
 
 ---
 
-## 4. Meilisearch — czym jest, czym nie jest
+## 5. Meilisearch
 
-**JEST:** silnik full-text search dla apki użytkownika (`/services?query=...` używa Meilisearch dla fuzzy matching).
+**JEST:** fuzzy full-text search — zasila in-place search na landing pages i apkę.
+**NIE JEST:** source of truth dla sitemaps. Sitemaps = Postgres.
 
-**NIE JEST:** źródłem prawdy dla SEO. SEO renderuje się z Postgres SSR. Meilisearch jest tylko dla dynamicznego search-a użytkownika.
-
-### 4.1 Sync flow
-
-**Runtime sync** (fire-and-forget):
-- `POST /services` (create) → `indexService(data).catch(() => {})`
-- `PATCH /services/:id` (update) → `reindexService(id)` → fetch fresh + indexService
-- `DELETE /services/:id` (soft delete) → `deleteFromIndex(id).catch(() => {})`
-- `POST /services/:id/restore` → `reindexService(id)`
-
-**Startup sync + cleanup** (`syncMeilisearch()` w `server.ts`):
-- Uruchamia się przy każdym starcie kontenera API
-- Pobiera wszystkie aktywne ID z Postgres
-- Pobiera wszystkie ID z Meilisearch (`getDocuments({ limit: 100000, fields: ['id'] })`)
-- Usuwa stale (te w Meili ale nie w Postgres)
-- Upsertuje wszystkie aktywne serwisy z Postgres do Meili (batch 100)
-- Cel: naprawia dryf między Postgres a Meilisearch który mógł się pojawić gdy `.catch(() => {})` zjadł błąd
-
-**Manual sync:**
-```bash
-ssh main
-docker exec lokalni-api-1 node dist/db/sync-meilisearch.js
-```
-
-### 4.2 Konfiguracja indexu
-
-```
-Index: 'services'
-Primary key: id
-Searchable: title, description, category
-Displayed: id, title, category
-Filterable: category
-Typo tolerance: enabled (1 typo od 5 znaków, 2 typo od 9)
-```
-
-### 4.3 Meilisearch a SEO — jak się łączą?
-
-**W apce (użytkownik):**
-```
-User w HomeView wpisuje "rejs rib"
-    ↓
-GET /services?query=rejs+rib
-    ↓
-Backend: Meilisearch fuzzy search → zwraca IDs
-    ↓
-Backend: SQL "SELECT * FROM services WHERE id = ANY(ids) AND is_deleted = FALSE"
-    ↓
-Zwraca serwisy → React Query cache → HomeView pokazuje
-```
-
-**W SEO (Google/SSR):**
-```
-Googlebot crawluje /rejsy-rowy
-    ↓
-Next.js SSR fetch: GET /services?query=rejsy&city=Rowy
-    ↓
-Backend: Meilisearch → SQL → results
-    ↓
-Next.js renderuje HTML z metadata + kartkami serwisów
-    ↓
-Google indexuje URL /rejsy-rowy z realną treścią
-```
-
-Meilisearch jest w oba przepływach — ale dla SEO w formie SSR fetch, nie client-side.
+### Sync flow
+- Runtime: `POST/PATCH/DELETE /services` → `indexService()` / `deleteFromIndex()`
+- Startup: `syncMeilisearch()` — usuwa stale IDs, upsertuje wszystkie aktywne (batch 100)
+- Manual: `ssh main && docker exec lokalni-api-1 node dist/db/sync-meilisearch.js`
 
 ---
 
-## 5. Auto-generation flow — jak strony powstają "same"
-
-**Docelowy przepływ dla dynamic search pages:**
+## 6. Auto-generation flow (docelowy)
 
 ```
-1. User dodaje post "Rejs RIB, Rowy" (category=rejsy, city=Rowy)
-                     ↓
-2. INSERT w Postgres  →  indexService() do Meilisearch (natychmiast)
-                     ↓
-3. [max 1h] Redis cache sitemap-services wygasa
-                     ↓
-4. [max 6h] Redis cache sitemap-search-pages wygasa
-                     ↓
-5. Google crawluje /sitemap.xml → widzi nowy URL /rejsy-rowy
-                     ↓
-6. Google crawluje /rejsy-rowy
-                     ↓
-7. Next.js SSR: fetch API /services?query=rejsy&city=Rowy → są wyniki
-                     ↓
-8. Render z metadata (title, description, JSON-LD) + karty serwisów
-                     ↓
-9. Google indexuje /rejsy-rowy jako "rejsy w Rowach"
-                     ↓
-10. User googluje "rejsy Rowy" → widzi wynik → klika
-                     ↓
-11. Ląduje na /rejsy-rowy → client-side JS auto-redirectuje do /?q=rejsy&city=Rowy
-                     ↓
-12. AppShell useEffect czyta ?q + ?city → setSearchQuery + setLocation
-                     ↓
-13. HomeView pokazuje wyniki z pre-fillowanym search barem
+User dodaje post "Koszenie trawnika, Gdańsk"
+        ↓
+INSERT Postgres + indexService() Meilisearch
++ redis.del('sitemap:services:v2')
++ redis.del('sitemap:search-pages:v1')
++ redis.del('sitemap:keyword-pages:v1')
+        ↓
+[natychmiast] sitemaps zaktualizowane
+        ↓
+Google crawluje → /koszenie-trawnika-gdansk
+        ↓
+Edge SSR: fetchServices("koszenie trawnika", "Gdańsk") → 2+ wyniki → index: true
+Google widzi: H1, lista serwisów, metadata, JSON-LD
+        ↓
+User z Google klika → /koszenie-trawnika-gdansk
+        ↓
+SSR HTML (szybkie) → hydruje AppProvider → LandingView z useAppLogic
+User widzi: listing, może szukać w miejscu, zalogować się, zarezerwować
 ```
 
-**Gdy user usuwa post (ostatni w kategorii+miasto):**
-
+**Usunięcie ostatniego posta:**
 ```
-1. UPDATE services SET is_deleted = TRUE
-                     ↓
-2. deleteFromIndex() z Meilisearch (natychmiast)
-                     ↓
-3. [max 1h] sitemap-services wygasa → post znika z sitemap
-                     ↓
-4. [max 6h] sitemap-search-pages wygasa → /rejsy-rowy znika z sitemap
-                     ↓
-5. Google crawluje /rejsy-rowy → SSR fetch: 0 wyników → notFound() → 404
-                     ↓
-6. Google usuwa URL z indeksu
+DELETE → redis.del() → sitemap refresh → brak URL
+Googlebot crawluje → 0 wyników → notFound() → 404 → Google deindeksuje
 ```
-
-Cały cykl życia strony jest **napędzany danymi**. Zero ręcznych operacji.
 
 ---
 
-## 6. Techniczne szczegóły
+## 7. Szczegóły techniczne
 
-### 6.1 Root metadata (`src/app/layout.tsx`)
+### 7.1 `[slug]/page.tsx` — nowa struktura (po refaktorze)
 
-- `metadataBase: 'https://mylokalni.pl'`
-- Global title: `MyLokalni.pl – znajdź specjalistę w swoim mieście`
-- Description, keywords, OG, Twitter cards
-- `robots: index/follow, googleBot: index/follow, 'max-image-preview': 'large'`
-- JSON-LD: `Organization` + `WebSite` z `SearchAction` (target: `{search_term_string}`)
-- Icons, appleWebApp, manifest, canonical
+```tsx
+export const runtime = 'edge';
 
-### 6.2 Service detail (`src/app/service/[slug]/`)
+export async function generateMetadata({ params }) {
+  // bez zmian — server component, edge SSR
+  const services = await fetchServices(...)
+  const robotsIndex = services.length >= 2
+    ? { robots: { index: true } }
+    : { robots: { index: false } }
+  return { title: `${services.length} ofert: ${kw} w ${city}`, ...robotsIndex }
+}
 
-- `runtime: 'edge'`
-- `generateMetadata`: title=serwisTitle, description z opisu, canonical URL
-- JSON-LD `LocalBusiness` (name, address, geo coords, rating, review count)
-- `notFound()` gdy API zwróci null — kluczowe żeby nie tworzyć pustych stron w indeksie
+export default async function SlugPage({ params }) {
+  const services = await fetchServices(...)
+  if (services.length === 0) notFound()
 
-### 6.3 Public profile (`src/app/profile/[uid]/`)
+  return (
+    <>
+      {/* JSON-LD scripts — widoczne dla Google */}
+      <script type="application/ld+json" ... />
+      {/* Client wrapper — pełna apka po hydratacji */}
+      <LandingAppWrapper
+        initialServices={services}
+        keyword={kw}
+        city={city}
+        slug={slug}
+      />
+    </>
+  )
+}
+```
 
-- Analogicznie do service — edge SSR + JSON-LD
-- **Uwaga:** brak w sitemapach (user zdecydował że profile nie muszą być indexowane osobno; są linkowane z `/service/[slug]`)
+### 7.2 `LandingAppWrapper.tsx` — nowy komponent
 
-### 6.4 `robots.ts` (`src/app/robots.ts`)
+```tsx
+'use client'
+// Wraps landing page content with AppProvider (same as (app)/layout.tsx)
+// Osobna instancja — poza (app)/ group, nie koliduje
+export function LandingAppWrapper({ initialServices, keyword, city, slug }) {
+  return (
+    <QueryProvider>
+      <AppProvider>
+        <LandingView
+          initialServices={initialServices}
+          keyword={keyword}
+          city={city}
+        />
+      </AppProvider>
+    </QueryProvider>
+  )
+}
+```
 
-- `User-agent: *`
-- `Allow: /`
-- `Disallow: /auth, /dashboard, /chat, /favorites, /calendar, /invite, /r, /verify-email, /reset-password, /delete-account, /booking-form, /support, /_next, /api`
-- `Sitemap: https://mylokalni.pl/sitemap.xml`
+### 7.3 `LandingView.tsx` — nowy widok
 
-### 6.5 Middleware (`src/middleware.ts`)
+Zastępuje obecny inline JSX w `[slug]/page.tsx`. Używa `useApp()` dla:
+- In-place search (setSearchQuery, setLocation)
+- Favorites (toggleFavorite)
+- Auth state (isLoggedIn)
+- Modal (add service, login)
 
-- 301 redirect legacy URL-i `/{title-PublicId}` → `/service/{slug}` (mixed-case URLs)
-- 404 na `/_next/data/*` (legacy Pages Router pułapka Googlebot cache)
+Layout:
+```
+Navbar (z apki, z auth state)
+│
+├── Hero: H1, count, opis, LandingSearchBar (in-place)
+├── Filtry: kategorie, miasta (link do innych landing pages)
+├── Listing: ServiceGrid (karty z ulubionym, cena, ocena)
+├── CTA: "Pokaż na mapie / zaawansowane filtry →" (link do /?q=...)
+├── Content: opis kategorii, FAQ, stats
+└── Footer
+```
 
-### 6.6 `next.config.ts` vs `public/_headers`
+### 7.4 `LandingSearchBar` — nowe zachowanie
 
-**KRYTYCZNE:** headery security (CSP, HSTS, X-Robots-Tag) MUSZĄ być w `public/_headers`. `next.config.ts::headers()` **nie jest respektowany** przez `@cloudflare/next-on-pages` na produkcji. CF Pages honoruje `_headers` natywnie.
+Zamiast `router.replace('/?q=...')`:
+```typescript
+onSubmit(keyword, city) {
+  // Spróbuj nawigować do landing page (SEO-friendly)
+  const slug = buildSlug(keyword, city)  // np. "hydraulik-warszawa"
+  router.push(`/${slug}`)
+  // Fallback: jeśli slug nie istnieje → 404 → graceful redirect do /?q=...
+  // (Next.js notFound() na [slug]/page.tsx obsługuje to automatycznie)
+}
+```
 
-### 6.7 App URL → search state (`AppShell.tsx`)
+### 7.5 Elastyczny parser slug-ów
+
+Obecny `parseLandingSlug` waliduje przeciwko 30 miastom + 48 keywordom. Docelowy parser:
+```typescript
+function parseSlug(slug) {
+  // 1. Exact keyword match (ALL_KEYWORDS)
+  if (ALL_KEYWORDS.includes(slug)) return { type: 'keyword', keyword: slug }
+
+  // 2. Exact city match (ALL_CITIES)
+  if (ALL_CITIES.includes(slug)) return { type: 'city', city: slug }
+
+  // 3. Keyword + city: szukaj keyword prefix (sort malejąco po długości)
+  for (const kw of [...ALL_KEYWORDS].sort((a, b) => b.length - a.length)) {
+    if (slug.startsWith(kw + '-')) {
+      return { type: 'keyword-city', keyword: kw, citySlug: slug.slice(kw.length + 1) }
+    }
+  }
+
+  // 4. Dowolna fraza (search_phrases) — cały slug jako query
+  //    Odetnij miasto z końca jeśli pasuje
+  return { type: 'search', query: slug.replace(/-/g, ' ') }
+}
+```
+
+### 7.6 Backend — city slug matching
+
+Problem: `nowy-sacz` ≠ `Nowy Sącz` w DB. Fix w `services.routes.ts`:
+```sql
+WHERE city ILIKE $displayName
+   OR LOWER(REGEXP_REPLACE(unaccent(city), '[^a-z0-9]+', '-', 'g')) = LOWER($citySlug)
+```
+
+### 7.7 Metadata z count
 
 ```typescript
-// Reads ?q= and ?city= from URL, applies to app state
-useEffect(() => {
-    if (state.isLoadingApp) return;
-    const q = searchParams.get('q');
-    if (q && pathname === '/') {
-        actions.homeActions.setSearchQuery(q);
-        actions.homeActions.setSearchDisplay(q);
-    }
-    const city = searchParams.get('city');
-    if (city) actions.homeActions.setLocation(city);
-}, [pathname, searchParams, ...]);
+title: `${services.length} ofert: ${kw} w ${city} | MyLokalni.pl`
+// "45 ofert: Hydraulik w Warszawie | MyLokalni.pl"
+// Social proof w Google SERP → większy CTR
 ```
 
-Ten useEffect jest kluczowy — bez niego user nawigujący z landing page do apki nie widziałby pre-fillowanego search-a (bo `useState(() => window.location.search)` działa tylko przy mount, nie przy nawigacji client-side).
+### 7.8 AggregateRating JSON-LD
+
+Na landing pages dodać schema z agregowaną oceną:
+```json
+{
+  "@type": "AggregateRating",
+  "ratingValue": "4.7",
+  "reviewCount": "123"
+}
+```
+Google może pokazać gwiazdki w wynikach wyszukiwania → +CTR.
+
+### 7.9 Internal linking service → kategoria
+
+Na stronie `/service/xxx` dodać link powrotny do kategorii:
+```tsx
+<Link href={`/${CATEGORY_SLUG[service.category]}`}>
+  ← Wszystkie oferty: {CATEGORY_DISPLAY[service.category]}
+</Link>
+```
+Google widzi hierarchię site → kategorie dostają PageRank z service pages.
+
+### 7.10 Security headers
+MUSZĄ być w `public/_headers`. `next.config.ts::headers()` nie działa na CF Pages.
 
 ---
 
-## 7. Status implementacji — checklist
+## 8. Status implementacji — kompletny checklist
 
 ### ✅ Zrobione
 
-- [x] **Root metadata** — pełne title/description/OG/Twitter/JSON-LD w `src/app/layout.tsx`
-- [x] **`/service/[slug]`** — edge SSR, `generateMetadata`, JSON-LD LocalBusiness, `notFound()` gdy brak danych
-- [x] **`/profile/[uid]`** — edge SSR, metadata (bez sitemap na decyzję usera)
-- [x] **Static informational pages** — `/faq`, `/jak-to-dziala`, `/o-nas`, `/regulamin`, `/polityka-prywatnosci`, `/zasady-bezpieczenstwa`
-- [x] **`sitemap.xml`** — index z 2 sub-sitemapami (services + categories)
-- [x] **`sitemap-services.xml`** — proxy do API, edge, `force-dynamic`, no CF cache
-- [x] **API `/public/sitemap/services`** — query Postgres, Redis cache 1h, filtruje `is_deleted=FALSE AND status='active'`
-- [x] **`sitemap-categories.xml`** — statyczne 7 stron informacyjnych
-- [x] **`robots.ts`** — Allow root, Disallow prywatne routes, link do sitemap
-- [x] **Middleware 301** — legacy URL → `/service/slug`
-- [x] **Middleware 404** — `/_next/data/*` blokada
-- [x] **`public/_headers`** — CSP, HSTS, X-Robots-Tag (production)
-- [x] **Meilisearch runtime sync** — indexService/deleteFromIndex w routes create/update/delete/restore
-- [x] **Meilisearch startup sync + cleanup** — `syncMeilisearch()` w `server.ts` czyści stale + upsertuje aktywne
-- [x] **`npm run sync:meili`** — manual sync script (`sync-meilisearch.ts`)
-- [x] **Landing pages `/[slug]`** — obecnie `noindex` (wygaszane, będą zastąpione dynamic search pages)
-- [x] **App URL → search state** — AppShell czyta `?q=` i `?city=`, ustawia HomeView pre-fill
-- [x] **Nawigacja z landing → app** — LandingSearchBar, category pills, city links zawsze idą do `/?q=...&city=...`
-- [x] **AppShell deep link handler** — konwertuje landing slugs z zewnętrznych źródeł (email, push notif) na app URL
+- [x] Root metadata — title/OG/Twitter/JSON-LD w `layout.tsx`
+- [x] `/service/[slug]` — edge SSR, generateMetadata, JSON-LD LocalBusiness, notFound()
+- [x] `/profile/[uid]` — edge SSR, metadata
+- [x] Strony statyczne — /faq, /jak-to-dziala, /o-nas, /regulamin, /polityka-prywatnosci, /zasady-bezpieczenstwa
+- [x] `sitemap.xml` — index
+- [x] `sitemap-services.xml` — proxy API, edge, force-dynamic
+- [x] `API /public/sitemap/services` — Postgres, Redis 1h
+- [x] `sitemap-search.xml` — proxy API, edge, force-dynamic
+- [x] `API /public/sitemap/search-pages` — GROUP BY category×city HAVING >= 2, Redis 6h
+- [x] `robots.ts` — Allow root, Disallow app routes
+- [x] Middleware 301 — legacy URL → /service/slug
+- [x] `public/_headers` — CSP, HSTS
+- [x] Meilisearch runtime sync — indexService/deleteFromIndex w routes
+- [x] Meilisearch startup cleanup — syncMeilisearch() w server.ts
+- [x] `[slug]/page.tsx` — index: true gdy >= 2 wyniki, notFound() gdy 0
+- [x] AppShell ?q= + ?city= — pre-fill search state
 
-### ☐ Do zrobienia — Dynamic Search Pages (target: OLX/Fixly-level SEO)
+### ☐ Do zrobienia — 4 fazy (bez podwójnej roboty)
 
-**Backend (`Lokalni API`):**
-
-- [ ] Nowy endpoint `GET /public/sitemap/search-pages`
-  - Query: `SELECT DISTINCT category, city FROM services WHERE is_deleted=FALSE AND status='active' AND category IS NOT NULL AND city IS NOT NULL`
-  - Zwraca JSON: `[{ slug: "rejsy-rowy", category: "rejsy", city: "Rowy" }, ...]`
-  - Redis cache klucz `sitemap:search-pages:v1`, TTL 6h
-  - Rate limit: 20/min (jak inne sitemap endpoints)
-
-- [ ] Rozszerz `GET /public/sitemap/search-pages` żeby zwracał XML dla `sitemap-search.xml` (alternatywnie: JSON + osobny endpoint XML)
-
-- [ ] Opcjonalnie: cache invalidation przy CRUD services — `redis.del('sitemap:search-pages:v1')` w routes żeby refresh był natychmiastowy
-
-**Frontend (`lokalni-web`):**
-
-- [ ] Nowy route `src/app/sitemap-search.xml/route.ts`
-  - Edge runtime, `force-dynamic`
-  - Proxy do API `/public/sitemap/search-pages`
-  - Cache-Control `public, max-age=21600, s-maxage=21600` (6h)
-
-- [ ] Dodaj `sitemap-search.xml` do `src/app/sitemap.xml/route.ts` (sitemap index)
-
-- [ ] Refaktor `src/app/[slug]/page.tsx`:
-  - Usuń `LANDING_SLUGS` whitelist z `generateStaticParams`
-  - Zamiast tego: `generateStaticParams` z API `/public/sitemap/search-pages` (dla top N stron przy build; reszta ISR)
-  - LUB: `dynamicParams = true`, brak `generateStaticParams`, wszystko on-demand SSR
-  - Parse slug: split po `-` na sensowne kombinacje, dopasuj do dostępnych `(category, city)` z API
-  - Fetch API `/services?query=...&city=...` w server component
-  - `services.length === 0` → `notFound()` (nie `noindex` — 404, żeby URL zniknął z Google)
-  - `services.length > 0` → `robots: { index: true, follow: true }`, prawdziwa metadata
-
-- [ ] Refaktor `src/lib/seo-data.ts`:
-  - `LANDING_SLUGS` — usuń albo zredukuj rolę (może zostać jako soft-hint dla nazewnictwa)
-  - `parseLandingSlug` — bardziej elastyczny, akceptuje dowolne kombinacje slug-ów po walidacji przez API
-
-- [ ] Auto-redirect client component `LandingAutoRedirect.tsx`:
-  - `useEffect` na mount → `router.replace('/?q=...&city=...')`
-  - Include w `/[slug]/page.tsx` (obok/zamiast statycznego renderu)
-  - Uwaga: SSR content dalej renderuje się dla Googlebota (Google robi JS execution ale wolniej niż browser, więc widzi SSR)
-  - Alternatywa: `<meta http-equiv="refresh">` (bardziej niezawodne cross-browser, ale gorsza UX)
-
-- [ ] `generateMetadata` dla dynamic pages:
-  - Title: `${keyword} ${city} – ${totalCount} ofert | MyLokalni.pl`
-  - Description: dynamiczny bazujący na kategorii+mieście
-  - Canonical: `/${slug}`
-  - JSON-LD `CollectionPage` lub `ItemList` z serwisami
-
-**Sitemap integration:**
-
-- [ ] Zweryfikuj że nowa `sitemap-search.xml` jest crawlowana — dodaj URL do Google Search Console
-- [ ] Monitor: ile URL-i z `sitemap-search.xml` jest indexed w GSC
-
-**Testing / QA:**
-
-- [ ] E2E: dodaj serwis w kategorii/miastie która nie miała wcześniej → sprawdź czy `sitemap-search.xml` po 6h zawiera nowy URL
-- [ ] E2E: usuń ostatni serwis z kategorii/miasta → sprawdź czy strona daje 404 (po Redis TTL)
-- [ ] Curl test: `curl -A "Googlebot" https://mylokalni.pl/rejsy-rowy` → widzi SSR content, nie flash empty
-- [ ] Real user test: `https://mylokalni.pl/rejsy-rowy` → auto-redirect do apki z pre-fill
-
-**Cleanup / migration:**
-
-- [ ] Po weryfikacji że dynamic search pages działają — usuń stare landing pages content z `/[slug]/page.tsx` (LandingNavbar, LandingSearchBar UI, LandingServiceGrid). Zastąp minimalnym SSR HTML (dla Google) + auto-redirect (dla usera).
-- [ ] Rozważ: może zostawić SSR content pełny (jak teraz — z kartkami serwisów) żeby Google miał więcej sygnału. Auto-redirect uruchomi się po chwili — Googlebot indexuje snapshot przed redirectem.
-
-**Documentation:**
-
-- [ ] Zaktualizuj `CLAUDE.md` — nowa architektura dynamic search pages, usunięcie 924 hardkodowanych slug-ów, opis flow
-- [ ] Zaktualizuj `src/app/robots.ts` — sprawdź czy nie trzeba dodać/usunąć disallow
-- [ ] Zaktualizuj ten dokument (`.ai/context/02-seo-architecture.md`) — odznacz zrealizowane, dodaj nowe znalezione tematy
+> **Klucz:** Faza 3 to DROGA B — refaktor `[slug]/page.tsx`. Wszystko co dotyka tego pliku
+> (elastyczny parser, Meilisearch, metadata z count, AggregateRating) robimy **razem** w Fazie 3,
+> nie osobno wcześniej. Backend i niezależny frontend robimy wcześniej, żeby nie wracać.
 
 ---
 
-## 8. Kluczowe decyzje architektoniczne (rationale)
+### FAZA 1 — Backend (tylko API, nie dotykamy frontu)
 
-**Q: Dlaczego nie serwować wyników wyszukiwania bezpośrednio pod `/?q=...` z SSR?**
-A: `/` to route apki (client-only z całym state managementem, mega-hook `useAppLogic`, providery). Dodanie SSR tam wymagałoby dużego refaktoru state managementu na server-safe. Zamiast tego — SSR odpowiada osobna warstwa (`/[slug]`) która renderuje statyczny snapshot dla Google, a interakcja idzie do apki.
+> Kolejność w Fazie 1 nie ma znaczenia — wszystkie są niezależne. Można paralelnie.
 
-**Q: Dlaczego auto-redirect z landing page do apki, a nie serwowanie apki bezpośrednio na landing page URL?**
-A: Analogicznie do wyżej — mieszanie SSR content-a i client app na tym samym URL wymagałoby refaktoru. Auto-redirect jest prostą warstwą — SSR robi swoje dla Google, JS redirect przenosi realnego usera do apki.
+**F1-A — Cache invalidation w CRUD (~30 min) ✅ ZROBIONE**
+- [x] `'sitemap:search-pages:v1'` dodane do `SITEMAP_KEYS` w `services.routes.ts`
+- Efekt: sitemaps aktualizują się natychmiast po każdej operacji CRUD
 
-**Q: Dlaczego Meilisearch a nie tylko Postgres FTS dla search?**
-A: Meilisearch daje fuzzy matching + typo tolerance out-of-the-box, i jest szybszy dla real-time search-as-you-type w apce. Postgres FTS jest fallback (gdy Meilisearch down).
+**F1-B — City slug matching w GET /services (~1h) ✅ ZROBIONE**
+- [x] `GET /services` akceptuje `citySlug` (np. `nowy-sacz`) jako alternatywę dla `city`
+- [x] SQL: `OR LOWER(REGEXP_REPLACE(unaccent(city), '[^a-z0-9]+', '-', 'g')) = LOWER($citySlug)`
+- [x] Dodaj `citySlug` do `servicesQuerySchema` w `services.schema.ts`
+- Efekt: każde miasto z DB działa, nie tylko 30 hardkodowanych
 
-**Q: Dlaczego cache 1h dla `sitemap-services` a 6h dla `sitemap-search-pages`?**
-A: Individual services zmieniają się częściej (edycje, dodawania, usuwania). Kombinacje category×city zmieniają się rzadko — nowa kategoria/miasto pojawia się dopiero jak KTOŚ tam wrzuci pierwszy serwis. 6h to komfortowe okno.
+**F1-C — Backend: endpoint category-pages (~30 min) ✅ ZROBIONE**
+- [x] `GET /public/sitemap/category-pages` w `public.routes.ts`
+- [x] SQL: `SELECT DISTINCT category FROM services WHERE is_deleted=FALSE HAVING COUNT(*) >= 2`
+- [x] Mapuj przez `CATEGORY_SLUG`, Redis 6h (`sitemap:category-pages:v1`)
+- [x] `redis.del('sitemap:category-pages:v1')` dodać do `SITEMAP_KEYS` w services.routes.ts
+- Efekt: /sprzatanie, /auto, /transport itd. odkrywalne przez Google
 
-**Q: Dlaczego `notFound()` (404) a nie `noindex` dla pustych search pages?**
-A: `noindex` zostawia URL w indeksie ale mówi "nie pokazuj". 404 usuwa URL z indeksu. Chcemy żeby puste kombinacje NIE ISTNIAŁY w Google — czyli 404.
-
-**Q: Dlaczego auto-redirect NIE po stronie serwera (302)?**
-A: 302 sprawi że Google przekieruje sitemap → zostanie zaindeksowany URL apki (`/?q=...`), a ten nie ma SSR content-a. Chcemy żeby Google indexował `/[slug]` (SSR content), a redirect wykonał tylko realny user. Redirect JS uruchamia się tylko w przeglądarce (Googlebot renderuje JS ale zwykle indeksuje URL na którym landował).
+**F1-D — Backend: endpoint keyword-pages (~1h) ✅ ZROBIONE**
+- [x] `GET /public/sitemap/keyword-pages` w `public.routes.ts`
+- [x] SQL: `search_phrases WHERE count >= 3` × aktywne miasta (GROUP BY city HAVING >= 2)
+- [x] Format: `{ slug, phrase, city?, count }[]`, Redis 12h (`sitemap:keyword-pages:v1`)
+- [x] `redis.del('sitemap:keyword-pages:v1')` dodać do `SITEMAP_KEYS`
+- Efekt: backend generuje /koszenie-trawnika, /koszenie-trawnika-warszawa itd.
 
 ---
 
-## 9. Monitoring i healthcheck
+### FAZA 2 — Frontend niezależny (nie dotykamy `[slug]/page.tsx`)
 
-**Live curl commands do weryfikacji:**
+> Pliki w tej fazie są **nowe** lub na innych routach — żaden nie zostanie nadpisany w Fazie 3.
+
+**F2-A — Restrukturyzacja sitemaps (~30 min) ✅ ZROBIONE**
+- [x] Rename route folder: `sitemap-categories.xml/` → `sitemap-static.xml/`
+- [x] Nowy folder `sitemap-categories.xml/route.ts` → proxy do `category-pages` API (wymaga F1-C)
+- [x] Aktualizacja `sitemap.xml` index: zamień `sitemap-categories` → `sitemap-static`, dodaj `sitemap-categories` i `sitemap-keywords`
+- Efekt: sitemap index wskazuje na właściwe pliki
+
+**F2-B — sitemap-keywords.xml (~20 min) ✅ ZROBIONE**
+- [x] Nowy `src/app/sitemap-keywords.xml/route.ts` — proxy do `keyword-pages` API (wymaga F1-D)
+- Efekt: Google odkrywa frazy z search_phrases
+
+**F2-C — Internal linking service → kategoria (~30 min) ✅ ZROBIONE**
+- [x] `/service/[slug]` — breadcrumb link `← Wszystkie: ${kategoria}` → `/${CATEGORY_SLUG[...]}` 
+- [x] Plik: `src/app/service/[slug]/ServiceDetailsClient.tsx`
+- [x] `CATEGORY_SLUG` dodany do `src/lib/seo-data.ts`
+- Efekt: Google widzi hierarchię, kategorie dostają PageRank z postów
+
+**F2-D — Google Search Console setup (manualne, ~30 min)**
+- [ ] Dodaj właściwość `mylokalni.pl` w GSC
+- [ ] Submit `https://mylokalni.pl/sitemap.xml`
+- [ ] Sprawdź Coverage: indexed vs excluded
+- [ ] Monitor: Rich Results, Performance per query
+
+---
+
+### FAZA 3 — DROGA B: Pełna unifikacja landing pages z apką (~2–3 tygodnie) 🏆
+
+> **Cel:** `/sprzatanie-warszawa` = pełna apka z SSR HTML dla Google. Jak OLX.
+> Robimy tu WSZYSTKO co dotyka `[slug]/page.tsx` — żeby nie wracać.
+
+**F3-A — Elastyczny parser slug-ów (zastępuje `parseLandingSlug`)**
+- [ ] Nowa funkcja `parseSlug(slug)` w `src/lib/seo-data.ts` (patrz szczegóły w sekcji 7.5)
+- [ ] Obsługa: exact keyword, exact city, keyword+citySlug, dowolna fraza (search query)
+- [ ] Przekazuj `citySlug` do `fetchServices` → backend używa F1-B
+- [ ] Usuń `LANDING_SLUGS` Set (zastąpione dynamicznym parserem)
+
+**F3-B — Meilisearch-driven parser dla dowolnych fraz**
+- [ ] Gdy parser z F3-A nie rozpozna keyword → cały slug jako search query
+- [ ] Odetnij miasto z końca slug-a przed przekazaniem jako query do Meilisearch
+- [ ] `fetchServices("koszenie trawnika", "Gdańsk")` z rozebranego slug-a
+- Efekt: /koszenie-trawnika-gdansk i każda fraza × miasto działa
+
+**F3-C — `LandingAppWrapper.tsx` — nowy komponent**
+- [ ] `'use client'` wrapper z `QueryProvider` + `AppProvider`
+- [ ] Osobna instancja AppProvider (poza `(app)/` group — nie koliduje)
+- [ ] Props: `initialServices`, `keyword`, `city`, `slug`
+
+**F3-D — `LandingView.tsx` — nowy widok**
+- [ ] Używa `useApp()` dla auth, favorites, search state
+- [ ] Layout: Navbar (z apki) + Hero (H1, count, opis) + SearchBar (in-place) + Filtry + ServiceGrid + CTA + Footer
+- [ ] Brak tab strip (inny niż HomeView)
+- [ ] CTA `"Pokaż na mapie / zaawansowane filtry →"` → `/?q=...&city=...`
+- [ ] Reuse `LandingServiceGrid` / `LandingServiceCard`
+
+**F3-E — `[slug]/page.tsx` refaktor**
+- [ ] Usuń cały inline JSX (city page section, keyword page section)
+- [ ] Zostaw: `generateMetadata`, `fetchServices`, `notFound()`, JSON-LD scripts
+- [ ] Dodaj: `<LandingAppWrapper initialServices={services} keyword={kw} city={city} />`
+- [ ] **Metadata z count:** `title: \`${services.length} ofert: ${kw} w ${city} | MyLokalni.pl\``
+- [ ] **AggregateRating JSON-LD:** `AVG(rating)` + `COUNT` z danych fetchServices → gwiazdki w Google
+- [ ] Użyj parsera z F3-A zamiast `parseLandingSlug`
+
+**F3-F — `LandingSearchBar` — nowe zachowanie**
+- [ ] Zamiast `router.replace('/?q=...')` → `router.push('/${buildSlug(kw, city)}')`
+- [ ] Buduje slug → nawiguje do landing page URL (SEO-friendly)
+- [ ] Fallback gdy landing 404 → `/?q=...&city=...`
+
+**F3-G — Usuń przestarzałe pliki**
+- [ ] Usuń `LandingAutoRedirect.tsx`
+- [ ] Usuń `LandingNavbar.tsx`
+
+**F3-H — Testy przed deployem**
+- [ ] Auth na landing page — user loguje się na /sprzatanie-warszawa bez opuszczania URL
+- [ ] Favorites — serce na karcie działa bez przejścia do apki
+- [ ] Klik w serwis → /service/xxx (bez zmian)
+- [ ] Mobile — brak tab strip, jest bottom nav
+- [ ] `curl -A "Googlebot" https://mylokalni.pl/sprzatanie-warszawa` widzi SSR HTML z H1 i listingiem
+
+---
+
+### FAZA 4 — Po Drodze B (gdy Faza 3 na produkcji)
+
+**F4-A — Core Web Vitals audit (~2h)**
+- [ ] PageSpeed Insights dla /sprzatanie-warszawa (mobile + desktop) — dopiero po Fazie 3
+- [ ] LCP, CLS, INP — napraw cokolwiek < 50 punktów
+
+**F4-B — Content layer na landing pages (~1 tydzień)**
+- [ ] Statyczne opisy per kategoria (15 tekstów)
+- [ ] Agregowane stats: COUNT, AVG(price), AVG(rating) per kategoria+miasto
+- [ ] Sekcja FAQ per kategoria (5–7 pytań)
+- [ ] Linki "powiązane kategorie" i "to samo w innych miastach"
+- Efekt: strony mają realną wartość informacyjną → Google rankuje wyżej
+
+**F4-C — Paginacja dla dużych kategorii (gdy skala wzrośnie)**
+- [ ] `/sprzatanie/2`, `/sprzatanie/3` z `rel="next/prev"`
+- [ ] Rozszerzyć `[slug]/page.tsx` o opcjonalny segment `[page]`
+
+---
+
+## 9. Co usuwamy po refaktorze (Droga B)
+
+| Plik | Akcja |
+|---|---|
+| `src/app/[slug]/_components/LandingAutoRedirect.tsx` | Usuń |
+| `src/app/[slug]/_components/LandingNavbar.tsx` | Usuń |
+| `src/app/[slug]/_components/LandingSearchBar.tsx` | Zostaw / przepisz zachowanie |
+| `src/app/[slug]/_components/LandingServiceCard.tsx` | Zostaw — reused w LandingView |
+| `src/lib/seo-data.ts` — `LANDING_SLUGS` | Usuń (zastąpione dynamicznym parserem) |
+| `src/lib/seo-data.ts` — `parseLandingSlug` | Zastąp elastycznym parserem |
+
+---
+
+## 10. Kluczowe decyzje architektoniczne
+
+**Q: Dlaczego Droga B a nie A?**
+A: Droga A zostawia trwałą granicę — użytkownik zawsze "przeskakuje" między landing page a apką. Droga B to właściwa architektura na lata. Landing pages są pełną apką od razu.
+
+**Q: Jak AppProvider w [slug]/ nie koliduje z (app)/layout.tsx?**
+A: `[slug]/` jest poza group `(app)/` — żaden rodzic nie dostarcza AppContext. `LandingAppWrapper` tworzy własną, izolowaną instancję AppProvider. Dwa oddzielne drzewa React bez konfliktów.
+
+**Q: Czy edge runtime + AppProvider (client) nie jest sprzeczne?**
+A: Nie. `[slug]/page.tsx` jest server component (edge) — renderuje SSR HTML + JSON-LD. `LandingAppWrapper` jest client component — hydruje po stronie przeglądarki. Next.js obsługuje ten split natywnie.
+
+**Q: Dlaczego notFound() a nie noindex dla pustych stron?**
+A: noindex = URL w indeksie (waste crawl budget). 404 = URL usunięty z indeksu całkowicie.
+
+**Q: Dlaczego Postgres → sitemap, nie Meilisearch?**
+A: Meilisearch może mieć dryf. Postgres = source of truth. Sitemap musi być dokładny.
+
+**Q: count >= 2 a nie >= 1?**
+A: Jedna oferta to za mało żeby strona miała SEO value. >= 2 gwarantuje sensowny listing.
+
+---
+
+## 11. Monitoring
 
 ```bash
 # Sitemap index
-curl -s https://mylokalni.pl/sitemap.xml | head -20
+curl -s https://mylokalni.pl/sitemap.xml
 
-# Individual services sitemap (should have real posts)
+# Ile ogłoszeń
 curl -s https://mylokalni.pl/sitemap-services.xml | grep -c "<url>"
 
-# Dynamic search pages sitemap (post-implementation)
+# Ile kombinacji keyword×miasto
 curl -s https://mylokalni.pl/sitemap-search.xml | grep -c "<url>"
 
-# Robots.txt
-curl -s https://mylokalni.pl/robots.txt
+# Kategorie (po Fix #4)
+curl -s https://mylokalni.pl/sitemap-categories.xml | grep -c "<url>"
 
-# Service page SSR content
-curl -s -A "Googlebot" https://mylokalni.pl/service/rejs-rib-xxx | grep -E "og:title|<title>"
+# Frazy keyword pages (po Fix #6)
+curl -s https://mylokalni.pl/sitemap-keywords.xml | grep -c "<url>"
 
-# Dynamic search page SSR (post-implementation)
-curl -s -A "Googlebot" https://mylokalni.pl/rejsy-rowy | grep -E "og:title|<title>"
+# SSR content dla Googlebota
+curl -s -A "Googlebot" https://mylokalni.pl/sprzatanie-warszawa | grep -E "<title>|og:title|<h1>"
 
-# API sitemap endpoints direct
-curl -s https://api.mylokalni.pl/public/sitemap/services | head -20
-curl -s https://api.mylokalni.pl/public/sitemap/search-pages | head -20  # post-implementation
+# Redis cache keys
+ssh main "docker exec lokalni-redis redis-cli KEYS 'sitemap:*'"
 
-# Meilisearch stats (SSH main required)
+# Meilisearch stats
 ssh main "docker exec lokalni-meilisearch curl -s http://localhost:7700/stats"
 ```
 
-**Google Search Console:**
-- Sprawdzaj coverage: ile URL-i indexed vs discovered vs excluded
-- Monitor: performance dla queries "kategoria miasto" (długi ogon)
-- Enhancements → Structured data → LocalBusiness (dla `/service/[slug]`)
+---
+
+## 12. Ryzyko i limity
+
+| Ryzyko | Opis | Mitigation |
+|---|---|---|
+| AppProvider double-mount | Dwie instancje AppProvider (app + landing) — osobne WebSocket, auth check | Normalne — izolowane drzewa React, nie kolidują |
+| Crawl budget | 500 fraz × 50 miast = 25k URL-i | Priorytetyzuj sitemap priority tag, top frazy najpierw |
+| LandingView mobile UX | Brak tab strip na landing — inny niż apka | Bottom nav CTA zamiast tab strip na mobile |
+| Meilisearch dryf | Między restartami API możliwy krótki dryf | Startup sync naprawia |
+| CF Pages edge timeout 30s | Duże sitemaps mogą przekroczyć | Redis cache eliminuje DB query per request |
+| Doorway page risk | Eliminuje Fix #8 — strony NIE są przekierowaniami | Google widzi pełną apkę, nie redirect trap |
 
 ---
 
-## 10. Ryzyko i limity
+## 13. Pliki kluczowe (docelowe)
 
-**Cloudflare Pages limits:**
-- Edge functions timeout: 30s (fetch do API musi się mieścić)
-- Bundle size: 25MB (nie problem dla tych routes)
-
-**Meilisearch limits:**
-- `getDocuments({ limit: 100000 })` — jeśli masz >100k serwisów, trzeba paginacji
-- Full sync przy każdym API start — dla dużego indexu może zająć minuty
-
-**Postgres query performance:**
-- `SELECT DISTINCT category, city` — dla >100k serwisów potrzebny index na `(category, city)` filtrowany `WHERE is_deleted=FALSE AND status='active'`
-
-**Redis cache expiry:**
-- Redis restart czyści cache → następny hit sitemap wygeneruje świeży (kilkasekundowy) query. To OK.
-
-**Google crawl budget:**
-- Zbyt duża sitemap (>50k URLs) — Google może nie zdążyć indeksować. Split na chunki jeśli potrzeba.
-
----
-
-## 11. Kontakt / źródła
-
-- **Kod SEO frontend:** `src/app/` (sitemap-*.xml, robots.ts, layout.tsx, service/, profile/, [slug]/)
-- **Kod SEO backend:** `Lokalni API/src/modules/public/public.routes.ts`
-- **Meilisearch:** `Lokalni API/src/lib/meilisearch.ts`, `src/db/sync-meilisearch.ts`
-- **Deploy status:** CF Pages Dashboard, GHCR (`ghcr.io/1talmon/lokalni-api`)
-- **Monitoring:** Google Search Console (`mylokalni.pl` property)
-- **API docs:** Notion (nie lokalne `.md`)
+| Plik | Co robi |
+|---|---|
+| `src/app/[slug]/page.tsx` | Edge SSR: generateMetadata, fetchServices, notFound(), JSON-LD |
+| `src/app/[slug]/_components/LandingAppWrapper.tsx` | Client: AppProvider + QueryProvider wrapper |
+| `src/app/[slug]/_components/LandingView.tsx` | Widok: listing + search + filtry (używa useApp()) |
+| `src/app/[slug]/_components/LandingSearchBar.tsx` | Search → nawigacja do landing page URL |
+| `src/app/[slug]/_components/LandingServiceCard.tsx` | Karta serwisu (reused) |
+| `src/app/sitemap.xml/route.ts` | Sitemap index |
+| `src/app/sitemap-static.xml/route.ts` | 7 statycznych stron |
+| `src/app/sitemap-categories.xml/route.ts` | Proxy → category-pages API |
+| `src/app/sitemap-services.xml/route.ts` | Proxy → services API |
+| `src/app/sitemap-search.xml/route.ts` | Proxy → search-pages API |
+| `src/app/sitemap-keywords.xml/route.ts` | Proxy → keyword-pages API |
+| `src/lib/seo-data.ts` | ALL_KEYWORDS, ALL_CITIES, elastyczny parser (refaktor) |
+| `Lokalni API/src/modules/public/public.routes.ts` | Wszystkie /public/sitemap/* endpointy |
+| `Lokalni API/src/modules/services/services.routes.ts` | CRUD + redis.del() po Fix #1 |
