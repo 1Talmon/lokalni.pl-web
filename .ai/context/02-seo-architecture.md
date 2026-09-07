@@ -433,46 +433,43 @@ MUSZĄ być w `public/_headers`. `next.config.ts::headers()` nie działa na CF P
 > **Cel:** `/sprzatanie-warszawa` = pełna apka z SSR HTML dla Google. Jak OLX.
 > Robimy tu WSZYSTKO co dotyka `[slug]/page.tsx` — żeby nie wracać.
 
-**F3-A — Elastyczny parser slug-ów (zastępuje `parseLandingSlug`)**
-- [ ] Nowa funkcja `parseSlug(slug)` w `src/lib/seo-data.ts` (patrz szczegóły w sekcji 7.5)
-- [ ] Obsługa: exact keyword, exact city, keyword+citySlug, dowolna fraza (search query)
-- [ ] Przekazuj `citySlug` do `fetchServices` → backend używa F1-B
-- [ ] Usuń `LANDING_SLUGS` Set (zastąpione dynamicznym parserem)
+**F3-A — Elastyczny parser slug-ów (zastępuje `parseLandingSlug`) ✅ ZROBIONE**
+- [x] Nowa funkcja `parseSlug(slug)` w `src/lib/seo-data.ts`
+- [x] Obsługa: exact keyword, exact city, keyword+citySlug, dowolna fraza (type='search')
+- [x] Przekazuje `citySlug` do `fetchServices` → backend używa F1-B
+- [x] `buildLandingSlug()` do budowania URL-i z search bara
 
-**F3-B — Meilisearch-driven parser dla dowolnych fraz**
-- [ ] Gdy parser z F3-A nie rozpozna keyword → cały slug jako search query
-- [ ] Odetnij miasto z końca slug-a przed przekazaniem jako query do Meilisearch
-- [ ] `fetchServices("koszenie trawnika", "Gdańsk")` z rozebranego slug-a
-- Efekt: /koszenie-trawnika-gdansk i każda fraza × miasto działa
+**F3-B — Meilisearch-driven parser dla dowolnych fraz ✅ ZROBIONE**
+- [x] Gdy parser z F3-A zwraca type='search' → query = slug jako zdania, citySlug opcjonalny
+- [x] `fetchServices` przekazuje `query` do Meilisearch przez GET /services?query=...
 
-**F3-C — `LandingAppWrapper.tsx` — nowy komponent**
-- [ ] `'use client'` wrapper z `QueryProvider` + `AppProvider`
-- [ ] Osobna instancja AppProvider (poza `(app)/` group — nie koliduje)
-- [ ] Props: `initialServices`, `keyword`, `city`, `slug`
+**F3-C — `LandingAppWrapper.tsx` — nowy komponent ✅ ZROBIONE**
+- [x] `'use client'` wrapper z `QueryProvider` + `AppProvider`
+- [x] Osobna instancja AppProvider (poza `(app)/` group — nie koliduje)
+- [x] Props: `initialServices`, `keyword`, `city`, `slug`
 
-**F3-D — `LandingView.tsx` — nowy widok**
-- [ ] Używa `useApp()` dla auth, favorites, search state
-- [ ] Layout: Navbar (z apki) + Hero (H1, count, opis) + SearchBar (in-place) + Filtry + ServiceGrid + CTA + Footer
-- [ ] Brak tab strip (inny niż HomeView)
-- [ ] CTA `"Pokaż na mapie / zaawansowane filtry →"` → `/?q=...&city=...`
-- [ ] Reuse `LandingServiceGrid` / `LandingServiceCard`
+**F3-D — `LandingView.tsx` — nowy widok ✅ ZROBIONE**
+- [x] Używa `useApp()` dla auth, favorites, Navbar state
+- [x] Layout: Navbar (z apki) + Hero (H1, count) + LandingSearchBar + ServiceGrid + CTA + Footer
+- [x] Brak tab strip (inny niż HomeView)
+- [x] CTA "Pokaż na mapie / zaawansowane filtry →" → `/?q=...&city=...`
+- [x] LandingServiceCard z obsługą ulubionych (serce)
 
-**F3-E — `[slug]/page.tsx` refaktor**
-- [ ] Usuń cały inline JSX (city page section, keyword page section)
-- [ ] Zostaw: `generateMetadata`, `fetchServices`, `notFound()`, JSON-LD scripts
-- [ ] Dodaj: `<LandingAppWrapper initialServices={services} keyword={kw} city={city} />`
-- [ ] **Metadata z count:** `title: \`${services.length} ofert: ${kw} w ${city} | MyLokalni.pl\``
-- [ ] **AggregateRating JSON-LD:** `AVG(rating)` + `COUNT` z danych fetchServices → gwiazdki w Google
-- [ ] Użyj parsera z F3-A zamiast `parseLandingSlug`
+**F3-E — `[slug]/page.tsx` refaktor ✅ ZROBIONE**
+- [x] Usunięto cały inline JSX (city page section, keyword page section)
+- [x] Zostaje: `generateMetadata`, `fetchServices`, `notFound()`, JSON-LD scripts
+- [x] Dodano: `<LandingAppWrapper initialServices={services} keyword={kw} city={city} />`
+- [x] **Metadata z count:** `title: \`${count} ofert: ${h1} | MyLokalni.pl\``
+- [x] **AggregateRating JSON-LD:** AVG(rating) × COUNT → gwiazdki w Google SERP
+- [x] Używa `parseSlug` zamiast `parseLandingSlug`
 
-**F3-F — `LandingSearchBar` — nowe zachowanie**
-- [ ] Zamiast `router.replace('/?q=...')` → `router.push('/${buildSlug(kw, city)}')`
-- [ ] Buduje slug → nawiguje do landing page URL (SEO-friendly)
-- [ ] Fallback gdy landing 404 → `/?q=...&city=...`
+**F3-F — `LandingSearchBar` — nowe zachowanie ✅ ZROBIONE**
+- [x] Zamiast `router.push('/?q=...')` → `router.push('/${buildLandingSlug(kw, city)}')`
+- [x] Nawiguje do landing page URL (SEO-friendly)
 
-**F3-G — Usuń przestarzałe pliki**
-- [ ] Usuń `LandingAutoRedirect.tsx`
-- [ ] Usuń `LandingNavbar.tsx`
+**F3-G — Usuń przestarzałe pliki ✅ ZROBIONE**
+- [x] Usunieto `LandingAutoRedirect.tsx`
+- [x] Usunięto `LandingNavbar.tsx`
 
 **F3-H — Testy przed deployem**
 - [ ] Auth na landing page — user loguje się na /sprzatanie-warszawa bez opuszczania URL
