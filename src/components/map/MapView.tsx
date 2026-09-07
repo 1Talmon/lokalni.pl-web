@@ -398,7 +398,7 @@ export const MapView = ({
             <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-2xl gap-3 text-gray-400">
                 <p className="text-sm font-semibold">Mapa niedostępna</p>
                 <p className="text-xs text-center px-6">
-                    Brak klucza <code className="bg-gray-100 px-1 rounded">VITE_GOOGLE_MAPS_KEY</code>
+                    Brak klucza <code className="bg-gray-100 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_KEY</code>
                 </p>
             </div>
         );
