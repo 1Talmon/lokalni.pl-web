@@ -13,6 +13,7 @@ import { createServiceUrl } from '@/utils/helpers';
 import { LandingNavbar } from './_components/LandingNavbar';
 import { LandingSearchBar } from './_components/LandingSearchBar';
 import { LandingServiceGrid } from './_components/LandingServiceCard';
+import { LandingAutoRedirect } from './_components/LandingAutoRedirect';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -46,7 +47,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const services = parsed.type === 'city'
         ? await fetchServices(null, parsed.city)
         : await fetchServices(parsed.keyword, parsed.city ?? null);
-    const noindex = services.length === 0 ? { robots: { index: false, follow: true } } : {};
+    const noindex = services.length >= 2
+        ? { robots: { index: true, follow: true } }
+        : { robots: { index: false, follow: true } };
 
     if (parsed.type === 'city') {
         const city = CITY_DISPLAY[parsed.city] ?? parsed.city;
@@ -90,6 +93,7 @@ export default async function SlugPage({ params }: Props) {
         const cityDisplay = CITY_DISPLAY[parsed.city] ?? parsed.city;
         const cityLoc = CITY_LOCATIVE[parsed.city] ?? cityDisplay;
         const services = await fetchServices(null, parsed.city);
+        if (services.length === 0) notFound();
 
         const h1 = `Usługi w ${cityLoc}`;
         const description = `Porównaj oferty lokalnych specjalistów w ${cityLoc}. Sprawdzone opinie, uczciwe ceny, szybki kontakt.`;
@@ -127,6 +131,7 @@ export default async function SlugPage({ params }: Props) {
 
         return (
             <>
+                <LandingAutoRedirect keyword="" city={cityDisplay} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
                 {itemListJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />}
@@ -159,19 +164,10 @@ export default async function SlugPage({ params }: Props) {
                     </section>
 
                     <main className="max-w-7xl mx-auto px-4 py-6">
-                        {services.length === 0 ? (
-                            <div className="text-center py-16">
-                                <p className="text-gray-500 text-lg mb-4">Brak ogłoszeń w {cityDisplay}.</p>
-                                <Link href="/" className="bg-[#6366F1] text-white px-6 py-3 rounded-full font-medium hover:bg-indigo-700 transition-colors">
-                                    Przeglądaj wszystkie ogłoszenia
-                                </Link>
-                            </div>
-                        ) : (
-                            <LandingServiceGrid
-                                services={services as Record<string, unknown>[]}
-                                createServiceUrl={createServiceUrl}
-                            />
-                        )}
+                        <LandingServiceGrid
+                            services={services as Record<string, unknown>[]}
+                            createServiceUrl={createServiceUrl}
+                        />
                     </main>
 
                     <PageFooter />
@@ -185,6 +181,7 @@ export default async function SlugPage({ params }: Props) {
     const city = parsed.city ? CITY_DISPLAY[parsed.city] : null;
     const cityLoc = parsed.city ? (CITY_LOCATIVE[parsed.city] ?? city) : null;
     const services = await fetchServices(parsed.keyword, parsed.city ?? null);
+    if (services.length === 0) notFound();
 
     const h1 = city ? `${kw} ${city}` : kw;
     const description = cityLoc
@@ -225,6 +222,7 @@ export default async function SlugPage({ params }: Props) {
 
     return (
         <>
+            <LandingAutoRedirect keyword={kw} city={city} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             {itemListJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />}
@@ -257,19 +255,10 @@ export default async function SlugPage({ params }: Props) {
                 </section>
 
                 <main className="max-w-7xl mx-auto px-4 py-6">
-                    {services.length === 0 ? (
-                        <div className="text-center py-16">
-                            <p className="text-gray-500 text-lg mb-4">Brak ogłoszeń w tej kategorii.</p>
-                            <Link href="/" className="bg-[#6366F1] text-white px-6 py-3 rounded-full font-medium hover:bg-indigo-700 transition-colors">
-                                Przeglądaj wszystkie ogłoszenia
-                            </Link>
-                        </div>
-                    ) : (
-                        <LandingServiceGrid
-                            services={services as Record<string, unknown>[]}
-                            createServiceUrl={createServiceUrl}
-                        />
-                    )}
+                    <LandingServiceGrid
+                        services={services as Record<string, unknown>[]}
+                        createServiceUrl={createServiceUrl}
+                    />
                 </main>
 
                 <PageFooter />

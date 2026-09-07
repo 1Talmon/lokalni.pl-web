@@ -18,6 +18,7 @@ Ten projekt utrzymuje briefy i skille w `.ai/` — Claude Code powinien czytać 
 | `.ai/architecture.md` | Ecosystem diagram (5 projektów), request flow, deploy topology, shared code map |
 | `.ai/context/01-project-brief.md` | Cel biznesowy MyLokalni.pl, target users, funkcje, roadmap |
 | `.ai/context/current-state.md` | Snapshot bieżących prac (**szybko się starzeje** — sprawdź `git log` i CF Dashboard dla live state) |
+| `.ai/context/02-seo-architecture.md` | Pełna dokumentacja SEO: sitemaps, generowanie stron, Meilisearch, checklist done/todo |
 | `.ai/skills/review-code/SKILL.md` | Procedura review — MCP graph + CF Pages specifics + quality gates |
 | `.ai/skills/deploy-web/SKILL.md` | Flow `git push` → CF Pages CI → post-deploy curl verification |
 | `.ai/skills/build-capacitor/SKILL.md` | Web build + `cap sync` + Xcode/Android Studio dla siostrzanego mobile projektu |
