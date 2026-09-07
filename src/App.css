@@ -35,36 +35,11 @@ html.scroll-locked body {
   padding-right: var(--scrollbar-w, 0px);
 }
 
-html.scroll-locked [data-fixed-nav],
-html.scroll-locked [data-fixed-bottom-nav] {
-  padding-right: var(--scrollbar-w, 0px);
-}
-
-
-/* Pasek przycisków z px-4 — padding-right musi uwzględniać istniejące 1rem */
-html.scroll-locked [data-fixed-nav-px4] {
-  padding-right: calc(1rem + var(--scrollbar-w, 0px));
-}
-
-/* Cookie banner — kompensacja pozycji right gdy scrollbar znika */
-html.scroll-locked [data-cookie-banner] {
-  right: calc(1rem + var(--scrollbar-w, 0px));
-}
-@media (min-width: 768px) {
-  html.scroll-locked [data-cookie-banner] {
-    right: calc(1.5rem + var(--scrollbar-w, 0px));
-  }
-}
-
 html.footer-visible [data-cta-bar],
 html.scroll-locked [data-cta-bar] {
   transform: translateY(100%);
   opacity: 0;
   pointer-events: none;
-}
-
-html.scroll-locked [data-cta-bar] {
-  padding-right: var(--scrollbar-w, 0px);
 }
 
 [data-cta-bar] {
