@@ -290,7 +290,7 @@ export const MainLayout = ({
                     </button>
                 </div>
             )}
-            <div ref={navWrapperRef} data-fixed-nav style={{ paddingTop: 'env(safe-area-inset-top, 0px)', backgroundColor: isDetailRoute ? 'transparent' : '#FFFFFF' }} className={`fixed top-0 left-0 right-0 z-50 min-w-[300px]${isDetailRoute ? '' : ' border-b border-gray-100'}`}>
+            <div ref={navWrapperRef} {...(!isDetailRoute && { 'data-fixed-nav': true })} style={{ paddingTop: 'env(safe-area-inset-top, 0px)', backgroundColor: isDetailRoute ? 'transparent' : '#FFFFFF' }} className={`fixed top-0 left-0 right-0 z-50 min-w-[300px]${isDetailRoute ? '' : ' border-b border-gray-100'}`}>
                 <Navbar
                     userProfile={userProfile}
                     isLoggedIn={isLoggedIn}
