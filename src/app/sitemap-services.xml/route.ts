@@ -8,7 +8,7 @@ export async function GET() {
     try {
         const res = await fetch(`${API_URL}/public/sitemap/services`, {
             headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
-            next: { revalidate: 3600 },
+            cache: 'no-store',
         });
 
         if (res.ok) {
