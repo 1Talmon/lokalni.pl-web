@@ -47,7 +47,6 @@ export const metadata: Metadata = {
         canonical: BASE_URL,
         languages: { 'pl': BASE_URL },
     },
-    other: { 'fb:app_id': '1082296997226159' },
     manifest: '/manifest.json',
     appleWebApp: {
         capable: true,
@@ -100,6 +99,9 @@ const websiteJsonLd = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="pl" className={font.variable}>
+            <head>
+                <meta property="fb:app_id" content="1082296997226159" />
+            </head>
             <body className={font.className}>
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />

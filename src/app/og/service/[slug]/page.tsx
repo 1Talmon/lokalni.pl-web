@@ -49,6 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description,
             url,
             type: 'website',
+            siteName: 'MyLokalni.pl',
+            locale: 'pl_PL',
             ...(image ? { images: [{ url: image, width: 1200, height: 630 }] } : {}),
         },
         twitter: {
@@ -57,7 +59,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description,
             ...(image ? { images: [image] } : {}),
         },
-        other: { 'fb:app_id': '1082296997226159' },
     };
 }
 

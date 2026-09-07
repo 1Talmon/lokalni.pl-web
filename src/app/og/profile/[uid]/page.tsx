@@ -47,15 +47,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: bio,
             url,
             type: 'profile',
-            ...(image ? { images: [{ url: image, width: 800, height: 800 }] } : {}),
+            siteName: 'MyLokalni.pl',
+            locale: 'pl_PL',
+            ...(image ? { images: [{ url: image, width: 1200, height: 630 }] } : {}),
         },
         twitter: {
-            card: 'summary',
+            card: 'summary_large_image',
             title: `${name} – specjalista`,
             description: bio,
             ...(image ? { images: [image] } : {}),
         },
-        other: { 'fb:app_id': '1082296997226159' },
     };
 }
 
