@@ -262,7 +262,7 @@ const HomeView = ({
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ duration: 0.3 }}
-            className="pb-24 md:pb-32"
+            className="pb-24 md:pb-32 bg-[#F4F4F9]"
         >
         
         {/* HERO SECTION */}

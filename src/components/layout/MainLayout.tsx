@@ -311,7 +311,8 @@ export const MainLayout = ({
                 style={{
                     paddingTop: 'var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px)))',
                     // hasRouteFooter: stable (pathname-only), never changes on modal open → no layout jump
-                    paddingBottom: (isNativeTabStrip || hasRouteFooter) ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
+                    // isOnTabRoute: tab slot handles its own scroll+padding, page-level pb would make body scrollable by ~68px → gray bar artifact
+                    paddingBottom: (isNativeTabStrip || hasRouteFooter || isOnTabRoute) ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
                 }}
             >
                 <Suspense fallback={Capacitor.isNativePlatform() ? <LoadingScreen isVisible={true} /> : null}>
