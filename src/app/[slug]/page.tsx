@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const services = parsed.type === 'city'
         ? await fetchServices(null, parsed.city)
         : await fetchServices(parsed.keyword, parsed.city ?? null);
-    const noindex = (services.length === 0 && parsed.type === 'keyword-city') ? { robots: { index: false, follow: true } } : {};
+    const noindex = services.length === 0 ? { robots: { index: false, follow: true } } : {};
 
     if (parsed.type === 'city') {
         const city = CITY_DISPLAY[parsed.city] ?? parsed.city;
