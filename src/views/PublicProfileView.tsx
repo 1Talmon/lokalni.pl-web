@@ -424,7 +424,6 @@ const PublicProfileView = ({
             {!isIos && (
                 <ClientPortal>
                     <div
-                        data-fixed-nav-px4
                         className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
                         style={{ top: 'var(--total-nav-h, 73px)' }}
                     >
