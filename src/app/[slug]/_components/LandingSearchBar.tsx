@@ -3,18 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { ALL_CITIES, CITY_DISPLAY, LANDING_SLUGS } from '@/lib/seo-data';
+import { ALL_CITIES, CITY_DISPLAY } from '@/lib/seo-data';
 
 interface Props {
     defaultKeyword: string;
     defaultCity: string;
-}
-
-function toSlug(text: string): string {
-    return text.toLowerCase()
-        .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l')
-        .replace(/ń/g, 'n').replace(/ó/g, 'o').replace(/ś/g, 's').replace(/ź/g, 'z').replace(/ż/g, 'z')
-        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 export function LandingSearchBar({ defaultKeyword, defaultCity }: Props) {
@@ -24,20 +17,10 @@ export function LandingSearchBar({ defaultKeyword, defaultCity }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const kwSlug = toSlug(keyword.trim());
-        const citySlug = city
-            ? (Object.keys(CITY_DISPLAY).find(k => CITY_DISPLAY[k] === city) ?? toSlug(city))
-            : null;
-
-        if (citySlug && LANDING_SLUGS.has(`${kwSlug}-${citySlug}`)) {
-            router.push(`/${kwSlug}-${citySlug}`);
-        } else if (LANDING_SLUGS.has(kwSlug)) {
-            router.push(`/${kwSlug}`);
-        } else if (citySlug && LANDING_SLUGS.has(citySlug)) {
-            router.push(`/${citySlug}`);
-        } else {
-            router.push(`/?q=${encodeURIComponent(keyword.trim())}`);
-        }
+        const qParams = new URLSearchParams();
+        if (keyword.trim()) qParams.set('q', keyword.trim());
+        if (city) qParams.set('city', city);
+        router.push(`/?${qParams}`);
     };
 
     return (

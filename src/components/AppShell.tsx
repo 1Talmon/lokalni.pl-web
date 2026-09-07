@@ -5,6 +5,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { CATEGORIES_DATA } from '../data/categories';
+import { parseLandingSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '../lib/seo-data';
 import { SWIPE_TABS } from '../hooks/useTabSwipe';
 import { useApp } from '../providers/AppProvider';
 import { useBiometricLock } from '../hooks/useBiometricLock';
@@ -92,7 +93,9 @@ function AppShellContent({ children }: AppShellProps) {
             localStorage.setItem('referral_code', ref);
             router.replace('/');
         }
-    }, [pathname, searchParams, router, state.isLoadingApp]);
+        const city = searchParams.get('city');
+        if (city) actions.homeActions.setLocation(city);
+    }, [pathname, searchParams, router, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleUrl = useCallback((url: string) => {
         if (url.startsWith('com.lokalni.app://')) {
@@ -110,6 +113,15 @@ function AppShellContent({ children }: AppShellProps) {
         if (DOMAINS.some(d => url.startsWith(d))) {
             try {
                 const parsed = new URL(url);
+                const slug = parsed.pathname.slice(1);
+                const landing = slug ? parseLandingSlug(slug) : null;
+                if (landing) {
+                    const qp = new URLSearchParams();
+                    if (landing.keyword) qp.set('q', KEYWORD_DISPLAY[landing.keyword] ?? landing.keyword.replace(/-/g, ' '));
+                    if (landing.city) qp.set('city', CITY_DISPLAY[landing.city] ?? landing.city);
+                    router.replace(`/?${qp}`);
+                    return;
+                }
                 router.replace(parsed.pathname + parsed.search);
             } catch (e) {
                 logger.warn('AppShell: nieprawidłowy URL w appUrlOpen', e);

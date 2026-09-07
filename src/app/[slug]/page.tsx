@@ -148,7 +148,7 @@ export default async function SlugPage({ params }: Props) {
                                 {POPULAR_KEYWORDS.slice(0, 16).map(kw => (
                                     <Link
                                         key={kw}
-                                        href={`/${kw}-${parsed.city}`}
+                                        href={`/?q=${encodeURIComponent(KEYWORD_DISPLAY[kw] ?? kw)}&city=${encodeURIComponent(cityDisplay)}`}
                                         className="text-sm bg-gray-100 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
                                     >
                                         {KEYWORD_DISPLAY[kw] ?? kw}
@@ -237,7 +237,7 @@ export default async function SlugPage({ params }: Props) {
                         <p className="text-gray-600 text-base max-w-xl">{description}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {city && (
-                                <Link href={`/${parsed.keyword}`} className="text-sm text-indigo-600 underline">
+                                <Link href={`/?q=${encodeURIComponent(kw)}`} className="text-sm text-indigo-600 underline">
                                     {kw} — wszystkie miasta
                                 </Link>
                             )}
@@ -245,7 +245,7 @@ export default async function SlugPage({ params }: Props) {
                                 <div className="mt-1 flex flex-wrap gap-2 w-full">
                                     <span className="text-xs text-gray-400 w-full">Wybierz miasto:</span>
                                     {['warszawa', 'krakow', 'wroclaw', 'poznan', 'gdansk', 'lodz', 'katowice', 'lublin'].map(c => (
-                                        <Link key={c} href={`/${parsed.keyword}-${c}`} className="text-sm bg-gray-100 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700 px-3 py-1 rounded-full transition-colors">
+                                        <Link key={c} href={`/?q=${encodeURIComponent(kw)}&city=${encodeURIComponent(CITY_DISPLAY[c])}`} className="text-sm bg-gray-100 hover:bg-indigo-50 hover:text-indigo-700 text-gray-700 px-3 py-1 rounded-full transition-colors">
                                             {CITY_DISPLAY[c]}
                                         </Link>
                                     ))}
