@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams, offset);
+    const { services } = await fetchServices(fetchParams, offset);
 
     return NextResponse.json(services);
 }
