@@ -1,8 +1,6 @@
 'use client';
 import { Calendar, CheckCircle, X, Clock, PartyPopper, XCircle, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../plugins/NativeNav';
 import { createServiceUrl } from '../../utils/helpers';
 import type { BookingData } from '../../types';
 
@@ -39,9 +37,8 @@ export const RecurringBookingCard = ({ booking, isMe: _isMe, onClose: _onClose, 
             {/* Header ze zdjęciem */}
             <div
                 className="relative h-20 cursor-pointer group overflow-hidden"
-                onClick={async () => {
+                onClick={() => {
                     if (!booking.servicePublicId) return;
-                    if (Capacitor.isNativePlatform()) await NativeNav.push({ fullScreen: true }).catch(() => {});
                     router.push(`/service/${createServiceUrl(booking.serviceTitle, booking.servicePublicId)}`);
                 }}
             >

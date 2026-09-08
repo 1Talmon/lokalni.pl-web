@@ -3,9 +3,6 @@ import { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Play, LayoutGrid } from 'lucide-react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { StatusBar } from '@capacitor/status-bar';
-import { usePlatform } from '../../hooks/usePlatform';
 import type { ChatMediaItem } from './ChatMediaGallery';
 
 interface Props {
@@ -33,8 +30,6 @@ export const MediaLightbox = ({
     nativeBottomPadding: _nativeBottomPadding = false,
     onOpenGallery,
 }: Props) => {
-    const { isNative } = usePlatform();
-
     const [current, setCurrent] = useState(initialIndex);
     const [dir, setDir] = useState(0);
 
@@ -109,11 +104,6 @@ export const MediaLightbox = ({
         }
     }, [isOpen, initialIndex, resetZoom]);
 
-    useEffect(() => {
-        if (!isNative || !isOpen) return;
-        StatusBar.hide().catch(() => {});
-        return () => { StatusBar.show().catch(() => {}); };
-    }, [isOpen, isNative]);
 
     useEffect(() => {
         imgSizeRef.current = null;
@@ -135,8 +125,7 @@ export const MediaLightbox = ({
         setDir(step);
         setCurrent(prev => (prev + step + items.length) % items.length);
         resetZoom();
-        if (isNative) Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    }, [items.length, isNative, resetZoom]);
+    }, [items.length, resetZoom]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -299,7 +288,6 @@ export const MediaLightbox = ({
 
     const onWrapperTouchEnd = useCallback(() => {
         if (isDraggingDownRef.current && swipeDownY > 90) {
-            if (isNative) Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
             onClose();
         } else if (swipeDownY > 0) {
             setIsSnappingBack(true);
@@ -308,7 +296,7 @@ export const MediaLightbox = ({
         }
         isDraggingDownRef.current = false;
         swipeDownRef.current = null;
-    }, [swipeDownY, onClose, isNative]);
+    }, [swipeDownY, onClose]);
 
     const closeOpacity = Math.max(0.3, 1 - swipeDownY / 250);
     const closeScale = Math.max(0.88, 1 - swipeDownY / 1200);
@@ -348,10 +336,8 @@ export const MediaLightbox = ({
                         {/* Header */}
                         <div
                             className="relative flex items-center justify-between px-4 pb-2 shrink-0"
-                            style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' : '1.25rem' }}
+                            style={{ paddingTop: '1.25rem' }}
                         >
-                            {/* Pull-down indicator — tylko native */}
-                            {isNative && <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-12 h-1.5 bg-white/25 rounded-full pointer-events-none" />}
                             <span className="text-white/50 text-sm tabular-nums min-w-[48px]">
                                 <span className="text-white font-semibold">{current + 1}</span>
                                 {' '}/ {items.length}

@@ -4,8 +4,6 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { useRouter } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../plugins/NativeNav';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../utils/logger';
 import { polishPlural } from '../utils/helpers';
@@ -19,8 +17,7 @@ import {
 } from 'lucide-react';
 import { ProviderProfile, Service, Review } from '../types';
 import type { AppActions } from '../types/appTypes';
-import { usePlatform } from '../hooks/usePlatform';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
 
 const ReportModal = dynamic(() => import('../components/modals/ReportModal').then(m => ({ default: m.ReportModal })));
 import { NewsFeedModal, type FeedItem } from '../components/modals/NewsFeedModal';
@@ -33,7 +30,6 @@ import { ReviewForm } from '../components/reviews/ReviewForm';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { useWsEvent } from '../hooks/useWebSocket';
 import { useSwipeBack } from '../hooks/useSwipeBack';
-import { useNativeNavBar, nativeShare } from '../hooks/useNativeNavBar';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
 import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 
@@ -64,23 +60,14 @@ const PublicProfileView = ({
                                isLoggedIn = false,
                                isOwner = false,
                                currentUserUid = null,
-                               isChatOpen = false,
-                               showNotificationsOpen = false,
                                actions
                            }: PublicProfileViewProps) => {
 
     const router = useRouter();
-    const { isNative, isIos } = usePlatform();
 
     const handleShare = async () => {
         if (!provider) return;
-        const url = window.location.href.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl');
-        const title = `${provider.name} — MyLokalni.pl`;
-        if (isNative) {
-            Haptics.impact({ style: ImpactStyle.Medium });
-            const imageUrl = provider.avatar || normalizeMediaUrl(provider.zdjecieTla) || 'https://mylokalni.pl/og-image.png';
-            try { await nativeShare({ url, title: provider.name || title, imageUrl }); return; } catch { return; }
-        }
+        const url = window.location.href;
         try {
             await navigator.clipboard.writeText(url);
         } catch {
@@ -126,12 +113,11 @@ const PublicProfileView = ({
         longPressMovedRef.current = false;
         longPressTimer.current = setTimeout(() => {
             if (!longPressMovedRef.current) {
-                if (isNative) Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
                 setProfileViewerPhotos([url]);
                 setProfileViewerOpen(true);
             }
         }, 600);
-    }, [isNative]);
+    }, []);
 
     const cancelLongPress = useCallback(() => {
         if (longPressTimer.current) {
@@ -149,33 +135,18 @@ const PublicProfileView = ({
 
     useSwipeBack(!galleryOpen && !newsFeedOpen && !certListOpen && !showReviewForm && !reportConfig.isOpen && !profileViewerOpen, onBack);
 
-    const nativeShareUrl = provider
-        ? window.location.href.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl')
-        : '';
-
-    useNativeNavBar({
-        showFavorite: false,
-        shareUrl: nativeShareUrl,
-        shareTitle: provider?.name || '',
-        shareImageUrl: provider?.avatar || normalizeMediaUrl(provider?.zdjecieTla) || 'https://mylokalni.pl/og-image.png',
-        onBack,
-        hidden: (isChatOpen && !reportConfig.isOpen) || galleryOpen || showReviewForm || showNotificationsOpen || profileViewerOpen || (newsFeedOpen && newsFeedLightboxOpen),
-        isMapOpen: reportConfig.isOpen || certListOpen || newsFeedOpen,
-    });
-
     // Biały overlay na popstate: przykrywa canvas GPU layer, sticky nav i wszystko inne.
     // Odpala się tylko dla browser-back / swipe-back (nie dla webNavigate z vt-running).
     useEffect(() => {
         const handlePop = () => {
             if (document.documentElement.classList.contains('vt-running')) return;
-            if (isNative) return;
             const overlay = createSafariOverlay();
             const sdvRoot = document.querySelector('[data-sdv-root]');
             revealAfterUnmount(overlay, sdvRoot);
         };
         window.addEventListener('popstate', handlePop, { capture: true });
         return () => window.removeEventListener('popstate', handlePop, { capture: true });
-    }, [isNative]);
+    }, []);
 
     useEffect(() => {
         const updateLimit = () => setVisibleLimit(window.innerWidth < 768 ? 3 : 6);
@@ -421,36 +392,32 @@ const PublicProfileView = ({
             {/* Pasek nawigacji — portaled do body żeby transform motion.div nie tworzył
                 nowego containing block dla position:fixed (fixed wewnątrz transformed parenta
                 jest relatywny do parenta, nie viewportu → navbar skacze przy animacji wejścia) */}
-            {!isIos && (
-                <ClientPortal>
-                    <div
-                        className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
-                        style={{ top: 'var(--total-nav-h, 73px)' }}
+            <ClientPortal>
+                <div
+                    className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
+                    style={{ top: 'var(--total-nav-h, 73px)' }}
+                >
+                    <button
+                        onClick={onBack}
+                        type="button"
+                        aria-label="Wróć"
+                        className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
+                        style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm || reportConfig.isOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
                     >
-                        {!isNative ? (
-                            <button
-                                onClick={onBack}
-                                type="button"
-                                aria-label="Wróć"
-                                className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
-                                style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm || reportConfig.isOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
-                            >
-                                <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
-                                <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
-                            </button>
-                        ) : <div />}
-                        <button
-                            onClick={handleShare}
-                            type="button"
-                            aria-label="Udostępnij profil"
-                            className="pointer-events-auto p-2.5 bg-white/90 hover:bg-white backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm text-slate-600 transition-all active:scale-95"
-                            style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
-                        >
-                            <Share2 size={20} />
-                        </button>
-                    </div>
-                </ClientPortal>
-            )}
+                        <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
+                    </button>
+                    <button
+                        onClick={handleShare}
+                        type="button"
+                        aria-label="Udostępnij profil"
+                        className="pointer-events-auto p-2.5 bg-white/90 hover:bg-white backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm text-slate-600 transition-all active:scale-95"
+                        style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
+                    >
+                        <Share2 size={20} />
+                    </button>
+                </div>
+            </ClientPortal>
 
             {/* Tło */}
             <div
@@ -460,7 +427,7 @@ const PublicProfileView = ({
                 onTouchMove={bgImageUrl ? moveLongPress : undefined}
                 onTouchEnd={bgImageUrl ? cancelLongPress : undefined}
                 onContextMenu={bgImageUrl ? (e) => e.preventDefault() : undefined}
-                onClick={bgImageUrl && !isNative ? () => { setProfileViewerPhotos([bgImageUrl]); setProfileViewerOpen(true); } : undefined}
+                onClick={bgImageUrl ? () => { setProfileViewerPhotos([bgImageUrl]); setProfileViewerOpen(true); } : undefined}
             >
                 {providerIsPremium && providerData.zdjecieTla ? (
                     <img
@@ -500,7 +467,7 @@ const PublicProfileView = ({
                                 onTouchMove={avatarUrl ? moveLongPress : undefined}
                                 onTouchEnd={avatarUrl ? cancelLongPress : undefined}
                                 onContextMenu={avatarUrl ? (e) => e.preventDefault() : undefined}
-                                onClick={avatarUrl && !isNative ? () => { setProfileViewerPhotos([avatarUrl]); setProfileViewerOpen(true); } : undefined}
+                                onClick={avatarUrl ? () => { setProfileViewerPhotos([avatarUrl]); setProfileViewerOpen(true); } : undefined}
                             >
                                 <img
                                     src={avatarUrl || '/default-profile-picture.webp'}
@@ -970,7 +937,7 @@ const PublicProfileView = ({
                                             ) : (
                                                 <div
                                                     className={`flex items-center gap-4 text-left ${review.userUid ? 'cursor-pointer group/reviewer' : ''}`}
-                                                    onClick={async () => { if (!review.userUid) return; if (Capacitor.isNativePlatform()) await NativeNav.push().catch(() => {}); router.push(`/profile/${review.userUid}`); }}
+                                                    onClick={() => { if (!review.userUid) return; router.push(`/profile/${review.userUid}`); }}
                                                 >
                                                     <div className="relative shrink-0">
                                                         <UserAvatar src={review.userAvatar} name={review.userName || '?'} size={48} className={`rounded-2xl transition-transform duration-200 ${review.userUid ? 'group-hover/reviewer:scale-105' : ''}`} />

@@ -1,8 +1,6 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Keyboard } from '@capacitor/keyboard';
 import { useRouter } from 'next/navigation';
 import { AddressAutocomplete } from '../components/ui/AddressAutocomplete';
 import { ArrowLeft, Calendar as CalendarIcon, Clock, MapPin, FileText, Loader2, Globe, MessageSquare, Banknote, CheckCircle, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
@@ -12,7 +10,6 @@ import { isRemoteService } from '../utils/serviceUtils';
 import { CATEGORIES_DATA } from '../data/categories';
 import { authService } from '../services/authService';
 import { UserAvatar } from '../components/ui/UserAvatar';
-import { useNativeNavBar } from '../hooks/useNativeNavBar';
 import { useSwipeBack } from '../hooks/useSwipeBack';
 interface BookingFormViewProps {
     service: Service | null;
@@ -33,21 +30,9 @@ const todayNative = new Date().toISOString().split('T')[0];
 
 const BookingFormView = ({ service, onBack, userLocation: _userLocation, onSubmit, isSubmitting }: BookingFormViewProps) => {
     const [step, setStep]                 = useState<1 | 2>(1);
-    const [kbHeight, setKbHeight] = useState(0);
     const notesRef = useRef<HTMLTextAreaElement>(null);
     const [addressValue, setAddressValue] = useState('');
     const [addressCoords, setAddressCoords] = useState<{ lat: number; lng: number } | null>(null);
-
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) return;
-        let showH: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-        let hideH: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-        Keyboard.addListener('keyboardWillShow', info => {
-            setKbHeight(info.keyboardHeight);
-        }).then(h => { showH = h; });
-        Keyboard.addListener('keyboardWillHide', () => setKbHeight(0)).then(h => { hideH = h; });
-        return () => { showH?.remove(); hideH?.remove(); };
-    }, []);
 
     const [calDate, setCalDate]           = useState(new Date());
     const [selectedDate, setSelectedDate] = useState('');
@@ -111,13 +96,6 @@ const BookingFormView = ({ service, onBack, userLocation: _userLocation, onSubmi
         else onBack();
     }, [step, onBack]);
 
-    const { isNativeNavActive } = useNativeNavBar({
-        shareUrl:     '',
-        showFavorite: false,
-        showShare:    false,
-        onBack:       handleNativeBack,
-    });
-
     useSwipeBack(true, handleNativeBack);
 
     if (!service) {
@@ -148,18 +126,16 @@ const BookingFormView = ({ service, onBack, userLocation: _userLocation, onSubmi
 
     return (
         <>
-        <div className="pb-20 selection:bg-indigo-500 selection:text-white" style={{ paddingBottom: kbHeight > 0 ? kbHeight + 80 : undefined }}>
-            <div className={`max-w-5xl mx-auto px-4 md:px-6 ${isNativeNavActive ? 'pt-[76px]' : 'pt-[60px] pb-8 lg:py-8'}`}>
+        <div className="pb-20 selection:bg-indigo-500 selection:text-white">
+            <div className="max-w-5xl mx-auto px-4 md:px-6 pt-[60px] pb-8 lg:py-8">
 
-                {!isNativeNavActive && (
-                    <button
-                        onClick={onBack}
-                        type="button"
-                        className="hidden lg:flex mb-6 items-center gap-2 bg-white px-4 py-2.5 rounded-2xl text-[10px] font-black shadow-sm border border-gray-100 text-gray-700 uppercase tracking-wider transition-all active:scale-95 hover:bg-gray-50"
-                    >
-                        <ArrowLeft size={13} strokeWidth={3} /> Wróć
-                    </button>
-                )}
+                <button
+                    onClick={onBack}
+                    type="button"
+                    className="hidden lg:flex mb-6 items-center gap-2 bg-white px-4 py-2.5 rounded-2xl text-[10px] font-black shadow-sm border border-gray-100 text-gray-700 uppercase tracking-wider transition-all active:scale-95 hover:bg-gray-50"
+                >
+                    <ArrowLeft size={13} strokeWidth={3} /> Wróć
+                </button>
 
                 {/* ── MOBILE: kompaktowa karta usługi na górze ── */}
                 <div className="lg:hidden mb-5">

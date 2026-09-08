@@ -32,7 +32,6 @@ interface ServiceShellData {
 }
 
 export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
-    const cityPart = data.city ? ` w ${data.city}` : '';
     const image = normalizeUrl(data.image || data.images?.[0] || data.provider?.profilowe);
     const rating = parseFloat(String(data.rating ?? 0)) || 0;
     const reviewsCount = parseInt(String(data.reviewsCount ?? 0)) || 0;

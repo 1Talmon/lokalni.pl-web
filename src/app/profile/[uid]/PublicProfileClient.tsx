@@ -2,10 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { UserX, ArrowLeft } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
-import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import { usePublicProfile } from '../../../hooks/usePublicProfile';
@@ -50,7 +47,7 @@ export default function PublicProfileClient() {
     const { state, actions } = useApp();
 
     const doNav = useCallback(() => {
-        if (!Capacitor.isNativePlatform() && window.history.length <= 1) {
+        if (window.history.length <= 1) {
             router.replace('/');
         } else {
             router.back();
@@ -59,22 +56,11 @@ export default function PublicProfileClient() {
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
-    const fromFullScreenRef = useRef(false);
-    useEffect(() => {
-        const flag = sessionStorage.getItem('__fromFullScreen__');
-        if (flag) { fromFullScreenRef.current = true; sessionStorage.removeItem('__fromFullScreen__'); }
-    }, []);
-
-    const handleBack = useCallback(async () => {
+    const handleBack = useCallback(() => {
         actions.setNavLoading(false);
-        if (Capacitor.isNativePlatform()) {
-            await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-        }
         setNavDirection('pop');
         doNav();
     }, [doNav, actions]);
-
-    useNativeSwipeBack(doNav);
 
     const { profile, isOnline, activityStatus, isLoading, isError } = usePublicProfile(uid);
 
@@ -124,16 +110,6 @@ export default function PublicProfileClient() {
         }
     }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Signal native that content is ready (once)
-    const signalSentRef = useRef(false);
-    useEffect(() => {
-        if (!profile || !Capacitor.isNativePlatform() || signalSentRef.current) return;
-        signalSentRef.current = true;
-        let r2 = 0;
-        const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
-        return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
-    }, [profile]);
-
     // Restore scroll position on web (saved before navigating away from profile)
     const hasRestoredScroll = useRef(false);
     useEffect(() => {
@@ -153,30 +129,24 @@ export default function PublicProfileClient() {
     if ((profile as { deleted?: boolean })?.deleted) return <DeletedAccountView onBack={doNav} />;
     if (!profile) return <NotFoundView />;
 
-    const isNative = Capacitor.isNativePlatform();
-
-    const ppvEl = (
-        <PublicProfileView
-            provider={profile as never}
-            onBack={handleBack}
-            providerServices={servicesData ?? []}
-            onServiceClick={actions.onServiceClick}
-            onStartChat={actions.startChat}
-            activityStatus={activityStatus}
-            isOnline={isOnline}
-            isLoggedIn={state.isLoggedIn}
-            isOwner={uid === (state.freshUser || state.userProfile)?.uid}
-            currentUserUid={(state.freshUser || state.userProfile)?.uid ?? null}
-            isChatOpen={state.activeModal !== 'none'}
-            showNotificationsOpen={state.showNotifications}
-            actions={actions}
-        />
-    );
-
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {isNative ? <div>{ppvEl}</div> : ppvEl}
+            <PublicProfileView
+                provider={profile as never}
+                onBack={handleBack}
+                providerServices={servicesData ?? []}
+                onServiceClick={actions.onServiceClick}
+                onStartChat={actions.startChat}
+                activityStatus={activityStatus}
+                isOnline={isOnline}
+                isLoggedIn={state.isLoggedIn}
+                isOwner={uid === (state.freshUser || state.userProfile)?.uid}
+                currentUserUid={(state.freshUser || state.userProfile)?.uid ?? null}
+                isChatOpen={state.activeModal !== 'none'}
+                showNotificationsOpen={state.showNotifications}
+                actions={actions}
+            />
         </>
     );
 }

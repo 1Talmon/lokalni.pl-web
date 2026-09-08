@@ -3,8 +3,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../../providers/AppProvider';
 import { UserProfileView } from '../../../views/Dashboard/UserProfileView';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
 
 export default function DashboardPage() {
     const { state, actions } = useApp();
@@ -15,25 +13,6 @@ export default function DashboardPage() {
             router.replace('/auth');
         }
     }, [state.isLoggedIn, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const openChat = async (chatId: string) => {
-        if (Capacitor.isNativePlatform()) {
-            await NativeNav.push({ fullScreen: true }).catch(() => {});
-            router.push(`/chat/${chatId}`);
-        } else {
-            actions.setCurrentChatId(chatId);
-            actions.setActiveModal('chat_detail');
-        }
-    };
-
-    const handleOpenSupport = async () => {
-        if (Capacitor.isNativePlatform()) {
-            await NativeNav.push({ fullScreen: true }).catch(() => {});
-            router.push('/support');
-        } else {
-            actions.openSupportModal();
-        }
-    };
 
     if (!state.isLoggedIn && !state.isLoadingApp) return null;
 
@@ -52,8 +31,8 @@ export default function DashboardPage() {
             onBookingAction={actions.handleBookingAction}
             onReschedule={actions.handleBookingReschedule}
             onUpgrade={actions.handleUpgradeToPremium}
-            onOpenChat={(chatId) => openChat(chatId)}
-            onOpenSupport={() => handleOpenSupport()}
+            onOpenChat={(chatId) => { actions.setCurrentChatId(chatId); actions.setActiveModal('chat_detail'); }}
+            onOpenSupport={() => actions.openSupportModal()}
             onOpenTicket={actions.openSupportTicket}
         />
     );

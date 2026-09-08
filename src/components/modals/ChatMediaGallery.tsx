@@ -3,9 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Film, Play, Images } from 'lucide-react';
-import { StatusBar } from '@capacitor/status-bar';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { usePlatform } from '../../hooks/usePlatform';
 import { MediaLightbox } from './MediaLightbox';
 
 export interface ChatMediaItem {
@@ -23,19 +20,12 @@ interface Props {
 export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
-    const { isNative } = usePlatform();
-
     const swipeRef = useRef<{ startY: number; startX: number } | null>(null);
     const isDraggingRef = useRef(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [dragY, setDragY] = useState(0);
     const [isSnapping, setIsSnapping] = useState(false);
 
-    useEffect(() => {
-        if (!isNative || !isOpen) return;
-        StatusBar.hide().catch(() => {});
-        return () => { StatusBar.show().catch(() => {}); };
-    }, [isOpen, isNative]);
 
     useEffect(() => {
         if (!isOpen) { setDragY(0); setIsSnapping(false); }
@@ -67,7 +57,6 @@ export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
 
     const onTouchEnd = useCallback(() => {
         if (isDraggingRef.current && dragY > 90) {
-            if (isNative) Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
             onClose();
         } else if (dragY > 0) {
             setIsSnapping(true);
@@ -76,7 +65,7 @@ export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
         }
         isDraggingRef.current = false;
         swipeRef.current = null;
-    }, [dragY, onClose, isNative]);
+    }, [dragY, onClose]);
 
     // Natywny listener — iOS WebKit konsumuje touchmove przy scrollTop=0
     useEffect(() => {
@@ -137,9 +126,8 @@ export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
                             {/* Header */}
                             <div
                                 className="relative flex items-center justify-between px-4 pb-2 shrink-0"
-                                style={{ paddingTop: isNative ? 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' : '1.25rem' }}
+                                style={{ paddingTop: '1.25rem' }}
                             >
-                                {isNative && <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-12 h-1.5 bg-white/25 rounded-full pointer-events-none" />}
                                 <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">
                                     {items.length === 0
                                         ? 'Brak mediów'

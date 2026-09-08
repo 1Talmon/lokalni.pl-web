@@ -4,12 +4,7 @@ import { ArrowLeft, Heart, Share2, MapPin, Star, Edit2, Flag, Globe, Check, Chev
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ClientPhotosModal } from '../components/modals/ClientPhotosModal';
 import { logger } from '../utils/logger';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../plugins/NativeNav';
-import { usePlatform } from '../hooks/usePlatform';
 import { useSwipeBack } from '../hooks/useSwipeBack';
-import { useNativeNavBar, nativeShare } from '../hooks/useNativeNavBar';
 import { useNativeBottomBar } from '../hooks/useNativeBottomBar';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -97,7 +92,6 @@ const getZoom = (r: number) => {
 const ServiceMap = ({ city, address, lat: propLat, lng: propLng, radiusKm, serviceName, providerAvatar, providerName, onExpandedChange, onRegisterControls }: {
     city: string; address?: string | null; lat?: number; lng?: number; radiusKm: number; serviceName?: string; providerAvatar?: string; providerName?: string; onExpandedChange?: (v: boolean) => void; onRegisterControls?: (c: { collapse: () => void; zoomIn: () => void; zoomOut: () => void }) => void;
 }) => {
-    const { isNative } = usePlatform();
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: (process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY as string | undefined) ?? '',
@@ -345,7 +339,7 @@ const ServiceMap = ({ city, address, lat: propLat, lng: propLng, radiusKm, servi
                         />
 
                         {/* Bottom card z nawigacją */}
-                        <div className={`absolute bottom-0 left-0 right-0 z-10 pt-3 pointer-events-none${isNative ? ' px-4' : ' px-3'}`}
+                        <div className="absolute bottom-0 left-0 right-0 z-10 pt-3 px-3 pointer-events-none"
                             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.25rem)' }}>
                             <div className="bg-white rounded-2xl shadow-lg px-4 py-3.5 flex items-center gap-3 pointer-events-auto">
                                 <UserAvatar src={providerAvatar} name={providerName || '?'} size={36} className="rounded-xl border border-slate-100 shrink-0" />
@@ -394,10 +388,9 @@ const savedCarouselScrolls = new Map<string, number>();
 const ServiceDetailsView = ({
     service, reviews: reviewsProp = [], isFavorite, onBack, onToggleFavorite, onOpenProfile,
     onOpenService, onStartChat, onEdit, onBook, isLoggedIn, onLoginRedirect, userLocation,
-    currentUserUid, onReport, onReportReview, onOpenSupport, addToast, isChatOpen = false, isReportOpen = false, isSupportOpen = false, showNotificationsOpen = false,
+    currentUserUid, onReport, onReportReview, onOpenSupport, addToast, isChatOpen = false, isReportOpen = false, isSupportOpen = false,
 }: ServiceDetailsViewProps) => {
 
-    const { isNative, isIos } = usePlatform();
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -487,8 +480,8 @@ const ServiceDetailsView = ({
     const similarSentinelRef = useRef<HTMLDivElement>(null);
 
     const mapControlsRef = useRef<{ collapse: () => void; zoomIn: () => void; zoomOut: () => void } | null>(null);
-    const [galleryViewMode, setGalleryViewMode] = useState<'carousel' | 'grid'>('carousel');
-    const [clientPhotosViewMode, setClientPhotosViewMode] = useState<'carousel' | 'grid'>('carousel');
+    const [, setGalleryViewMode] = useState<'carousel' | 'grid'>('carousel');
+    const [, setClientPhotosViewMode] = useState<'carousel' | 'grid'>('carousel');
     const galleryToggleRef = useRef<(() => void) | null>(null);
     const clientPhotosToggleRef = useRef<(() => void) | null>(null);
 
@@ -589,12 +582,11 @@ const ServiceDetailsView = ({
 
     const handleCTA = useCallback(() => {
         if (!activeService) return;
-        if (isNative) Haptics.impact({ style: ImpactStyle.Medium });
         if (!isLoggedIn) { onLoginRedirect(); return; }
         if (activeService.type === 'request') {
             onStartChat(activeService);
         } else { onBook(); }
-    }, [activeService, isLoggedIn, isNative, onLoginRedirect, onStartChat, onBook]);
+    }, [activeService, isLoggedIn, onLoginRedirect, onStartChat, onBook]);
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault(); e.stopPropagation();
@@ -604,7 +596,6 @@ const ServiceDetailsView = ({
             router.push('/auth');
             return;
         }
-        if (isNative) Haptics.impact({ style: ImpactStyle.Medium });
         const willBeFavorite = !effectiveFavorite;
         setOptimisticFavorite(willBeFavorite);
         onToggleFavorite(activeService.publicId ?? '');
@@ -615,12 +606,7 @@ const ServiceDetailsView = ({
     const handleShare = async (e: React.MouseEvent) => {
         e.preventDefault(); e.stopPropagation();
         if (!activeService) return;
-        const webUrl = window.location.href.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl');
-        if (isNative) {
-            Haptics.impact({ style: ImpactStyle.Medium });
-            const imageUrl = activeService.images?.[0] || activeService.image || '';
-            try { await nativeShare({ url: webUrl, title: activeService.title, imageUrl }); return; } catch { return; }
-        }
+        const webUrl = window.location.href;
         try {
             await navigator.clipboard.writeText(webUrl);
             addToast('Link skopiowany do schowka', 'success', <Check size={18} />);
@@ -639,14 +625,13 @@ const ServiceDetailsView = ({
     useEffect(() => {
         const handlePop = () => {
             if (document.documentElement.classList.contains('vt-running')) return;
-            if (isNative) { return; }
             const overlay = createSafariOverlay();
             const sdvRoot = document.querySelector('[data-sdv-root]');
             revealAfterUnmount(overlay, sdvRoot);
         };
         window.addEventListener('popstate', handlePop, { capture: true });
         return () => window.removeEventListener('popstate', handlePop, { capture: true });
-    }, [isNative]);
+    }, []);
 
     const doBack = useCallback(() => {
         // onBack() → NativeNav.pop() na native (Swift animation) lub webNavigate na web;
@@ -665,56 +650,17 @@ const ServiceDetailsView = ({
         doBack();
     }, [galleryOpen, clientPhotosOpen, doBack]);
 
-    const shareUrl = typeof window !== 'undefined'
-        ? window.location.href.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl')
-        : '';
-
-    const shareImageUrl = activeService?.images?.[0] || activeService?.image || '';
-
-    useNativeNavBar({
-        isFavorite: effectiveFavorite,
-        shareUrl,
-        shareTitle: activeService?.title || '',
-        shareImageUrl,
-        isLoggedIn,
-        hidden:        (isChatOpen && !isReportOpen && !isSupportOpen) || isSupportOpen || showNotificationsOpen,
-        isMapOpen:     isMapExpanded || isReportOpen,
-        isGalleryOpen: galleryOpen || clientPhotosOpen,
-        galleryIsGrid: galleryOpen ? galleryViewMode === 'grid' : clientPhotosViewMode === 'grid',
-        onBack: handleSmartBack,
-        onFavoriteChange: (fav) => {
-            if (!activeService) return;
-            setOptimisticFavorite(fav);
-            onToggleFavorite(activeService.publicId ?? '');
-            if (!fav) addToast('Usunięto z ulubionych', 'custom', <Trash2 size={18} />, 'bg-gray-800');
-            else      addToast('Dodano do ulubionych',  'custom', <Heart  size={18} fill="currentColor" />, 'bg-rose-500');
-        },
-        onLoginRequired: () => {
-            addToast('Zaloguj się, aby dodać do ulubionych', 'info', <Heart size={18} />);
-            router.push('/auth');
-        },
-        onGalleryClose: () => {
-            if (galleryOpen) setGalleryOpen(false);
-            else if (clientPhotosOpen) setClientPhotosOpen(false);
-        },
-        onGalleryToggle: () => {
-            if (galleryOpen) galleryToggleRef.current?.();
-            else if (clientPhotosOpen) clientPhotosToggleRef.current?.();
-        },
-    });
-
     const ctaBarRef = useRef<HTMLDivElement>(null);
 
     const { isNativeBottomBarActive } = useNativeBottomBar({
         price:     activeService?.price?.toString() ?? '',
         unit:      activeService?.priceUnit ?? '',
         label:     ctaLabel,
-        enabled:   isNative,
-        visible:   isNative && !activeService?.isMine && (!isChatOpen || isReportOpen || isSupportOpen),
+        enabled:   false,
+        visible:   false,
         collapsed: !isLoggedIn || galleryOpen || clientPhotosOpen || isMapExpanded || isReportOpen || isSupportOpen,
         onAction: () => {
             if (!activeService) return;
-            if (isNative) Haptics.impact({ style: ImpactStyle.Medium });
             if (!isLoggedIn) { onLoginRedirect(); return; }
             onBook();
         },
@@ -921,22 +867,8 @@ const ServiceDetailsView = ({
                  Web: portaled do body — fixed wewnątrz transformed motion.div byłoby relatywne do parenta,
                       przez co CTA "jedzie" ze stroną podczas animacji wejścia.
                  iOS native: inline — portal zaburza synchronizację z natywnym BottomBar pluginem. */}
-            {!activeService.isMine && (isNative
-                ? <div
-                    ref={ctaBarRef}
-                    data-cta-bar
-                    className={`fixed left-0 right-0 z-40 lg:hidden bg-white/80 backdrop-blur-xl border-t border-white/30 transition-[opacity] duration-200${isNativeBottomBarActive ? ' opacity-0 pointer-events-none' : ''}`}
-                    style={{ bottom: isLoggedIn ? 'var(--bottom-nav-total-h, calc(68px + var(--bottom-nav-pb, 0px)))' : '0' }}
-                >
-                    <div className="flex items-center gap-3 px-4 pt-3" style={{ paddingBottom: isLoggedIn ? '0.75rem' : 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-                        <div className="shrink-0">
-                            <p className="font-black text-xl text-slate-900 leading-tight">{activeService.price} zł</p>
-                            <p className="text-[11px] text-slate-400">/ {activeService.priceUnit}</p>
-                        </div>
-                        <button onClick={handleCTA} className="flex-1 bg-indigo-600 text-white py-3.5 rounded-2xl font-black text-base hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-300/50">{ctaLabel}</button>
-                    </div>
-                </div>
-                : <ClientPortal>
+            {!activeService.isMine && (
+                <ClientPortal>
                     <div
                         ref={ctaBarRef}
                         data-cta-bar
@@ -958,23 +890,21 @@ const ServiceDetailsView = ({
             <div
                 className="min-h-screen bg-[#F4F4F9] w-full relative font-sans selection:bg-indigo-500 selection:text-white pb-28 lg:pb-0"
             >
-                <div className={`max-w-6xl mx-auto px-4 pb-4 ${isIos ? 'pt-[60px]' : 'pt-14'} md:px-6 md:pb-6 md:pt-14 lg:p-8 w-full`}>
+                <div className="max-w-6xl mx-auto px-4 pb-4 pt-14 md:px-6 md:pb-6 md:pt-14 lg:p-8 w-full">
 
                     {/* ── NAWIGACJA mobile: portaled to body, tylko domyślny widok (galerie i mapa mają własne kontrolki) ── */}
-                    {!isIos && !galleryOpen && !clientPhotosOpen && (!isChatOpen || isReportOpen || isSupportOpen) && (
+                    {!galleryOpen && !clientPhotosOpen && (!isChatOpen || isReportOpen || isSupportOpen) && (
                         <ClientPortal>
                             <div
                                 className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
                                 style={{ top: 'var(--total-nav-h, 73px)' }}
                             >
-                                {!isNative ? (
-                                    <button onClick={handleSmartBack} type="button" aria-label="Wróć" className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
-                                        style={(isReportOpen || isSupportOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
-                                    >
-                                        <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
-                                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
-                                    </button>
-                                ) : <div />}
+                                <button onClick={handleSmartBack} type="button" aria-label="Wróć" className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
+                                    style={(isReportOpen || isSupportOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
+                                >
+                                    <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
+                                </button>
                                 <div className="flex gap-2 items-center">
                                     <button onClick={handleFavoriteClick} type="button" aria-label={effectiveFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'} aria-pressed={effectiveFavorite} className="pointer-events-auto p-2.5 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
                                         style={(isReportOpen || isSupportOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
@@ -1371,7 +1301,7 @@ const ServiceDetailsView = ({
                                                         ) : (
                                                             <div
                                                                 className={`flex items-center gap-4 min-w-0 ${review.userUid ? 'cursor-pointer group/reviewer' : ''}`}
-                                                                onClick={async () => { if (!review.userUid) return; if (Capacitor.isNativePlatform()) await NativeNav.push().catch(() => {}); router.push(`/profile/${review.userUid}`); }}
+                                                                onClick={() => { if (!review.userUid) return; router.push(`/profile/${review.userUid}`); }}
                                                             >
                                                                 <div className="relative shrink-0">
                                                                     <UserAvatar

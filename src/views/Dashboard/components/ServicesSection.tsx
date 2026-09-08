@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '@/plugins/NativeNav';
 import { Plus, MoreHorizontal, Zap, Edit3, Trash2, Tag, RotateCcw, AlertTriangle, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
@@ -227,7 +225,7 @@ export const ServicesSection = ({ myServices, onAddService, onEditService, setSe
                             service={service}
                             onEdit={() => onEditService(service)}
                             onDelete={() => setConfirmDeleteId(service.publicId ?? '')}
-                            onNavigate={async () => { if (Capacitor.isNativePlatform()) { sessionStorage.setItem('nav_scroll_/dashboard', String(window.scrollY)); await NativeNav.push().catch(() => {}); } router.push(`/service/${createServiceUrl(service.title, service.publicId ?? '')}`); }}
+                            onNavigate={() => { router.push(`/service/${createServiceUrl(service.title, service.publicId ?? '')}`); }}
                         />
                     ))
                 )}

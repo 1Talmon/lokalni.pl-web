@@ -5,8 +5,6 @@ import { ImageWithSkeleton } from './ui/ImageWithSkeleton';
 import { UserAvatar } from './ui/UserAvatar';
 import type { Service } from '../types';
 import { isRemoteService } from '../utils/serviceUtils';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { usePlatform } from '../hooks/usePlatform';
 
 interface ServiceCardProps {
     service: Service;
@@ -15,7 +13,6 @@ interface ServiceCardProps {
 }
 
 const ServiceCard = memo(({ service, onServiceClick, onStartChat }: ServiceCardProps) => {
-    const { isNative } = usePlatform();
     const isOffer = (service.type || 'offer') === 'offer';
     const isRemote = isRemoteService(service);    // czy usługa jest zdalna
     const isUserActive = service.isOnline;         // czy wykonawca jest teraz aktywny
@@ -90,13 +87,13 @@ const ServiceCard = memo(({ service, onServiceClick, onStartChat }: ServiceCardP
 
                 <div className="flex gap-2 md:gap-3">
                     <button
-                        onClick={e => { e.stopPropagation(); if (isNative) Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {}); onServiceClick(service); }}
+                        onClick={e => { e.stopPropagation(); onServiceClick(service); }}
                         className={`flex-1 text-white py-2.5 md:py-3 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 transition-colors active:scale-95 ${isOffer ? 'bg-gray-900 hover:bg-gray-800' : 'bg-[#6366F1] hover:bg-[#4F46E5]'}`}
                     >
                         <CreditCard size={16} /> {isOffer ? 'Zarezerwuj' : 'Zgłoś się'}
                     </button>
                     <button
-                        onClick={e => { e.stopPropagation(); if (isNative) Haptics.impact({ style: ImpactStyle.Light }).catch(() => {}); onStartChat(service); }}
+                        onClick={e => { e.stopPropagation(); onStartChat(service); }}
                         aria-label={`Napisz do ${service.provider.name}`}
                         className="w-10 md:w-12 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 flex items-center justify-center transition-colors active:scale-95"
                     >

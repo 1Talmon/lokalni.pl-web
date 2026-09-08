@@ -4,8 +4,6 @@ import { X, ArrowUp, LifeBuoy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Capacitor } from '@capacitor/core';
-import { Keyboard } from '@capacitor/keyboard';
 import { useBottomSheet } from '../../hooks/useBottomSheet';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { apiClient } from '../../services/apiClient';
@@ -65,12 +63,9 @@ const formatTime = (iso: string) =>
 export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: SupportTicketModalProps) => {
     const [reply, setReply] = useState('');
     const [isSending, setIsSending] = useState(false);
-    const [kbHeight, setKbHeight] = useState(0);
-    const isNative = Capacitor.isNativePlatform();
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const kbHandlesRef = useRef<{ show: { remove(): void } | null; hide: { remove(): void } | null }>({ show: null, hide: null });
     const prevMsgCountRef = useRef(0);
     const queryClient = useQueryClient();
 
@@ -91,24 +86,6 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
         return () => { unlockScroll(); };
     }, [isOpen]);
 
-    useEffect(() => {
-        if (!isNative) return;
-        if (!isOpen) { setKbHeight(0); return; }
-        Keyboard.addListener('keyboardWillShow', info => {
-            setKbHeight(info.keyboardHeight);
-            requestAnimationFrame(() => {
-                if (messagesContainerRef.current) {
-                    messagesContainerRef.current.scrollTop += info.keyboardHeight + 12;
-                }
-            });
-        }).then(h => { kbHandlesRef.current.show = h; });
-        Keyboard.addListener('keyboardWillHide', () => setKbHeight(0)).then(h => { kbHandlesRef.current.hide = h; });
-        return () => {
-            kbHandlesRef.current.show?.remove();
-            kbHandlesRef.current.hide?.remove();
-            kbHandlesRef.current = { show: null, hide: null };
-        };
-    }, [isNative, isOpen]);
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -204,9 +181,7 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
                         onClick={e => e.stopPropagation()}
                         onTouchMove={e => e.stopPropagation()}
                         {...sheetDragProps}
-                        className={`pointer-events-auto bg-white w-full sm:max-w-lg shadow-2xl relative text-left flex flex-col overflow-hidden rounded-t-[2rem] ${
-                            isNative ? 'h-[85dvh]' : 'max-h-[92dvh]'
-                        } sm:rounded-[2.5rem] sm:max-h-[85vh] sm:h-auto`}
+                        className="pointer-events-auto bg-white w-full sm:max-w-lg shadow-2xl relative text-left flex flex-col overflow-hidden rounded-t-[2rem] max-h-[92dvh] sm:rounded-[2.5rem] sm:max-h-[85vh] sm:h-auto"
                     >
                         <div className="sm:hidden">
                             <BottomSheetHandle onPointerDown={startDrag} />
@@ -250,7 +225,7 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
                             className="overflow-y-auto flex-1 px-3 pt-2"
                             style={{
                                 backgroundColor: '#F5F5F7',
-                                paddingBottom: isNative && kbHeight > 0 ? `${kbHeight + 24}px` : '24px',
+                                paddingBottom: '24px',
                             }}
                         >
                             {isLoading && (
@@ -355,13 +330,7 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
                                 className="px-3 pt-2 border-t shrink-0 bg-white"
                                 style={{
                                     borderColor: 'rgba(0,0,0,0.06)',
-                                    paddingBottom: isNative && kbHeight > 0
-                                        ? '8px'
-                                        : isNative
-                                            ? 'calc(var(--bottom-nav-total-h, env(safe-area-inset-bottom)) + 10px)'
-                                            : 'calc(8px + env(safe-area-inset-bottom))',
-                                    transform: isNative && kbHeight > 0 ? `translateY(-${kbHeight}px)` : undefined,
-                                    transition: isNative && kbHeight === 0 ? 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
+                                    paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
                                 }}
                             >
                                 <div className="flex gap-2 items-end pb-1">
@@ -412,11 +381,7 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
                             <div
                                 className="px-6 sm:px-8 py-4 border-t border-gray-50 shrink-0 bg-gray-50/50 text-center"
                                 style={{
-                                    paddingBottom: isNative && kbHeight > 0
-                                        ? '12px'
-                                        : 'calc(12px + env(safe-area-inset-bottom))',
-                                    transform: isNative && kbHeight > 0 ? `translateY(-${kbHeight}px)` : undefined,
-                                    transition: isNative && kbHeight === 0 ? 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
+                                    paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
                                 }}
                             >
                                 <p className="text-sm text-gray-500">

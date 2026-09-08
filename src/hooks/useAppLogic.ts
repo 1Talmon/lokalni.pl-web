@@ -2,8 +2,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { navPush } from '../utils/navState';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../plugins/NativeNav';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePersistedState } from './usePersistedState';
 import { useMyProfile } from './useMyProfile';
@@ -138,22 +136,7 @@ export const useAppLogic = () => {
 
         (async () => {
             try {
-                // Na native: czytaj RT z Keychain/Keystore i wyślij w body.
-                // Cookie httpOnly nie przeżywa zabicia aplikacji na iOS/Android.
-                const rt = await secureStorage.getRefreshToken();
-
-                if (!rt && Capacitor.isNativePlatform()) {
-                    // Keychain pusty — brak RT (np. stary login przed secureStorage).
-                    // Czyść stan lokalny cicho bez redirect — user zobaczy stronę
-                    // jako niezalogowany i może zalogować się z navbara.
-                    setIsLoggedIn(false);
-                    setUserProfile(null);
-                    tokenUtils.clearAll();
-                    return;
-                }
-
                 const body: Record<string, string> = {};
-                if (rt) body.refreshToken = rt;
 
                 const res = await fetch(`${API_BASE}/auth/refresh`, {
                     method: 'POST',
@@ -180,9 +163,6 @@ export const useAppLogic = () => {
                 const data = await res.json() as { token?: string; refreshToken?: string };
                 if (data?.token) {
                     tokenUtils.set(data.token);
-                }
-                if (data?.refreshToken && Capacitor.isNativePlatform()) {
-                    await secureStorage.setRefreshToken(data.refreshToken);
                 }
             } catch {
                 // Błąd sieci — NIE wylogowuj
@@ -227,16 +207,9 @@ export const useAppLogic = () => {
     // fromKilledApp=true: review_received/reply kieruje na stronę usługi zamiast dashboardu
     const handlePushData = useCallback(async (data: Record<string, string>, fromKilledApp = false) => {
         if (data.type === 'message' && data.sessionId) {
-            if (Capacitor.isNativePlatform()) {
-                if (!fromKilledApp) {
-                    await NativeNav.push({ fullScreen: true }).catch(() => {});
-                }
-                router.push(`/chat/${data.sessionId}`);
-            } else {
-                setCurrentChatId(data.sessionId);
-                setActiveModal('chat_detail');
-                router.push('/chat');
-            }
+            setCurrentChatId(data.sessionId);
+            setActiveModal('chat_detail');
+            router.push('/chat');
         } else if (data.type === 'booking') {
             navPush(router, '/dashboard', { openTab: 'orders', bookingTab: data.bookingTab || 'incoming' });
         } else if (data.type === 'review_received' || data.type === 'review_reply') {
@@ -568,16 +541,6 @@ export const useAppLogic = () => {
             providerUid ? c.otherPartyUid === providerUid : c.servicePublicId === s.publicId
         );
 
-        if (Capacitor.isNativePlatform()) {
-            await NativeNav.push({ fullScreen: true }).catch(() => {});
-            if (existing) {
-                router.push(`/chat/${existing.id}`);
-            } else {
-                router.push(`/chat/new?serviceId=${s.publicId}`);
-            }
-            return;
-        }
-
         if (existing) {
             setCurrentChatId(existing.id);
         } else {
@@ -714,19 +677,11 @@ export const useAppLogic = () => {
         addToast,
         handleLogout,
         removeToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
-        onServiceClick: async (s: Service) => {
+        onServiceClick: (s: Service) => {
             setSelectedService(s);
-            if (!Capacitor.isNativePlatform()) {
-                const cached = queryClient.getQueryData(['service', s.publicId]);
-                if (!cached) setIsNavLoading(true);
-            }
-            if (Capacitor.isNativePlatform()) {
-                sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY));
-                await NativeNav.push().catch(() => {});
-                router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
-            } else {
-                router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
-            }
+            const cached = queryClient.getQueryData(['service', s.publicId]);
+            if (!cached) setIsNavLoading(true);
+            router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
         },
         toggleFavorite: (publicId: string) => {
             if (!isLoggedIn) { router.push('/auth'); return; }
@@ -749,13 +704,10 @@ export const useAppLogic = () => {
                 return;
             }
             if (type === 'review' && servicePublicId) { navPush(router, '/dashboard', { openDetail: 'reviews' }); return; }
-            if (type === 'review' && bookingId) { if (Capacitor.isNativePlatform()) await NativeNav.push().catch(() => {}); router.push(`/review/${bookingId}`); return; }
+            if (type === 'review' && bookingId) { router.push(`/review/${bookingId}`); return; }
             if (type === 'review') { navPush(router, '/dashboard', { openTab: 'orders', bookingTab: 'outgoing' }); return; }
             if (cId) {
-                if (Capacitor.isNativePlatform()) {
-                    await NativeNav.push({ fullScreen: true }).catch(() => {});
-                    router.push(`/chat/${cId}`);
-                } else { setCurrentChatId(cId); setActiveModal('chat_detail'); }
+                setCurrentChatId(cId); setActiveModal('chat_detail');
                 return;
             }
         },

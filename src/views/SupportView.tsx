@@ -4,8 +4,6 @@ import { ArrowLeft, Wrench, CreditCard, AlertTriangle, User, HelpCircle, CheckCi
 import { motion, AnimatePresence } from 'framer-motion';
 import { readNavState } from '../utils/navState';
 import { useQueryClient } from '@tanstack/react-query';
-import { Capacitor } from '@capacitor/core';
-import { Keyboard } from '@capacitor/keyboard';
 import { apiClient } from '../services/apiClient';
 
 type Category = 'technical' | 'payment' | 'dispute' | 'account' | 'other';
@@ -36,17 +34,14 @@ export const SupportView = ({ addToast, onClose }: SupportViewProps) => {
     const [body, setBody] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [ticketNo, setTicketNo] = useState('');
-    const [kbHeight, setKbHeight] = useState(0);
 
-    const isNative = Capacitor.isNativePlatform();
     const contentRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
 
-    // ── Swipe z lewej krawędzi → back (JS, bez WKWebView native cache) ────────
+    // ── Swipe z lewej krawędzi → back (JS fallback) ──────────────────────────
     const edgeDragRef = useRef<{ startX: number; startY: number; active: boolean } | null>(null);
 
     useEffect(() => {
-        if (isNative) return; // Na native SupportWrapper obsługuje swipe (capture phase) — tu byłby duplikat
         const EDGE = 22; // px od lewej krawędzi
         const MIN_DX = 60; // minimalne przesunięcie w prawo
 
@@ -79,48 +74,7 @@ export const SupportView = ({ addToast, onClose }: SupportViewProps) => {
             document.removeEventListener('touchmove', onTouchMove);
             document.removeEventListener('touchend', onTouchEnd);
         };
-    }, [isNative, onClose]);
-
-    useEffect(() => {
-        if (!isNative) return;
-        Keyboard.setScroll({ isDisabled: true }).catch((_: unknown) => undefined);
-        return () => { Keyboard.setScroll({ isDisabled: false }).catch((_: unknown) => undefined); };
-    }, [isNative]);
-
-    useEffect(() => {
-        if (!isNative) return;
-        let showH: { remove(): void } | undefined;
-        let hideH: { remove(): void } | undefined;
-        let hideTimer: ReturnType<typeof setTimeout> | null = null;
-
-        Keyboard.addListener('keyboardWillShow', info => {
-            if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-            setKbHeight(info.keyboardHeight);
-            setTimeout(() => {
-                const active = document.activeElement as HTMLElement | null;
-                const container = contentRef.current;
-                if (!active || !container) return;
-                const tag = active.tagName;
-                if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
-                const rect = active.getBoundingClientRect();
-                const visibleBottom = window.innerHeight - info.keyboardHeight;
-                if (rect.bottom > visibleBottom - 24) {
-                    container.scrollTop += rect.bottom - (visibleBottom - 24);
-                }
-            }, 320);
-        }).then(h => { showH = h; });
-
-        Keyboard.addListener('keyboardWillHide', () => {
-            hideTimer = setTimeout(() => { setKbHeight(0); hideTimer = null; }, 300);
-        }).then(h => { hideH = h; });
-
-        return () => {
-            showH?.remove();
-            hideH?.remove();
-            if (hideTimer) clearTimeout(hideTimer);
-            setKbHeight(0);
-        };
-    }, [isNative]);
+    }, [onClose]);
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -156,16 +110,11 @@ export const SupportView = ({ addToast, onClose }: SupportViewProps) => {
     const selectedCat = CATEGORIES.find(c => c.id === category);
 
     const footerStyle: React.CSSProperties = {
-        transform: isNative && kbHeight > 0 ? `translateY(-${kbHeight}px)` : undefined,
-        transition: isNative ? 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
-        paddingBottom: kbHeight > 0 ? '12px' : 'var(--bottom-nav-total-h, calc(12px + env(safe-area-inset-bottom)))',
+        paddingBottom: 'var(--bottom-nav-total-h, calc(12px + env(safe-area-inset-bottom)))',
     };
 
     return (
-        <div
-            className="fixed inset-0 z-[999997] bg-white flex flex-col"
-            style={{ paddingTop: isNative ? 'env(safe-area-inset-top)' : undefined }}
-        >
+        <div className="fixed inset-0 z-[999997] bg-white flex flex-col">
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50 shrink-0">
                 <button

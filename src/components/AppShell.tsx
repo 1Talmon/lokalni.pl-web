@@ -1,9 +1,6 @@
 'use client';
 import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { App as CapacitorApp } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
-import { SplashScreen } from '@capacitor/splash-screen';
 import { CATEGORIES_DATA } from '../data/categories';
 import { parseSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '../lib/seo-data';
 import { SWIPE_TABS } from '../hooks/useTabSwipe';
@@ -23,7 +20,6 @@ import { ChatListView } from '../views/ChatListView';
 import GrafikView from '../views/GrafikView';
 import { FavoritesListView } from '../views/FavoritesListView';
 
-const isAndroid = Capacitor.getPlatform() === 'android';
 const SWIPE_TAB_SET = new Set(SWIPE_TABS);
 const SLUG_RE = /^\/[a-z0-9][a-z0-9-]*(?:\/\d+)?$/;
 const KNOWN_APP_ROUTES = new Set([
@@ -44,41 +40,6 @@ function AppShellContent({ children }: AppShellProps) {
     const searchParams = useSearchParams();
     const [showTour, setShowTour] = useState(false);
     const wasLockedRef = useRef(locked);
-    const pendingWidgetUrl = useRef<string | null>(null);
-    const isLoadingRef = useRef(state.isLoadingApp);
-    useEffect(() => { isLoadingRef.current = state.isLoadingApp; }, [state.isLoadingApp]);
-
-    const [androidReady, setAndroidReady] = useState(!isAndroid);
-
-    useEffect(() => {
-        if (!isAndroid) return;
-        const id = setTimeout(() => {
-            setAndroidReady(true);
-            SplashScreen.hide({ fadeOutDuration: 300 });
-        }, 160);
-        return () => clearTimeout(id);
-    }, []);
-
-    const splashHiddenRef = useRef(false);
-    const hideSplash = useCallback(() => {
-        if (splashHiddenRef.current || !Capacitor.isNativePlatform() || isAndroid) return;
-        splashHiddenRef.current = true;
-        let r2: number;
-        const r1 = requestAnimationFrame(() => {
-            r2 = requestAnimationFrame(() => {
-                SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
-            });
-        });
-        return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
-    }, []);
-    useEffect(() => {
-        if (!state.isLoadingApp) hideSplash();
-    }, [state.isLoadingApp, hideSplash]);
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform() || isAndroid) return;
-        const t = setTimeout(hideSplash, 3000);
-        return () => clearTimeout(t);
-    }, [hideSplash]);
 
     useEffect(() => {
         if (state.isLoadingApp) return;
@@ -109,17 +70,6 @@ function AppShellContent({ children }: AppShellProps) {
     }, [pathname, searchParams, router, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleUrl = useCallback((url: string) => {
-        if (url.startsWith('com.lokalni.app://')) {
-            const rest = url.slice('com.lokalni.app://'.length);
-            const qIdx = rest.indexOf('?');
-            const path = qIdx >= 0 ? rest.slice(0, qIdx) : rest;
-            const search = qIdx >= 0 ? rest.slice(qIdx) : '';
-            if (path === 'dashboard') { router.replace('/dashboard' + search); return; }
-            if (path === 'orders')    { router.replace('/dashboard?tab=orders' + (search ? '&' + search.slice(1) : '')); return; }
-            if (path === 'calendar')  { router.replace('/calendar'); return; }
-            if (path === 'chat')      { router.replace('/chat'); return; }
-            return;
-        }
         const DOMAINS = ['https://mylokalni.pl', 'https://www.mylokalni.pl', 'https://mylokalni.com', 'https://www.mylokalni.com'];
         if (DOMAINS.some(d => url.startsWith(d))) {
             try {
@@ -144,52 +94,13 @@ function AppShellContent({ children }: AppShellProps) {
                 }
                 router.replace(parsed.pathname + parsed.search);
             } catch (e) {
-                logger.warn('AppShell: nieprawidłowy URL w appUrlOpen', e);
+                logger.warn('AppShell: nieprawidłowy URL', e);
             }
         }
     }, [router]);
 
-    useEffect(() => {
-        if (state.isLoadingApp || !pendingWidgetUrl.current) return;
-        const url = pendingWidgetUrl.current;
-        pendingWidgetUrl.current = null;
-        handleUrl(url);
-    }, [state.isLoadingApp, handleUrl]);
-
-    useEffect(() => {
-        CapacitorApp.getLaunchUrl().then(r => {
-            if (!r?.url) return;
-            pendingWidgetUrl.current = r.url;
-        });
-        const listener = CapacitorApp.addListener('appUrlOpen', e => {
-            if (isLoadingRef.current) {
-                pendingWidgetUrl.current = e.url;
-            } else {
-                handleUrl(e.url);
-            }
-        });
-        return () => { listener.then(l => l.remove()); };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) return;
-        const ROOT_PATHS = new Set(['/', '/chat', '/favorites', '/calendar', '/dashboard']);
-        const listener = CapacitorApp.addListener('backButton', () => {
-            if (state.activeModal) {
-                actions.setActiveModal('none');
-                return;
-            }
-            if (ROOT_PATHS.has(pathname)) {
-                CapacitorApp.minimizeApp();
-                return;
-            }
-            router.back();
-        });
-        return () => { listener.then(l => l.remove()); };
-    }, [state.activeModal, pathname, router, actions]);
-
     const isTabRoute = SWIPE_TAB_SET.has(pathname as '/');
-    const isSlugRoute = !Capacitor.isNativePlatform() && SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/') && !KNOWN_APP_ROUTES.has(pathname);
+    const isSlugRoute = SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/') && !KNOWN_APP_ROUTES.has(pathname);
 
     // Pre-populate search from slug URL — useLayoutEffect prevents flash (runs before browser paint)
     useLayoutEffect(() => {
@@ -219,26 +130,16 @@ function AppShellContent({ children }: AppShellProps) {
         }
     }, [pathname, isSlugRoute, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const openChat = useCallback(async (chatId: string) => {
-        if (Capacitor.isNativePlatform()) {
-            const { NativeNav } = await import('../plugins/NativeNav');
-            await NativeNav.push({ fullScreen: true }).catch(() => {});
-            router.push(`/chat/${chatId}`);
-        } else {
-            actions.setCurrentChatId(chatId);
-            actions.setActiveModal('chat_detail');
-        }
-    }, [router, actions]);
+    const openChat = useCallback((chatId: string) => {
+        actions.setCurrentChatId(chatId);
+        actions.setActiveModal('chat_detail');
+    }, [actions]);
 
-    const handleOpenSupport = useCallback(async () => {
-        if (Capacitor.isNativePlatform()) {
-            const { NativeNav } = await import('../plugins/NativeNav');
-            await NativeNav.push({ fullScreen: true }).catch(() => {});
-            router.push('/support');
-        } else {
-            actions.openSupportModal();
-        }
-    }, [router, actions]);
+    const handleOpenSupport = useCallback(() => {
+        actions.openSupportModal();
+    }, [actions]);
+
+    void handleUrl;
 
     // On slug routes tab strip is display:none — skip mounting tab views to avoid unnecessary renders
     const tabElements = isSlugRoute ? [null, null, null, null] : [
@@ -279,7 +180,7 @@ function AppShellContent({ children }: AppShellProps) {
         ) : null,
     ];
 
-    const showLoadingScreen = !Capacitor.isNativePlatform() && (!!state.isLoadingApp || !!state.isNavLoading);
+    const showLoadingScreen = !!state.isLoadingApp || !!state.isNavLoading;
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
@@ -299,7 +200,7 @@ function AppShellContent({ children }: AppShellProps) {
                 {/* Slug SSR shell: rendered before app loads so initial HTML contains service cards */}
                 {isSlugRoute && state.isLoadingApp && children}
 
-                {!state.isLoadingApp && androidReady && (
+                {!state.isLoadingApp && (
                     <>
                         <ErrorBoundary context="Layout">
                             <MainLayout
@@ -340,7 +241,7 @@ function AppShellContent({ children }: AppShellProps) {
                     </>
                 )}
 
-                {!Capacitor.isNativePlatform() && <CookieBanner />}
+                <CookieBanner />
                 {showTour && <TourOverlay onDone={() => { localStorage.setItem('tour_seen', '1'); setShowTour(false); }} />}
                 {locked && <AppLock onVerify={verify} verifying={verifying} />}
             </div>

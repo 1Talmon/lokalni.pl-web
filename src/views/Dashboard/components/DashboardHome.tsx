@@ -6,12 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, Star, TrendingUp, Sparkles, PlusCircle, Lock, Unlock, ChevronRight, Copy } from 'lucide-react';
 import { authService } from '../../../services/authService';
 import { AuthModal } from '../../../components/modals/AuthModal';
-import { BiometricAuth } from '../../../utils/biometricBridge';
-import { BiometryErrorType } from '@aparajita/capacitor-biometric-auth';
-import { logger } from '../../../utils/logger';
-import { usePlatform } from '../../../hooks/usePlatform';
 import { getMyAnalytics, getMyEarnings } from '../../../services/analyticsService';
-import { Share } from '@capacitor/share';
 
 export const DashboardHome = ({
                                   servicesCount,
@@ -38,7 +33,6 @@ export const DashboardHome = ({
         Math.floor(Math.random() * headlines.length)
     );
 
-    const { isNative } = usePlatform();
     const [showAuthModal, setShowAuthModal] = useState(false);
 
     const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
@@ -103,21 +97,16 @@ export const DashboardHome = ({
                 break;
             case 'kopiujLinkZapraszajacy':
                 if (userData?.linkPolecajacy) {
-                    const origin = window.location.origin.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl');
-                    const inviteUrl = `${origin}/r/${userData.linkPolecajacy}`;
-                    if (isNative) {
-                        try { await Share.share({ title: 'Dołącz do MyLokalni.pl', text: 'Zarejestruj się przez mój link!', url: inviteUrl }); } catch { /* anulowane */ }
-                    } else {
-                        try {
-                            await navigator.clipboard.writeText(inviteUrl);
-                        } catch {
-                            const ta = document.createElement('textarea');
-                            ta.value = inviteUrl; ta.style.cssText = 'position:fixed;left:-9999px';
-                            document.body.appendChild(ta); ta.focus(); ta.select();
-                            document.execCommand('copy'); document.body.removeChild(ta);
-                        }
-                        addToast?.('Link skopiowany!', 'success');
+                    const inviteUrl = `${window.location.origin}/r/${userData.linkPolecajacy}`;
+                    try {
+                        await navigator.clipboard.writeText(inviteUrl);
+                    } catch {
+                        const ta = document.createElement('textarea');
+                        ta.value = inviteUrl; ta.style.cssText = 'position:fixed;left:-9999px';
+                        document.body.appendChild(ta); ta.focus(); ta.select();
+                        document.execCommand('copy'); document.body.removeChild(ta);
                     }
+                    addToast?.('Link skopiowany!', 'success');
                 }
                 break;
             default:
@@ -128,25 +117,6 @@ export const DashboardHome = ({
     const handleEarningsClick = async () => {
         if (isEarningsUnlocked() || userData?.ustawionehaslo === false) {
             onOpenDetail('earnings');
-            return;
-        }
-        const useBiometric = isNative && localStorage.getItem('earnings_unlock_method') === 'biometric';
-        logger.debug('[DashboardHome] earnings unlock — useBiometric:', useBiometric, 'stored method:', localStorage.getItem('earnings_unlock_method'));
-        if (useBiometric) {
-            try {
-                await BiometricAuth.authenticate({ reason: 'Odblokuj sekcję Zarobki' });
-                sessionStorage.setItem('earnings_unlocked_at', Date.now().toString());
-                onOpenDetail('earnings');
-            } catch (err) {
-                const code = (err as { code?: BiometryErrorType })?.code;
-                const userCancelled = code === BiometryErrorType.userCancel
-                    || code === BiometryErrorType.systemCancel
-                    || code === BiometryErrorType.appCancel;
-                if (!userCancelled) {
-                    // Face ID niedostępny (wyłączony w Ustawieniach, lockout itp.) — fallback na hasło
-                    setShowAuthModal(true);
-                }
-            }
             return;
         }
         setShowAuthModal(true);

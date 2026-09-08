@@ -1,11 +1,6 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Keyboard } from '@capacitor/keyboard';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../plugins/NativeNav';
-import { usePlatform } from '../../hooks/usePlatform';
 import { useChatScroll } from '../../hooks/useChatScroll';
 import { UserAvatar } from '../ui/UserAvatar';
 import { useSwipeToClose } from '../../hooks/useSwipeToClose';
@@ -217,8 +212,7 @@ export const ChatModal = ({
     isOpen, onClose, currentChatId, pendingServiceId, chatSessions,
     allServices, onSendMessage, onBookingAction, onReschedule, onCreateBooking, myServices, initialMessage, asView,
 }: ChatModalProps) => {
-    const { isNative } = usePlatform();
-    const { panelRef, panelX, backdropOpacity } = useSwipeToClose(isOpen, onClose);
+    const { panelRef, panelX } = useSwipeToClose(isOpen, onClose);
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -297,7 +291,7 @@ export const ChatModal = ({
     // ── Scroll management ─────────────────────────────────────────────────────
     const {
         containerRef, contentRef,
-        kbHeight, messagesVisible, showScrollBtn, unreadWhileScrolled,
+        messagesVisible, showScrollBtn, unreadWhileScrolled,
         onScroll, onTouchStart, onTouchMove,
         scrollToBottom, snapToBottom,
         addUnread,
@@ -307,7 +301,6 @@ export const ChatModal = ({
         isOpen,
         chatId: currentChatId,
         hasData: messagesData !== undefined || isError,
-        isNative,
         onScrolledToTop: () => {
             if (!hasMoreOlder || isLoadingOlder) return;
             const prevH = containerRef.current?.scrollHeight ?? 0;
@@ -523,14 +516,12 @@ export const ChatModal = ({
         e.preventDefault();
         if ((!chatInput.trim() && !pendingImage && !pendingVideo && !pendingFile) || isSending) return;
         setSendErrorMsg(null);
-        if (isNative) Haptics.impact({ style: ImpactStyle.Light });
 
         const textToSend = chatInput.trim();
         const imageToSend = pendingImage;
         const videoFile = pendingVideoFileRef.current;
         const videoPreviewUrl = pendingVideo;
         const fileToSend = pendingFile;
-        const wasKbOpen = kbHeight > 0;
 
         const tempId = `temp-${Date.now()}`;
         const optimistic = {
@@ -557,7 +548,7 @@ export const ChatModal = ({
         setPendingFile(null);
         pendingVideoFileRef.current = null;
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
-        if (!isNative || wasKbOpen) textareaRef.current?.focus();
+        textareaRef.current?.focus();
 
         if (currentChatId) {
             if (videoFile) {
@@ -653,7 +644,6 @@ export const ChatModal = ({
                 }
                 setPendingVideo(previewUrl);
                 pendingVideoFileRef.current = file;
-                if (isNative) setTimeout(() => { textareaRef.current?.focus(); Keyboard.show().catch(() => void 0); }, 350);
             };
             vid.onerror = () => {
                 // Nie można odczytać metadanych — dopuszczamy, backend zweryfikuje
@@ -675,7 +665,6 @@ export const ChatModal = ({
                 setPendingImage(compressed);
             };
             reader.readAsDataURL(file);
-            if (isNative) setTimeout(() => { textareaRef.current?.focus(); Keyboard.show().catch(() => void 0); }, 350);
         } else {
             // Document file (PDF, Word, etc.)
             if (file.size > 20 * 1024 * 1024) {
@@ -686,7 +675,6 @@ export const ChatModal = ({
             setPendingImage(null);
             setPendingVideo(null);
             pendingVideoFileRef.current = null;
-            if (isNative) setTimeout(() => { textareaRef.current?.focus(); Keyboard.show().catch(() => void 0); }, 350);
         }
     };
 
@@ -700,15 +688,13 @@ export const ChatModal = ({
     };
 
     // ── Nawigacja ─────────────────────────────────────────────────────────────
-    const goToProfile = async () => {
+    const goToProfile = () => {
         if (!providerUid) return;
-        if (Capacitor.isNativePlatform()) { await NativeNav.push({ fullScreen: true }).catch(() => {}); router.push(`/profile/${providerUid}`); }
-        else { onClose(); router.push(`/profile/${providerUid}`); }
+        onClose(); router.push(`/profile/${providerUid}`);
     };
-    const goToService = async () => {
+    const goToService = () => {
         if (!servicePublicId) return;
-        if (Capacitor.isNativePlatform()) { await NativeNav.push({ fullScreen: true }).catch(() => {}); router.push(`/service/${serviceSlug ?? servicePublicId}`); }
-        else { onClose(); router.push(`/service/${serviceSlug ?? servicePublicId}`); }
+        onClose(); router.push(`/service/${serviceSlug ?? servicePublicId}`);
     };
 
     // ── Usuwanie wiadomości ───────────────────────────────────────────────────
@@ -893,7 +879,7 @@ export const ChatModal = ({
                 onClose={() => setChatLightboxOpen(false)}
                 items={chatMediaItems}
                 initialIndex={chatLightboxIndex}
-                nativeBottomPadding={isNative}
+                nativeBottomPadding={false}
                 onOpenGallery={() => { setChatLightboxOpen(false); setMediaGalleryOpen(true); }}
             />
             <ChatMediaGallery
@@ -906,7 +892,7 @@ export const ChatModal = ({
             {!asView && (
                 <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    style={isNative ? { opacity: backdropOpacity } : undefined}
+                    style={undefined}
                     onClick={onClose}
                     className="fixed inset-0 bg-black/50 z-[100000] backdrop-blur-sm"
                 />
@@ -920,13 +906,10 @@ export const ChatModal = ({
             >
                 <motion.div
                     ref={asView ? undefined : panelRef}
-                    initial={asView ? undefined : (isNative ? undefined : { y: '100%', opacity: 0 })}
-                    animate={asView ? undefined : (isNative ? undefined : { y: 0, opacity: 1 })}
-                    exit={asView ? undefined : (isNative
-                        ? { x: '100%', transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] } }
-                        : { y: '100%', opacity: 0, transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }
-                    )}
-                    transition={asView ? undefined : (isNative ? undefined : { type: 'spring', damping: 26, stiffness: 380, mass: 0.8 })}
+                    initial={asView ? undefined : { y: '100%', opacity: 0 }}
+                    animate={asView ? undefined : { y: 0, opacity: 1 }}
+                    exit={asView ? undefined : { y: '100%', opacity: 0, transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] } }}
+                    transition={asView ? undefined : { type: 'spring', damping: 26, stiffness: 380, mass: 0.8 }}
                     data-modal-panel
                     className={asView
                         ? "w-full h-full flex flex-col overflow-hidden bg-white"
@@ -1070,7 +1053,7 @@ export const ChatModal = ({
                             style={{
                                 WebkitOverflowScrolling: 'touch',
                                 backgroundColor: '#F5F5F7',
-                                paddingBottom: isNative && kbHeight > 0 ? `${kbHeight + 24}px` : '24px',
+                                paddingBottom: '24px',
                                 opacity: messagesVisible ? 1 : 0,
                                 transition: messagesVisible ? 'opacity 120ms ease' : 'none',
                             }}
@@ -1154,7 +1137,6 @@ export const ChatModal = ({
 
                                         const openDeleteMenu = (el: HTMLElement) => {
                                             if (msg.bookingData || msg.isDeletedForAll) return;
-                                            if (isNative) { textareaRef.current?.blur(); Keyboard.hide().catch(() => void 0); }
                                             const rect = el.getBoundingClientRect();
                                             const MENU_H = 112;
                                             const spaceBelow = window.innerHeight - rect.bottom;
@@ -1182,15 +1164,12 @@ export const ChatModal = ({
                                                     if (last && last.msgId === String(msg.id) && now - last.time < 350) {
                                                         lastTapRef.current = null;
                                                         if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
-                                                        Haptics.impact({ style: ImpactStyle.Light });
                                                         handleToggleLike(String(msg.id));
                                                         return;
                                                     }
                                                     lastTapRef.current = { msgId: String(msg.id), time: now };
                                                     // Long-press → menu z reakcją i usunięciem
                                                     longPressRef.current = setTimeout(() => {
-                                                        Haptics.impact({ style: ImpactStyle.Medium });
-                                                        if (isNative) { textareaRef.current?.blur(); Keyboard.hide().catch(() => void 0); }
                                                         setDeleteMenu({ msgId: String(msg.id), isMe, isLiked: !!(msg as any).isLikedByMe, x: 0, y: 0 });
                                                     }, 500);
                                                 }}
@@ -1238,11 +1217,10 @@ export const ChatModal = ({
                                                                 onComplete={!isMe && msg.bookingData.status === 'accepted' ? () => onBookingAction?.(msg.bookingData!.id, 'complete') : undefined}
                                                                 onReschedule={(msg.bookingData.status === 'pending' || msg.bookingData.status === 'accepted') && msg.bookingData.serviceType !== 'request' ? (newDate, newTime) => onReschedule?.(msg.bookingData!.id, newDate, newTime) : undefined}
                                                                 onRescheduleSheetToggle={open => { pauseAutoScrollRef.current = open; }}
-                                                                onReview={isMe && msg.bookingData.status === 'completed' ? async () => {
+                                                                onReview={isMe && msg.bookingData.status === 'completed' ? () => {
                                                                     const reviewPath = `/review/${msg.bookingData!.id}`;
                                                                     const reviewNavState = { servicePublicId: activeSession?.servicePublicId ?? '', serviceTitle: msg.bookingData!.serviceTitle, providerName: activeSession?.providerName ?? '', providerAvatar: activeSession?.providerAvatar ?? '', bookingId: msg.bookingData!.id };
-                                                                    if (Capacitor.isNativePlatform()) { await NativeNav.push({ fullScreen: true }).catch(() => {}); navPush(router, reviewPath, reviewNavState); }
-                                                                    else { onClose(); navPush(router, reviewPath, reviewNavState); }
+                                                                    onClose(); navPush(router, reviewPath, reviewNavState);
                                                                 } : undefined}
                                                             />
                                                             )
@@ -1473,10 +1451,7 @@ export const ChatModal = ({
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.7, y: 6 }}
                                     transition={{ type: 'spring', damping: 22, stiffness: 420 }}
-                                    onClick={() => {
-                                        if (isNative) Haptics.impact({ style: ImpactStyle.Light });
-                                        scrollToBottom();
-                                    }}
+                                    onClick={scrollToBottom}
                                     className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-90 transition-colors z-10"
                                     style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.14)' }}
                                 >
@@ -1495,10 +1470,8 @@ export const ChatModal = ({
                     <div
                         className="shrink-0 bg-white px-3 pt-2"
                         style={{
-                            paddingBottom: isNative && kbHeight > 0 ? '8px' : asView ? 'calc(env(safe-area-inset-bottom) + 10px)' : isNative ? 'calc(var(--bottom-nav-total-h, env(safe-area-inset-bottom)) + 10px)' : 'calc(8px + env(safe-area-inset-bottom))',
+                            paddingBottom: asView ? 'calc(env(safe-area-inset-bottom) + 10px)' : 'calc(8px + env(safe-area-inset-bottom))',
                             borderTop: '1px solid rgba(0,0,0,0.06)',
-                            transform: isNative && kbHeight > 0 ? `translateY(-${kbHeight}px)` : undefined,
-                            transition: isNative && !deleteMenu && kbHeight === 0 ? 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)' : undefined,
                         }}
                     >
                         {/* Send error */}

@@ -7,7 +7,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/ap
 import { motion } from 'framer-motion';
 import { useBottomSheet } from '../../hooks/useBottomSheet';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { Geolocation } from '@capacitor/geolocation';
 import { X, ArrowLeft, Zap, ImageIcon, Globe, Trash2, Star, Plus, LocateFixed, Loader2, Sparkles, Film } from 'lucide-react';
 import { CityAutocomplete } from '../ui/CityAutocomplete';
 import { AddressAutocomplete } from '../ui/AddressAutocomplete';
@@ -76,7 +75,9 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
         setIsGpsLoading(true);
         setGpsError(false);
         try {
-            const pos = await Geolocation.getCurrentPosition({ timeout: 10000, maximumAge: 60000 });
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, maximumAge: 60000 })
+            );
             const { latitude, longitude } = pos.coords;
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,

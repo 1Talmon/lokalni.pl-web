@@ -3,19 +3,14 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
 import { apiClient } from '../../../services/apiClient';
 import { mapApiService } from '../../../services/serviceService';
 import { createSlug } from '../../../utils/helpers';
-import { useNativeSwipeBack } from '../../../hooks/useNativeNav';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
-
-const serviceScrollPositions = new Map<string, number>();
 
 function DeletedServiceView({ onBack }: { onBack: () => void }) {
     return (
@@ -56,7 +51,7 @@ export default function ServiceDetailsClient() {
     const publicId = id ? id.split('-').pop()! : '';
 
     const doNav = useCallback(() => {
-        if (!Capacitor.isNativePlatform() && window.history.length <= 1) {
+        if (window.history.length <= 1) {
             router.replace('/');
         } else {
             router.back();
@@ -65,22 +60,11 @@ export default function ServiceDetailsClient() {
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
-    const fromFullScreenRef = useRef(false);
-    useEffect(() => {
-        const flag = sessionStorage.getItem('__fromFullScreen__');
-        if (flag) { fromFullScreenRef.current = true; sessionStorage.removeItem('__fromFullScreen__'); }
-    }, []);
-
-    const handleBack = useCallback(async () => {
+    const handleBack = useCallback(() => {
         actions.setNavLoading(false);
-        if (Capacitor.isNativePlatform()) {
-            await (fromFullScreenRef.current ? NativeNav.pop({ fullScreen: true }) : NativeNav.pop()).catch(() => {});
-        }
         setNavDirection('pop');
         doNav();
     }, [doNav, actions]);
-
-    useNativeSwipeBack(doNav);
 
     const { data: service, isPending, isError } = useQuery({
         queryKey: ['service', publicId],
@@ -108,7 +92,6 @@ export default function ServiceDetailsClient() {
     }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Hide SSR static shell once the interactive component has data and will render.
-    // Shell stays visible during loading so users see content instead of blank screen.
     useEffect(() => {
         if (!isPending && service && !state.isLoadingApp) {
             const shell = document.querySelector('[data-ssr-shell]');
@@ -136,112 +119,77 @@ export default function ServiceDetailsClient() {
         const openChatId = sessionStorage.getItem('__openChat__');
         if (!openChatId) return;
         sessionStorage.removeItem('__openChat__');
-        if (Capacitor.isNativePlatform()) {
-            (async () => {
-                await NativeNav.push({ fullScreen: true }).catch(() => {});
-                router.push(`/chat/${openChatId}`);
-            })();
-        } else {
-            actions.setActiveModal('chat_detail');
-        }
+        actions.setActiveModal('chat_detail');
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Signal native that content is ready (once per service)
-    const signalSentRef = useRef(false);
+    // Restore scroll position (saved before navigating away from service)
+    const hasRestoredScroll = useRef(false);
     useEffect(() => {
-        if (!service || !Capacitor.isNativePlatform() || signalSentRef.current) return;
-        signalSentRef.current = true;
+        if (!service || hasRestoredScroll.current) return;
+        hasRestoredScroll.current = true;
+        const saved = sessionStorage.getItem('nav_scroll_' + window.location.pathname);
+        if (!saved) return;
+        const y = parseInt(saved, 10);
+        sessionStorage.removeItem('nav_scroll_' + window.location.pathname);
         let r2 = 0;
-        const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => NativeNav.signalReady().catch(() => {})); });
+        const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => window.scrollTo(0, y)); });
         return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }, [service]);
 
-    // Restore scroll position on native after back-navigation
-    useEffect(() => {
-        if (!service || !Capacitor.isNativePlatform()) return;
-        const saved = serviceScrollPositions.get(publicId);
-        if (saved !== undefined) { serviceScrollPositions.delete(publicId); window.scrollTo(0, saved); }
-    }, [service, publicId]);
-
     const handleOpenService = useCallback((svc: Service) => {
-        if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
         return actions.onServiceClick(svc);
-    }, [publicId, actions]);
+    }, [actions]);
 
     const handleOpenProfile = useCallback(async () => {
         if (!service) return;
         const uid = service.provider.uid || createSlug(service.provider.name);
         const url = `/profile/${uid}`;
-        if (!Capacitor.isNativePlatform()) {
-            const cached = queryClient.getQueryData(['public-profile', uid]);
-            if (!cached) actions.setNavLoading(true);
-        }
-        if (Capacitor.isNativePlatform()) {
-            serviceScrollPositions.set(publicId, window.scrollY);
-            await NativeNav.push().catch(() => {});
-        }
+        const cached = queryClient.getQueryData(['public-profile', uid]);
+        if (!cached) actions.setNavLoading(true);
         router.push(url);
-    }, [publicId, service, router, actions, queryClient]);
+    }, [service, router, actions, queryClient]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {
-        if (Capacitor.isNativePlatform()) serviceScrollPositions.set(publicId, window.scrollY);
         return actions.startChat(svc);
-    }, [publicId, actions]);
+    }, [actions]);
 
     if (isError && !service) return null;
     if ((service as Service & { __deleted?: boolean })?.__deleted) return <DeletedServiceView onBack={doNav} />;
     if (!isPending && service === null) return <NotFoundView />;
     if (isPending || state.isLoadingApp || !service) return null;
 
-    const isNative = Capacitor.isNativePlatform();
-    const sdvEl = (
-        <ServiceDetailsView
-            service={service}
-            isFavorite={state.favorites.includes(service.publicId ?? '') || (state.isLoggedIn && !!service.isFavorite)}
-            onBack={handleBack}
-            onToggleFavorite={actions.toggleFavorite}
-            onOpenProfile={handleOpenProfile}
-            onOpenService={handleOpenService}
-            onStartChat={handleStartChat}
-            onEdit={actions.openEditServiceModal}
-            onBook={async () => {
-                if (isNative) {
-                    serviceScrollPositions.set(publicId, window.scrollY);
-                    await NativeNav.push().catch(() => {});
-                }
-                router.push('/booking-form');
-            }}
-            isLoggedIn={state.isLoggedIn}
-            onLoginRedirect={() => router.push('/auth')}
-            userLocation={state.location}
-            currentUserUid={(state.freshUser || state.userProfile)?.uid ?? null}
-            onReport={() => actions.openReportModal('service', service.publicId ?? '')}
-            onReportReview={(rId) => actions.openReportModal('review', rId)}
-            onOpenSupport={async () => {
-                if (state.isLoggedIn) {
-                    if (isNative) {
-                        serviceScrollPositions.set(publicId, window.scrollY);
-                        await NativeNav.push({ fullScreen: true }).catch(() => {});
-                        router.push('/support');
-                    } else {
-                        actions.openSupportModal();
-                    }
-                } else {
-                    router.push('/auth');
-                }
-            }}
-            addToast={actions.addToast}
-            isChatOpen={state.activeModal !== 'none'}
-            isReportOpen={state.activeModal === 'report'}
-            isSupportOpen={state.activeModal === 'support'}
-            showNotificationsOpen={state.showNotifications}
-        />
-    );
-
     return (
         <>
             <span data-sdv-root style={{ display: 'none' }} />
-            {isNative ? <div>{sdvEl}</div> : sdvEl}
+            <ServiceDetailsView
+                service={service}
+                isFavorite={state.favorites.includes(service.publicId ?? '') || (state.isLoggedIn && !!service.isFavorite)}
+                onBack={handleBack}
+                onToggleFavorite={actions.toggleFavorite}
+                onOpenProfile={handleOpenProfile}
+                onOpenService={handleOpenService}
+                onStartChat={handleStartChat}
+                onEdit={actions.openEditServiceModal}
+                onBook={() => router.push('/booking-form')}
+                isLoggedIn={state.isLoggedIn}
+                onLoginRedirect={() => router.push('/auth')}
+                userLocation={state.location}
+                currentUserUid={(state.freshUser || state.userProfile)?.uid ?? null}
+                onReport={() => actions.openReportModal('service', service.publicId ?? '')}
+                onReportReview={(rId) => actions.openReportModal('review', rId)}
+                onOpenSupport={() => {
+                    if (state.isLoggedIn) {
+                        actions.openSupportModal();
+                    } else {
+                        router.push('/auth');
+                    }
+                }}
+                addToast={actions.addToast}
+                isChatOpen={state.activeModal !== 'none'}
+                isReportOpen={state.activeModal === 'report'}
+                isSupportOpen={state.activeModal === 'support'}
+                showNotificationsOpen={state.showNotifications}
+            />
         </>
     );
 }

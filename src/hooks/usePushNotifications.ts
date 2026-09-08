@@ -1,76 +1,47 @@
+// Push notifications on web use the browser Web Push API via service worker.
+// The native Capacitor LocalNotifications path has been removed.
+
 import { useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { usePlatform } from './usePlatform';
 import { logger } from '@/utils/logger';
 import { initPushNotifications } from '../services/pushNotificationService';
 import { apiClient } from '../services/apiClient';
 
 async function reRegisterFCMToken(token: string) {
     try {
-        const p = Capacitor.getPlatform() as 'ios' | 'android' | 'web'
-        if (p !== 'ios' && p !== 'android') return
-        const res = await apiClient.post('/notifications/device-token', { token, platform: p })
+        const res = await apiClient.post('/notifications/device-token', { token, platform: 'web' });
         if (res.ok) {
-            localStorage.setItem('push_device_token', token)
-            logger.info('[Push] token rotation — re-registered OK')
+            localStorage.setItem('push_device_token', token);
+            logger.info('[Push] token rotation — re-registered OK');
         }
     } catch (err) {
-        logger.error('[Push] token rotation re-register error:', err)
+        logger.error('[Push] token rotation re-register error:', err);
     }
-};
+}
 
 export const usePushNotifications = (
     isLoggedIn: boolean,
     addToast?: (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => void,
 ) => {
-    const { isNative } = usePlatform();
-
     useEffect(() => {
-        if (!isNative || !isLoggedIn) return;
+        if (!isLoggedIn) return;
 
-        let actionHandle: Awaited<ReturnType<typeof LocalNotifications.addListener>> | undefined;
-
-        const setup = async () => {
-            const perm = await LocalNotifications.requestPermissions();
-            if (perm.display !== 'granted') return;
-
-            actionHandle = await LocalNotifications.addListener('localNotificationActionPerformed', (action: unknown) => {
-                logger.info('[Notification] tapped:', (action as { notification?: unknown })?.notification);
-            });
-
-            initPushNotifications(addToast).catch(err => logger.error('[Push] initPushNotifications error:', err));
-        };
-
-        setup();
+        initPushNotifications(addToast).catch(err => logger.error('[Push] initPushNotifications error:', err));
 
         const onTokenRefresh = (e: Event) => {
-            const token = (e as CustomEvent<{ token: string }>).detail?.token
-            if (token) reRegisterFCMToken(token).catch(() => {})
-        }
-        window.addEventListener('fcmTokenReady', onTokenRefresh)
-
-        return () => {
-            actionHandle?.remove()
-            window.removeEventListener('fcmTokenReady', onTokenRefresh)
-        }
-    }, [isNative, isLoggedIn, addToast]);
+            const token = (e as CustomEvent<{ token: string }>).detail?.token;
+            if (token) reRegisterFCMToken(token).catch(() => {});
+        };
+        window.addEventListener('fcmTokenReady', onTokenRefresh);
+        return () => window.removeEventListener('fcmTokenReady', onTokenRefresh);
+    }, [isLoggedIn, addToast]);
 };
 
-export const sendLocalNotification = async (title: string, body: string, delayMs = 500) => {
+export const sendLocalNotification = async (title: string, body: string, _delayMs = 500) => {
+    if (!('Notification' in window)) return;
     try {
-        const perm = await LocalNotifications.requestPermissions();
-        if (perm.display !== 'granted') return;
-
-        await LocalNotifications.schedule({
-            notifications: [{
-                id: Date.now(),
-                title,
-                body,
-                schedule: { at: new Date(Date.now() + delayMs) },
-                iconColor: '#6366F1',
-            }],
-        });
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+        new Notification(title, { body, icon: '/icons/web-app-manifest-192x192.png' });
     } catch (e) {
         logger.error('[Notification] failed:', e);
     }

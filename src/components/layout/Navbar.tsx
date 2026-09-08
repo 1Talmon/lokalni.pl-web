@@ -2,7 +2,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { ClientPortal } from '../ui/ClientPortal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePlatform } from '../../hooks/usePlatform';
 import { Bell, User, MessageCircle, Info, Calendar } from 'lucide-react';
 import { UserAvatar } from '../ui/UserAvatar';
 import { UserProfile, NotificationItem } from '../../types';
@@ -34,7 +33,6 @@ export const Navbar = ({
     onProfileClick,
     onLogoClick
 }: NavbarProps) => {
-    const { isNative } = usePlatform();
     const notificationWrapperRef = useRef<HTMLDivElement>(null);
     const notificationPanelRef = useRef<HTMLDivElement>(null);
     const bellButtonRef = useRef<HTMLButtonElement>(null);
@@ -125,7 +123,7 @@ export const Navbar = ({
     }, [showNotifications, onCloseNotifications]);
 
     return (
-        <nav className={`sticky top-0 z-50 bg-white px-6 ${isNative ? 'pt-0 pb-3' : 'py-4'}`}>
+        <nav className="sticky top-0 z-50 bg-white px-6 py-4">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
           <div onClick={onLogoClick} className="text-2xl font-black text-gray-900 cursor-pointer">
             MyLokalni<span className="text-[#6366F1]">.</span>

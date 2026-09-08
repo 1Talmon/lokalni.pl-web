@@ -1,9 +1,7 @@
 'use client';
 import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { SWIPE_TABS, SWIPE_TAB_NAMES } from '../../hooks/useTabSwipe';
-import { NativeBottomNav, useNativeBottomNav } from '../../hooks/useNativeBottomNav';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { useNativeBottomNav } from '../../hooks/useNativeBottomNav';
 import { useRouter, usePathname } from 'next/navigation';
 import { navDirection, setNavDirection } from '../../utils/navDirection';
 import { useMotionValue } from 'framer-motion';
@@ -15,7 +13,6 @@ import { LoadingScreen } from '../ui/LoadingScreen';
 import { UserProfile, NotificationItem } from '@/types';
 
 // Strip fills from below the top navbar to the physical screen bottom.
-// Slots add paddingBottom = native tab bar height so content scrolls above the bar.
 const STRIP_H = 'calc(100vh - var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))))';
 
 interface MainLayoutProps {
@@ -82,8 +79,6 @@ export const MainLayout = ({
     const router = useRouter();
     const pathname = usePathname();
 
-    // navDirection jest zmienną modułową — czytana synchronicznie podczas renderu,
-    // więc setNavDirection('pop') w handleBack zadziała przed zamontowaniem nowej strony.
     const enterClass = navDirection === 'pop' ? 'page-pop-back' : 'page-enter-forward';
     useEffect(() => { setNavDirection('push'); }, [pathname]);
     useEffect(() => {
@@ -91,34 +86,28 @@ export const MainLayout = ({
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
     }, []);
-    const isIos = Capacitor.getPlatform() === 'ios';
+
     const NO_GLOBAL_BACK = useMemo(() => new Set([...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard']), []);
-    const showGlobalBack = !isIos
-        && !NO_GLOBAL_BACK.has(pathname)
+    const showGlobalBack = !NO_GLOBAL_BACK.has(pathname)
         && !isSlugRoute
         && !pathname.startsWith('/service/')
         && !pathname.startsWith('/profile/');
     const isDetailRoute = pathname.startsWith('/service/') || pathname.startsWith('/profile/');
     const [isFooterVisible, setIsFooterVisible] = useState(false);
-    const [, setNativeNavActive] = useState(false);
     const footerRef = useRef<HTMLElement>(null);
     const navWrapperRef = useRef<HTMLDivElement>(null);
     const navHeightUpdateRef = useRef<() => void>(() => {});
     const bottomNavWrapperRef = useRef<HTMLDivElement>(null);
-    // CSS scroll-snap strip refs
     const tabScrollRef = useRef<HTMLDivElement>(null);
     const scrollDebounceRef = useRef<ReturnType<typeof setTimeout>>();
     const pathnameRef = useRef(pathname);
     useEffect(() => { pathnameRef.current = pathname; });
 
     const initialIdx = Math.max(0, SWIPE_TABS.indexOf(pathname as typeof SWIPE_TABS[number]));
-    // Real-time scroll progress (0–3) — drives BottomNav indicator on the compositor
     const scrollProgress = useMotionValue(initialIdx);
-    // Tracks which tab index we last fired haptic for — avoids double-firing
     const prevTabRef = useRef(initialIdx);
 
     const isOnTabRoute = !!tabElements && SWIPE_TABS.includes(pathname as typeof SWIPE_TABS[number]);
-    const isNativeTabStrip = Capacitor.isNativePlatform() && isOnTabRoute;
 
     const { isNativeNavActive } = useNativeBottomNav({
         isLoggedIn,
@@ -154,7 +143,6 @@ export const MainLayout = ({
     useEffect(() => {
         const check = () => {
             const active = !!document.documentElement.dataset.nativeNav;
-            setNativeNavActive(active);
             if (!active) navHeightUpdateRef.current();
         };
         const obs = new MutationObserver(check);
@@ -192,9 +180,6 @@ export const MainLayout = ({
         return () => { document.documentElement.classList.remove('footer-visible'); };
     }, [isFooterVisible, pathname]);
 
-    // Sync scroll position when route changes externally (BottomNav tap, deep link).
-    // useLayoutEffect — odpala przed paintem, więc strip nie pokazuje tab 0 przez
-    // jeden frame gdy staje się widoczny po powrocie z sub-strony (np. ServiceDetails).
     useLayoutEffect(() => {
         if (!tabScrollRef.current) return;
         const idx = SWIPE_TABS.indexOf(pathname as typeof SWIPE_TABS[number]);
@@ -211,26 +196,6 @@ export const MainLayout = ({
         prevTabRef.current = idx;
     }, [pathname, isSlugRoute]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Minimum 20% displacement before a tab switch commits — cancels velocity flicks
-    // Does NOT mutate CSS mid-gesture (which breaks iOS scroll entirely)
-    useEffect(() => {
-        const el = tabScrollRef.current;
-        if (!el || !Capacitor.isNativePlatform()) return;
-        const onTouchEnd = () => {
-            const maxLeft = (SWIPE_TABS.length - 1) * window.innerWidth;
-            // In overscroll territory — let CSS rubber-band handle bounce back
-            if (el.scrollLeft < 0 || el.scrollLeft > maxLeft) return;
-            const idx = SWIPE_TABS.indexOf(pathnameRef.current as typeof SWIPE_TABS[number]);
-            if (idx === -1) return;
-            const currentLeft = idx * window.innerWidth;
-            if (Math.abs(el.scrollLeft - currentLeft) < window.innerWidth * 0.2) {
-                el.scrollTo({ left: currentLeft, behavior: 'smooth' });
-            }
-        };
-        el.addEventListener('touchend', onTouchEnd, { passive: true });
-        return () => el.removeEventListener('touchend', onTouchEnd);
-    }, []);
-
     // scrollend fires when snap animation completes — immediate URL sync, no debounce needed
     useEffect(() => {
         const el = tabScrollRef.current;
@@ -239,7 +204,6 @@ export const MainLayout = ({
             const raw = Math.round(el.scrollLeft / window.innerWidth);
             const idx = Math.max(0, Math.min(SWIPE_TABS.length - 1, raw));
             const expectedLeft = idx * window.innerWidth;
-            // iOS scroll-snap + overscroll bug: container can get stuck off a snap point
             if (Math.abs(el.scrollLeft - expectedLeft) > 2) {
                 el.scrollTo({ left: expectedLeft, behavior: 'smooth' });
                 return;
@@ -251,7 +215,6 @@ export const MainLayout = ({
         return () => el.removeEventListener('scrollend', onScrollEnd);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // onScroll: update real-time progress + fire haptic at midpoint crossing
     const handleTabScroll = useCallback(() => {
         const el = tabScrollRef.current;
         if (!el) return;
@@ -261,8 +224,7 @@ export const MainLayout = ({
         const snappingTo = Math.round(progress);
         if (snappingTo !== prevTabRef.current && snappingTo >= 0 && snappingTo < SWIPE_TABS.length) {
             prevTabRef.current = snappingTo;
-            Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-            NativeBottomNav?.setActiveTab({ tab: SWIPE_TAB_NAMES[snappingTo] }).catch(() => {});
+            void SWIPE_TAB_NAMES[snappingTo]; // reference for type safety
         }
 
         // Fallback for browsers without scrollend (iOS < 16.4)
@@ -280,7 +242,6 @@ export const MainLayout = ({
 
     const hideFooterOn = ['/chat', '/dashboard', '/calendar', '/bookings', '/favorites', '/booking-form'];
     const shouldShowFooter = !hideFooterOn.includes(pathname) && !hideNavigation;
-    // Route-only check — stable during modal open (doesn't depend on hideNavigation or isFooterVisible)
     const hasRouteFooter = !isOnTabRoute && !hideFooterOn.includes(pathname);
 
     return (
@@ -320,15 +281,12 @@ export const MainLayout = ({
                 className="flex-grow bg-[#F4F4F9]"
                 style={{
                     paddingTop: 'var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px)))',
-                    // hasRouteFooter: stable (pathname-only), never changes on modal open → no layout jump
-                    // isOnTabRoute: tab slot handles its own scroll+padding, page-level pb would make body scrollable by ~68px → gray bar artifact
-                    paddingBottom: (isNativeTabStrip || hasRouteFooter || isOnTabRoute) ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
+                    paddingBottom: (hasRouteFooter || isOnTabRoute) ? '0px' : 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))',
                 }}
             >
-                <Suspense fallback={Capacitor.isNativePlatform() ? <LoadingScreen isVisible={true} /> : null}>
+                <Suspense fallback={null}>
                     {tabElements ? (
                         <>
-                            {/* Tab strip — zawsze zamontowany; display:none na sub-stronach zachowuje drzewo React */}
                             <div style={{ height: STRIP_H, display: isOnTabRoute ? 'block' : 'none' }}>
                                 <div
                                     ref={tabScrollRef}
@@ -336,7 +294,7 @@ export const MainLayout = ({
                                     className="scrollbar-hide"
                                     style={{
                                         height: '100%',
-                                        overflowX: (hideNavigation || (!isLoggedIn && Capacitor.isNativePlatform())) ? 'hidden' : 'scroll',
+                                        overflowX: hideNavigation ? 'hidden' : 'scroll',
                                         overflowY: 'hidden',
                                         display: 'flex',
                                         scrollSnapType: 'x mandatory',
@@ -417,8 +375,9 @@ export const MainLayout = ({
                         onChangeView={onChangeView}
                         onAddClick={onAddClick}
                         hasUnreadMessages={hasUnreadMessages}
-                        scrollProgress={isNativeTabStrip ? scrollProgress : undefined}
+                        scrollProgress={undefined}
                     />
+                    <LoadingScreen isVisible={false} />
                 </div>
             )}
         </div>

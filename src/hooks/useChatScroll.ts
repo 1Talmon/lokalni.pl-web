@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { Keyboard } from '@capacitor/keyboard';
 
 interface UseChatScrollOptions {
     isOpen: boolean;
     chatId: string | null;
     hasData: boolean;
-    isNative: boolean;
     onScrolledToTop?: () => void;
 }
 
@@ -13,16 +11,13 @@ export const useChatScroll = ({
     isOpen,
     chatId,
     hasData,
-    isNative,
     onScrolledToTop,
 }: UseChatScrollOptions) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef   = useRef<HTMLDivElement>(null);
     const touchStartYRef = useRef(0);
     const pinToBottomRef = useRef(true);
-    const kbHandlesRef = useRef<{ show: { remove(): void } | null; hide: { remove(): void } | null }>({ show: null, hide: null });
 
-    const [kbHeight, setKbHeight]                   = useState(0);
     const [messagesVisible, setMessagesVisible]     = useState(false);
     const [showScrollBtn, setShowScrollBtn]         = useState(false);
     const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
@@ -83,30 +78,6 @@ export const useChatScroll = ({
         return () => ro.disconnect();
     }, []);
 
-    // ── Klawiatura iOS (Capacitor) ────────────────────────────────────────────
-    useEffect(() => {
-        if (!isNative) return;
-        if (!isOpen) { setKbHeight(0); return; }
-
-        Keyboard.addListener('keyboardWillShow', info => {
-            setKbHeight(info.keyboardHeight);
-            requestAnimationFrame(() => {
-                const el = getContainer();
-                if (el) el.scrollTop += info.keyboardHeight + 12;
-            });
-        }).then(h => { kbHandlesRef.current.show = h; });
-
-        Keyboard.addListener('keyboardWillHide', () => {
-            setKbHeight(0);
-        }).then(h => { kbHandlesRef.current.hide = h; });
-
-        return () => {
-            kbHandlesRef.current.show?.remove();
-            kbHandlesRef.current.hide?.remove();
-            kbHandlesRef.current = { show: null, hide: null };
-        };
-    }, [isNative, isOpen]);
-
     // ── Scroll handler ────────────────────────────────────────────────────────
     const onScroll = useCallback(() => {
         const el = getContainer();
@@ -128,12 +99,7 @@ export const useChatScroll = ({
     const onTouchMove = useCallback((e: React.TouchEvent) => {
         const dy = e.touches[0].clientY - touchStartYRef.current;
         if (dy < -10) pinToBottomRef.current = false;
-        if (!isNative) return;
-        if (dy > 70) {
-            Keyboard.hide().catch(() => void 0);
-            touchStartYRef.current = e.touches[0].clientY;
-        }
-    }, [isNative]);
+    }, []);
 
     // ── Akcje eksponowane na zewnątrz ────────────────────────────────────────
     const scrollToBottom = useCallback(() => {
@@ -165,7 +131,6 @@ export const useChatScroll = ({
     return {
         containerRef,
         contentRef,
-        kbHeight,
         messagesVisible,
         showScrollBtn,
         unreadWhileScrolled,

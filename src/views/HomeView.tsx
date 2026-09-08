@@ -1,8 +1,5 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Geolocation } from '@capacitor/geolocation';
-import { usePlatform } from '../hooks/usePlatform';
 import { Search, Filter, ArrowUpDown, MapPin, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
@@ -61,7 +58,6 @@ const SortDropdown = ({ value, onChange }: { value: SortBy; onChange: (v: SortBy
                                     onClick={() => {
                                         onChange(opt.value);
                                         setOpen(false);
-                                        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
                                     }}
                                     className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-sm font-semibold transition-colors ${
                                         opt.value === value
@@ -135,11 +131,8 @@ const HomeView = ({
     isLoggedIn,
     showOnlineOnly,
     setShowOnlineOnly,
-    onSearch,
     skipInitialAnimation,
 }: HomeViewProps) => {
-    const { isNative, isIos } = usePlatform();
-
     const { data: recommendedData } = useQuery({
         queryKey: ['recommended', isLoggedIn],
         queryFn:  () => serviceService.getRecommendedServices(),
@@ -165,7 +158,6 @@ const HomeView = ({
     const prefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const handleCardMouseEnter = (publicId: string) => {
         setHoveredServiceId(publicId);
-        if (isNative) return; // na mobile nie ma hover
         prefetchTimerRef.current = setTimeout(() => {
             queryClient.prefetchQuery({
                 queryKey: ['service', publicId],
@@ -188,20 +180,25 @@ const HomeView = ({
     const heroRef = useRef<HTMLDivElement>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    const handleGps = async () => {
+    const handleGps = () => {
         if (isGpsLoading) return;
         setIsGpsLoading(true);
-        try {
-            const pos = await Geolocation.getCurrentPosition({ timeout: 10000, maximumAge: 60000 });
-            const { latitude, longitude } = pos.coords;
-            setLocationCoords({ lat: latitude, lng: longitude });
-            const result = await cityService.getCityByLocation(latitude, longitude);
-            setLocation(result ? result.nazwa : 'Moja okolica');
-        } catch {
-            // user denied or error
-        } finally {
-            setIsGpsLoading(false);
-        }
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
+                    setLocationCoords({ lat: latitude, lng: longitude });
+                    const result = await cityService.getCityByLocation(latitude, longitude);
+                    setLocation(result ? result.nazwa : 'Moja okolica');
+                } catch {
+                    // reverse geocode error
+                } finally {
+                    setIsGpsLoading(false);
+                }
+            },
+            () => { setIsGpsLoading(false); },
+            { timeout: 10000, maximumAge: 60000 },
+        );
     };
 
     const handleSortChange = (newSort: typeof sortBy) => {
@@ -238,7 +235,6 @@ const HomeView = ({
         // External links (/keyword-city URLs) continue to work via SSR + AppShell pre-fill
         setSearchQuery(searchDisplay.trim());
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
-        if (isNative) return;
     };
 
     const nextBatchToPreload = services.slice(loadedCount, loadedCount + 24);
@@ -437,19 +433,7 @@ const HomeView = ({
                   <h2 className="text-lg md:text-3xl font-bold text-gray-900 leading-tight">
                       {location && !showOnlineOnly ? `Wyniki: ${location}` : 'Polecane usługi'}
                   </h2>
-                  {isIos ? (
-                      <div className="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm shrink-0 ml-3">
-                          <ArrowUpDown size={13} className="text-gray-400 shrink-0" />
-                          <select value={sortBy} onChange={(e) => handleSortChange(e.target.value as typeof sortBy)} className="bg-transparent text-xs font-bold text-gray-700 outline-none cursor-pointer">
-                              <option value="rating">Polecane</option>
-                              <option value="distance">Odległość</option>
-                              <option value="price-low">Cena</option>
-                              <option value="verified">Sprawdzeni</option>
-                          </select>
-                      </div>
-                  ) : (
-                      <SortDropdown value={sortBy} onChange={handleSortChange} />
-                  )}
+                  <SortDropdown value={sortBy} onChange={handleSortChange} />
               </div>
 
               {/* Segmented control + Zdalnie */}

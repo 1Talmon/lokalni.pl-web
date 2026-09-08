@@ -7,8 +7,7 @@ import { X, CheckCircle2, Hash, Clock, CalendarDays, User, ExternalLink } from '
 import { useSwipeToClose } from '../../../hooks/useSwipeToClose';
 import { useRouter } from 'next/navigation';
 import { createServiceUrl } from '../../../utils/helpers';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
+
 
 interface TransactionSidebarProps {
     tx: EarningsTransaction | null;
@@ -16,7 +15,7 @@ interface TransactionSidebarProps {
 }
 
 export const TransactionSidebar = ({ tx, onClose }: TransactionSidebarProps) => {
-    const { panelRef, panelX, isNative, triggerClose } = useSwipeToClose(!!tx, onClose);
+    const { panelRef, panelX, triggerClose } = useSwipeToClose(!!tx, onClose);
     const router = useRouter();
     const serviceUrl = tx?.servicePublicId
         ? `/service/${createServiceUrl(tx.serviceTitle, tx.servicePublicId)}`
@@ -34,20 +33,18 @@ export const TransactionSidebar = ({ tx, onClose }: TransactionSidebarProps) => 
 
     return createPortal(
         <>
-            {!isNative && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="fixed inset-0 bg-black/20 backdrop-blur-md z-[60]"
-                />
-            )}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="fixed inset-0 bg-black/20 backdrop-blur-md z-[60]"
+            />
             <motion.div
                 ref={panelRef}
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
-                exit={isNative ? { x: '100%', transition: { duration: 0 } } : { x: '100%' }}
+                exit={{ x: '100%' }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 style={{ x: panelX, paddingTop: 'calc(2rem + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(2rem + var(--bottom-nav-total-h, env(safe-area-inset-bottom, 0px)))' }}
                 data-modal-panel
@@ -97,7 +94,7 @@ export const TransactionSidebar = ({ tx, onClose }: TransactionSidebarProps) => 
                 </div>
 
                 <button
-                    onClick={async () => { if (Capacitor.isNativePlatform()) await NativeNav.push().catch(() => {}); onClose(); if (serviceUrl) router.push(serviceUrl); }}
+                    onClick={() => { onClose(); if (serviceUrl) router.push(serviceUrl); }}
                     disabled={!serviceUrl}
                     className="w-full py-4 bg-[#6366F1] text-white rounded-[2rem] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 mt-4 shadow-lg shadow-indigo-100 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 >

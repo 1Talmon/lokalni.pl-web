@@ -6,8 +6,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Loader2, CheckCircle, ArrowLeft, AlertCircle, Clock } from 'lucide-react';
 import { Spinner } from '../components/ui/Spinner';
-import { Capacitor } from '@capacitor/core';
-import { Keyboard } from '@capacitor/keyboard';
 import { apiClient } from '../services/apiClient';
 import { UserAvatar } from '../components/ui/UserAvatar';
 
@@ -47,16 +45,6 @@ export const ReviewView = () => {
     const [loadError, setLoadError] = useState(false);
     const [isExpired, setIsExpired] = useState(false);
     const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-    const [kbHeight, setKbHeight] = useState(0);
-
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) return;
-        let showH: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-        let hideH: Awaited<ReturnType<typeof Keyboard.addListener>> | undefined;
-        Keyboard.addListener('keyboardWillShow', info => setKbHeight(info.keyboardHeight)).then(h => { showH = h; });
-        Keyboard.addListener('keyboardWillHide', () => setKbHeight(0)).then(h => { hideH = h; });
-        return () => { showH?.remove(); hideH?.remove(); };
-    }, []);
 
     // Gdy brak location.state (push notification, link email, deep link) — fetch z API
     useEffect(() => {
@@ -169,10 +157,7 @@ export const ReviewView = () => {
     );
 
     return (
-        <div
-            className="min-h-screen bg-[#F4F4F9] overflow-y-auto flex flex-col items-center p-4"
-            style={{ paddingBottom: kbHeight > 0 ? kbHeight + 16 : undefined }}
-        >
+        <div className="min-h-screen bg-[#F4F4F9] overflow-y-auto flex flex-col items-center p-4">
             <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}

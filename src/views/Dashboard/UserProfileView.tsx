@@ -10,13 +10,7 @@ import {
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { readNavState } from '../../utils/navState';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '@/plugins/NativeNav';
-import { Share } from '@capacitor/share';
-import { usePlatform } from '@/hooks/usePlatform';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
-import { CameraSource } from '@capacitor/camera';
 import { Service, UserProfile } from '@/types';
 import { authService } from '@/services/authService';
 import { apiClient } from '@/services/apiClient';
@@ -74,7 +68,6 @@ export const UserProfileView = ({
     onOpenSupport?: () => void,
     onOpenTicket?: (id: string) => void,
 }) => {
-    const { isNative } = usePlatform();
     const router = useRouter();
     const queryClient = useQueryClient();
     const pathname = usePathname();
@@ -176,7 +169,6 @@ export const UserProfileView = ({
 
     const handleTabChange = (tab: string) => {
         if (tab === activeTab) return;
-        if (isNative) Haptics.impact({ style: ImpactStyle.Light });
         setActiveTab(tab as ActiveTab);
         if (tab === 'dashboard') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -189,7 +181,6 @@ export const UserProfileView = ({
 
     const handleOpenDetail = (view: DetailView) => {
         if (view === 'none') return handleBackToDashboard();
-        if (isNative) Haptics.impact({ style: ImpactStyle.Light });
         setDetailView(view);
         requestAnimationFrame(() => scrollToNav());
     };
@@ -315,18 +306,12 @@ export const UserProfileView = ({
     const buildInviteUrl = () => {
         const code = userData?.linkPolecajacy;
         if (!code) return null;
-        const origin = window.location.origin.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl');
-        return `${origin}/r/${code}`;
+        return `${window.location.origin}/r/${code}`;
     };
 
     const handleShareInvite = async () => {
         const url = buildInviteUrl();
         if (!url) return;
-        if (isNative) {
-            Haptics.impact({ style: ImpactStyle.Light });
-            try { await Share.share({ title: 'Dołącz do MyLokalni.pl', text: 'Zarejestruj się przez mój link!', url }); } catch { /* anulowane */ }
-            return;
-        }
         try { await navigator.clipboard.writeText(url); } catch {
             const ta = document.createElement('textarea');
             ta.value = url; ta.style.cssText = 'position:fixed;left:-9999px';
@@ -444,8 +429,7 @@ export const UserProfileView = ({
 
     const handleCopyLink = () => {
         if (currentUid) {
-            const origin = window.location.origin.replace(/^(capacitor|https?):\/\/localhost(:\d+)?/, 'https://mylokalni.pl');
-            navigator.clipboard.writeText(`${origin}/profile/${currentUid}`);
+            navigator.clipboard.writeText(`${window.location.origin}/profile/${currentUid}`);
             if (addToast) addToast("Skopiowano link!", "success");
         }
     };
@@ -460,18 +444,12 @@ export const UserProfileView = ({
         }
     };
 
-    const handleAvatarSourceSelect = (source: CameraSource) => {
+    const handleAvatarSourceSelect = (source: 'camera' | 'photos') => {
         setShowAvatarSheet(false);
-        if (source === CameraSource.Camera) {
+        if (source === 'camera') {
             avatarCameraInputRef.current?.click();
         } else {
             avatarGalleryInputRef.current?.click();
-        }
-    };
-
-    const handleAvatarClick = () => {
-        if (isNative) {
-            setShowAvatarSheet(true);
         }
     };
 
@@ -700,10 +678,7 @@ export const UserProfileView = ({
                         </button>
                         {currentUid && (
                             <button
-                                onClick={async () => {
-                                    if (Capacitor.isNativePlatform()) { sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY)); await NativeNav.push().catch(() => {}); }
-                                    router.push(`/profile/${currentUid}`);
-                                }}
+                                onClick={() => { router.push(`/profile/${currentUid}`); }}
                                 className="p-2.5 bg-gray-50 text-gray-500 rounded-full hover:bg-gray-100 active:scale-95 transition-all shadow-sm border border-gray-100 flex items-center justify-center"
                             >
                                 <Eye size={20} />
@@ -742,19 +717,10 @@ export const UserProfileView = ({
                                     <img src="/default-profile-picture.webp" className="w-full h-full object-cover" alt="" />
                                 )}
                             </div>
-                            {isNative ? (
-                                <button
-                                    onClick={handleAvatarClick}
-                                    className="absolute bottom-1 right-1 p-2 md:p-2.5 bg-[#6366F1] text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform z-20"
-                                >
-                                    <Camera size={14} className="md:w-[18px] md:h-[18px]"/>
-                                </button>
-                            ) : (
-                                <label className="absolute bottom-1 right-1 p-2 md:p-2.5 bg-[#6366F1] text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform z-20">
-                                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden"/>
-                                    <Camera size={14} className="md:w-[18px] md:h-[18px]"/>
-                                </label>
-                            )}
+                            <label className="absolute bottom-1 right-1 p-2 md:p-2.5 bg-[#6366F1] text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform z-20">
+                                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden"/>
+                                <Camera size={14} className="md:w-[18px] md:h-[18px]"/>
+                            </label>
                         </div>
 
                         <div className="flex-1 min-w-0 text-left md:hidden">
@@ -777,11 +743,7 @@ export const UserProfileView = ({
 
                         <div className="hidden md:flex flex-wrap gap-3 justify-center md:justify-start">
                             <button
-                                onClick={async () => {
-                                    if (!currentUid) return;
-                                    if (Capacitor.isNativePlatform()) { sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY)); await NativeNav.push().catch(() => {}); }
-                                    router.push(`/profile/${currentUid}`);
-                                }}
+                                onClick={() => { if (!currentUid) return; router.push(`/profile/${currentUid}`); }}
                                 className="text-xs font-bold px-4 py-2.5 rounded-xl text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-all flex items-center gap-2 shadow-sm"
                             >
                                 <Eye size={14}/> Podgląd publiczny
@@ -873,8 +835,8 @@ export const UserProfileView = ({
                                             : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95'
                                     }`}
                                 >
-                                    {copiedInvite ? <Check size={14} /> : isNative ? <Gift size={14} /> : <Copy size={14} />}
-                                    {copiedInvite ? 'Skopiowano!' : isNative ? 'Udostępnij link' : 'Kopiuj link'}
+                                    {copiedInvite ? <Check size={14} /> : <Copy size={14} />}
+                                    {copiedInvite ? 'Skopiowano!' : 'Kopiuj link'}
                                 </button>
                             </div>
                             );
@@ -982,7 +944,7 @@ export const UserProfileView = ({
                                         onPointerDown={startAvatarDrag}
                                     >Zdjęcie profilowe</p>
                                     <button
-                                        onClick={() => handleAvatarSourceSelect(CameraSource.Camera)}
+                                        onClick={() => handleAvatarSourceSelect('camera')}
                                         className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
                                     >
                                         <div className="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center">
@@ -994,7 +956,7 @@ export const UserProfileView = ({
                                         </div>
                                     </button>
                                     <button
-                                        onClick={() => handleAvatarSourceSelect(CameraSource.Photos)}
+                                        onClick={() => handleAvatarSourceSelect('photos')}
                                         className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
                                     >
                                         <div className="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center">

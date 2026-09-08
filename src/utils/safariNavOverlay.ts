@@ -1,7 +1,5 @@
-import { Capacitor } from '@capacitor/core';
-
 export const IS_SAFARI_WEB =
-    !Capacitor.isNativePlatform() && navigator.vendor === 'Apple Computer, Inc.';
+    typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.';
 
 export function createSafariOverlay(): HTMLDivElement {
     const overlay = document.createElement('div');
@@ -14,10 +12,6 @@ export function createSafariOverlay(): HTMLDivElement {
 /**
  * Czeka aż React faktycznie odmontuje trasę (usunie [data-sdv-root] z DOM),
  * następnie ukrywa canvas (GPU punch-through fix) i zanika overlay.
- * Nie zakłada żadnego timingu — reaguje na DOM mutation.
- *
- * sdvRoot musi być pobrany PRZED doNav(), żeby mieć referencję przed odmontowaniem.
- * clearVtRunning=true używane tylko przez webNavigate (ono ustawia klasę vt-running).
  */
 export function revealAfterUnmount(
     overlay: HTMLDivElement,

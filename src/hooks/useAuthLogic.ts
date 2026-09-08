@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authService, type AuthResult, type TwoFAChallengeResult, type SocialDobResult, type AuthSuccessResult } from '../services/authService';
-import { Capacitor, registerPlugin } from '@capacitor/core';
-import { FacebookLogin } from '@capacitor-community/facebook-login';
 import type { UserProfile } from '../types';
 
 // --- LOCAL TYPES ---
@@ -36,11 +34,6 @@ type WindowWithSDKs = Window & typeof globalThis & {
     };
     fbAsyncInit?: () => void;
 };
-
-const iOSGoogleAuth = registerPlugin<{
-    signIn: () => Promise<{ authentication: { idToken: string; accessToken: string } }>;
-    signOut: () => Promise<void>;
-}>('GoogleAuth');
 
 export type AuthMode = 'login' | 'register' | 'verify' | 'forgot-password' | 'reset-password' | '2fa' | 'parental-pending' | 'social-dob';
 
@@ -132,10 +125,8 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         onLoginSuccess((result as { user: UserProfile }).user);
     };
 
-    // Google & Facebook SDK init (web only — native uses plugin)
+    // Google & Facebook SDK init
     useEffect(() => {
-        if (Capacitor.isNativePlatform()) return;
-
         const scriptGoogle = document.createElement('script');
         scriptGoogle.src = "https://accounts.google.com/gsi/client";
         scriptGoogle.async = true;
@@ -334,90 +325,15 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         codeInputsRef.current[focusTarget]?.focus();
     };
 
-    const handleGoogleLogin = async () => {
+    const handleGoogleLogin = () => {
         setApiError('');
-        if (Capacitor.getPlatform() === 'ios') {
-            setIsLoading(true);
-            try {
-                const result = await iOSGoogleAuth.signIn();
-                if (!result?.authentication?.idToken) throw new Error('Brak tokenu Google');
-                const authResult = await authService.loginWithGoogle(result.authentication.idToken);
-                handle2FAOrSuccess(authResult);
-            } catch (error: unknown) {
-                const e = error as AuthError;
-                if (e.code === 'ACCOUNT_EXISTS') {
-                    setApiError(e.message);
-                    setAuthMode('login');
-                } else {
-                    const msg = e?.message || e?.errorMessage || String(e) || '';
-                    const isCanceled = msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('anulo');
-                    if (!isCanceled) setApiError(msg || 'Błąd logowania Google');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-            return;
-        }
-
-        if (Capacitor.getPlatform() === 'android') {
-            setIsLoading(true);
-            try {
-                const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-                await GoogleAuth.initialize({
-                    clientId: '1020493448098-nprs538u47hv37a9sb6c9qbvpr98bid7.apps.googleusercontent.com',
-                    scopes: ['profile', 'email'],
-                    grantOfflineAccess: false,
-                });
-                const googleUser = await GoogleAuth.signIn() as unknown as { authentication: { idToken: string; accessToken: string } } | null;
-                const idToken = googleUser?.authentication.idToken;
-                if (!idToken) throw new Error('Brak tokenu Google');
-                const result = await authService.loginWithGoogle(idToken);
-                handle2FAOrSuccess(result);
-            } catch (error: unknown) {
-                const e = error as AuthError;
-                if (e.code === 'ACCOUNT_EXISTS') {
-                    setApiError(e.message);
-                    setAuthMode('login');
-                } else {
-                    const msg = e?.message || e?.errorMessage || String(e) || '';
-                    const isCanceled = msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('anulo');
-                    if (!isCanceled) setApiError(msg || 'Błąd logowania Google');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-            return;
-        }
         const btn = googleButtonRef.current?.querySelector('div[role="button"]') as HTMLElement;
         if (btn) btn.click();
         else (window as WindowWithSDKs).google?.accounts?.id?.prompt();
     };
 
-    const handleFacebookLogin = async () => {
+    const handleFacebookLogin = () => {
         setApiError('');
-        if (Capacitor.isNativePlatform()) {
-            setIsLoading(true);
-            try {
-                const result = await FacebookLogin.login({ permissions: ['public_profile', 'email'] });
-                const token = result?.accessToken?.token;
-                if (!token) return; // anulowano lub brak tokenu — cicha rezygnacja
-                const authResult = await authService.loginWithFacebook(token);
-                handle2FAOrSuccess(authResult);
-            } catch (error: unknown) {
-                const e = error as AuthError;
-                if (e.code === 'ACCOUNT_EXISTS') {
-                    setApiError(e.message);
-                    setAuthMode('login');
-                } else {
-                    const msg = e?.message || e?.errorMessage || String(e) || '';
-                    const isCanceled = msg.toLowerCase().includes('cancel') || msg.toLowerCase().includes('anulo');
-                    if (!isCanceled) setApiError(msg || 'Błąd logowania Facebook');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-            return;
-        }
         try {
             (window as WindowWithSDKs).FB?.login((response: FacebookLoginResponse) => {
                 if (response.authResponse && response.status === 'connected') {

@@ -1,5 +1,4 @@
 import type { NextConfig } from 'next';
-import path from 'path';
 import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 
@@ -53,29 +52,6 @@ const nextConfig: NextConfig = {
             { protocol: 'https', hostname: '*.fbcdn.net' },
             { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
         ],
-    },
-    webpack(config) {
-        const stubs = path.resolve('./src/lib/cap-stubs');
-        config.resolve.alias = {
-            ...config.resolve.alias,
-            '@capacitor/action-sheet':                path.join(stubs, 'action-sheet.ts'),
-            '@capacitor/core':                        path.join(stubs, 'core.ts'),
-            '@capacitor/app':                         path.join(stubs, 'app.ts'),
-            '@capacitor/haptics':                     path.join(stubs, 'haptics.ts'),
-            '@capacitor/splash-screen':               path.join(stubs, 'splash-screen.ts'),
-            '@capacitor/status-bar':                  path.join(stubs, 'status-bar.ts'),
-            '@capacitor/keyboard':                    path.join(stubs, 'keyboard.ts'),
-            '@capacitor/camera':                      path.join(stubs, 'camera.ts'),
-            '@capacitor/push-notifications':          path.join(stubs, 'push-notifications.ts'),
-            '@capacitor/local-notifications':         path.join(stubs, 'local-notifications.ts'),
-            '@capacitor/share':                       path.join(stubs, 'share.ts'),
-            '@capacitor/geolocation':                 path.join(stubs, 'geolocation.ts'),
-            'capacitor-secure-storage-plugin':        path.join(stubs, 'secure-storage.ts'),
-            '@aparajita/capacitor-biometric-auth':    path.join(stubs, 'biometric-auth.ts'),
-            '@capacitor-community/facebook-login':    path.join(stubs, 'facebook-login.ts'),
-            '@codetrix-studio/capacitor-google-auth': path.join(stubs, 'google-auth.ts'),
-        };
-        return config;
     },
 };
 

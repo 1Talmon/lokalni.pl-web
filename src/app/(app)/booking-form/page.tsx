@@ -3,8 +3,6 @@ import { useApp } from '../../../providers/AppProvider';
 import BookingFormView from '../../../views/BookingFormView';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
 import { IS_SAFARI_WEB, createSafariOverlay, revealAfterUnmount } from '../../../utils/safariNavOverlay';
 
 export default function BookingFormPage() {
@@ -16,21 +14,18 @@ export default function BookingFormPage() {
         if (hasHistory) router.back(); else router.push('/');
     }, [router]);
 
-    const handleBack = useCallback(async () => {
-        if (Capacitor.isNativePlatform()) { await NativeNav.pop().catch(() => {}); doNav(); }
-        else {
-            const doc = document as unknown as { startViewTransition?: (fn: () => void | Promise<void>) => { finished: Promise<void> } };
-            if (!IS_SAFARI_WEB && typeof doc.startViewTransition === 'function') {
-                document.documentElement.classList.add('vt-running', 'vt-inapp');
-                const vt = doc.startViewTransition(() => { doNav(); return new Promise<void>(resolve => setTimeout(resolve, 20)); });
-                vt.finished.finally(() => document.documentElement.classList.remove('vt-running', 'vt-inapp'));
-            } else {
-                document.documentElement.classList.add('vt-running');
-                const overlay = createSafariOverlay();
-                const sdvRoot = document.querySelector('[data-sdv-root]');
-                doNav();
-                revealAfterUnmount(overlay, sdvRoot, true);
-            }
+    const handleBack = useCallback(() => {
+        const doc = document as unknown as { startViewTransition?: (fn: () => void | Promise<void>) => { finished: Promise<void> } };
+        if (!IS_SAFARI_WEB && typeof doc.startViewTransition === 'function') {
+            document.documentElement.classList.add('vt-running', 'vt-inapp');
+            const vt = doc.startViewTransition(() => { doNav(); return new Promise<void>(resolve => setTimeout(resolve, 20)); });
+            vt.finished.finally(() => document.documentElement.classList.remove('vt-running', 'vt-inapp'));
+        } else {
+            document.documentElement.classList.add('vt-running');
+            const overlay = createSafariOverlay();
+            const sdvRoot = document.querySelector('[data-sdv-root]');
+            doNav();
+            revealAfterUnmount(overlay, sdvRoot, true);
         }
     }, [doNav]);
 

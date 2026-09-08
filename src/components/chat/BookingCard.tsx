@@ -3,8 +3,6 @@ import Image from 'next/image';
 import { Calendar, MapPin, MessageSquare, Banknote, CheckCircle, XCircle, X, Globe, Star, PartyPopper, Pencil, ExternalLink, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../plugins/NativeNav';
 import { AnimatePresence } from 'framer-motion';
 import { createServiceUrl } from '../../utils/helpers';
 import type { BookingData, BookingStatus } from '../../types';
@@ -92,7 +90,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
             {/* Header ze zdjęciem — klikalny */}
             <div
                 className="relative h-28 cursor-pointer group overflow-hidden rounded-t-2xl"
-                onClick={async () => { if (!booking.servicePublicId) return; if (Capacitor.isNativePlatform()) await NativeNav.push({ fullScreen: true }).catch(() => {}); router.push(`/service/${createServiceUrl(booking.serviceTitle, booking.servicePublicId)}`); }}
+                onClick={() => { if (!booking.servicePublicId) return; router.push(`/service/${createServiceUrl(booking.serviceTitle, booking.servicePublicId)}`); }}
             >
                 <Image src={booking.serviceImage} alt={booking.serviceTitle} fill className="object-cover group-hover:brightness-90 transition-all" sizes="280px" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

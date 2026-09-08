@@ -4,8 +4,6 @@ import { Calendar, MapPin, Banknote, MessageSquare, CheckCircle, XCircle, X, Par
 import { AnimatePresence } from 'framer-motion';
 import { useBookings, BookingEvent } from '../../../hooks/useBookings';
 import { useRouter } from 'next/navigation';
-import { Capacitor } from '@capacitor/core';
-import { NativeNav } from '../../../plugins/NativeNav';
 import type { BookingStatus } from '../../../types';
 import { MapNavigationButton } from '../../../components/ui/MapNavigationButton';
 import { RescheduleSheet } from '../../../components/modals/RescheduleSheet';
@@ -89,7 +87,7 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
                 {/* Miniaturka — link do posta usługi */}
                 <button
                     type="button"
-                    onClick={async () => { if (Capacitor.isNativePlatform()) { sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY)); await NativeNav.push().catch(() => {}); } router.push(`/service/${b.servicePublicId}`); }}
+                    onClick={() => { router.push(`/service/${b.servicePublicId}`); }}
                     className="w-14 h-14 bg-indigo-50 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center active:scale-95 transition-transform"
                 >
                     {!imgError && b.serviceImage ? (
@@ -110,7 +108,7 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
                         <div className="flex-1 min-w-0">
                             <button
                                 type="button"
-                                onClick={async () => { if (Capacitor.isNativePlatform()) { sessionStorage.setItem('nav_scroll_' + window.location.pathname, String(window.scrollY)); await NativeNav.push().catch(() => {}); } router.push(`/service/${b.servicePublicId}`); }}
+                                onClick={() => { router.push(`/service/${b.servicePublicId}`); }}
                                 className="font-bold text-gray-900 text-sm leading-tight text-left line-clamp-2 hover:text-indigo-600 transition-colors active:opacity-70"
                             >
                                 {b.serviceTitle || 'Rezerwacja'}

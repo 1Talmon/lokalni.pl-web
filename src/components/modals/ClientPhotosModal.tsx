@@ -3,9 +3,6 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, LayoutGrid, ChevronLeft, ChevronRight, Play, Film } from 'lucide-react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { StatusBar } from '@capacitor/status-bar';
-import { usePlatform } from '../../hooks/usePlatform';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import type { ChatMediaItem } from './ChatMediaGallery';
 
@@ -38,9 +35,7 @@ export const ClientPhotosModal = ({
     onViewChange,
     registerToggle,
     hideControls = false,
-    showCloseOnNative = false,
 }: ClientPhotosModalProps) => {
-    const { isNative } = usePlatform();
     const safeBottom = 'env(safe-area-inset-bottom)';
     const slideBottomPad = items.length <= DOTS_THRESHOLD
         ? `calc(${safeBottom} + 4.5rem)`
@@ -126,10 +121,8 @@ export const ClientPhotosModal = ({
     }, [isOpen, initialIndex, startInGrid, resetZoom]);
 
     useEffect(() => {
-        if (!isNative || !isOpen) return;
-        StatusBar.hide().catch(() => {});
-        return () => { StatusBar.show().catch(() => {}); };
-    }, [isOpen, isNative]);
+        if (!isOpen) return;
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -166,8 +159,7 @@ export const ClientPhotosModal = ({
         setDir(step);
         setCurrent(prev => (prev + step + items.length) % items.length);
         resetZoom();
-        if (isNative) Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-    }, [items.length, isNative, resetZoom]);
+    }, [items.length, resetZoom]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -339,7 +331,6 @@ export const ClientPhotosModal = ({
 
     const onWrapperTouchEnd = useCallback(() => {
         if (isDraggingDownRef.current && swipeDownY > 90) {
-            if (isNative) Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
             onClose();
         } else if (swipeDownY > 0) {
             setIsSnappingBack(true);
@@ -348,7 +339,7 @@ export const ClientPhotosModal = ({
         }
         isDraggingDownRef.current = false;
         swipeDownRef.current = null;
-    }, [swipeDownY, onClose, isNative]);
+    }, [swipeDownY, onClose]);
 
     useEffect(() => {
         if (view !== 'grid') return;
@@ -403,60 +394,32 @@ export const ClientPhotosModal = ({
                     onTouchMove={onWrapperTouchMove}
                     onTouchEnd={onWrapperTouchEnd}
                 >
-                    {isNative ? (
-                        <div className="shrink-0" style={{ height: '20vh' }}>
-                            <div
-                                className="relative flex items-center justify-between px-4 pb-2"
-                                style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
-                            >
-                                <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-12 h-1.5 bg-white/25 rounded-full pointer-events-none" />
-                                <span className="text-white/50 text-sm tabular-nums min-w-[48px] h-10 flex items-center">
-                                    {view === 'carousel'
-                                        ? items.length > 1 && <><span className="text-white font-semibold">{current + 1}</span>{' '}/ {items.length}</>
-                                        : <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">{items.length} {items.length === 1 ? 'medium' : 'mediów'}</span>
-                                    }
-                                </span>
-                                <div className="w-10 h-10 flex items-center justify-center">
-                                    {showCloseOnNative && (
-                                        <button
-                                            onClick={onClose}
-                                            className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
-                                            aria-label="Zamknij"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    )}
-                                </div>
+                    <div className="relative flex items-center justify-between px-4 pt-5 pb-2 shrink-0">
+                        <span className="text-white/50 text-sm tabular-nums min-w-[48px]">
+                            {view === 'carousel'
+                                ? items.length > 1 && <><span className="text-white font-semibold">{current + 1}</span> / {items.length}</>
+                                : <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">{items.length} mediów</span>
+                            }
+                        </span>
+                        {!hideControls && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setView(v => v === 'carousel' ? 'grid' : 'carousel')}
+                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    aria-label={view === 'grid' ? 'Widok pojedynczy' : 'Widok siatki'}
+                                >
+                                    <LayoutGrid size={18} />
+                                </button>
+                                <button
+                                    onClick={onClose}
+                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    aria-label="Zamknij"
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="relative flex items-center justify-between px-4 pt-5 pb-2 shrink-0">
-                            <span className="text-white/50 text-sm tabular-nums min-w-[48px]">
-                                {view === 'carousel'
-                                    ? items.length > 1 && <><span className="text-white font-semibold">{current + 1}</span> / {items.length}</>
-                                    : <span className="text-[11px] font-bold uppercase tracking-widest text-white/40">{items.length} mediów</span>
-                                }
-                            </span>
-                            {!hideControls && (
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setView(v => v === 'carousel' ? 'grid' : 'carousel')}
-                                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
-                                        aria-label={view === 'grid' ? 'Widok pojedynczy' : 'Widok siatki'}
-                                    >
-                                        <LayoutGrid size={18} />
-                                    </button>
-                                    <button
-                                        onClick={onClose}
-                                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
-                                        aria-label="Zamknij"
-                                    >
-                                        <X size={18} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Content */}
                     <div className="flex-1 overflow-hidden relative">

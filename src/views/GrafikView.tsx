@@ -7,8 +7,6 @@ import {
     CalendarDays, Bell, MapPin, Globe, Clock, Banknote,
     CalendarCheck, Info, X, Calendar as CalendarIcon, PartyPopper,
 } from 'lucide-react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
 import { MapNavigationButton } from '../components/ui/MapNavigationButton';
 import { authService } from '../services/authService';
 import { useBookings, BookingEvent } from '../hooks/useBookings';
@@ -589,11 +587,9 @@ export default function GrafikView({ isLoggedIn = false, isPremium, onUpgrade, o
 
     const prevWeek = useCallback(() => {
         setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate() - 7); return d; });
-        if (Capacitor.isNativePlatform()) Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
     }, []);
     const nextWeek = useCallback(() => {
         setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate() + 7); return d; });
-        if (Capacitor.isNativePlatform()) Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
     }, []);
 
     const handleTabSwitch = (tab: 'plan' | 'month') => {
@@ -735,7 +731,6 @@ export default function GrafikView({ isLoggedIn = false, isPremium, onUpgrade, o
         const dy = Math.abs(e.changedTouches[0].clientY - weekSwipeRef.current.y);
         weekSwipeRef.current = null;
         if (Math.abs(dx) < 40 || dy > Math.abs(dx) || Math.abs(dx) > window.innerWidth * 0.6) return;
-        if (Capacitor.isNativePlatform()) Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
         if (dx < 0) nextWeek(); else prevWeek();
     }, [nextWeek, prevWeek]);
 
@@ -750,7 +745,6 @@ export default function GrafikView({ isLoggedIn = false, isPremium, onUpgrade, o
         const dy = Math.abs(e.changedTouches[0].clientY - calSwipeRef.current.y);
         calSwipeRef.current = null;
         if (Math.abs(dx) < 30 || dy > Math.abs(dx) || Math.abs(dx) > window.innerWidth * 0.25) return;
-        if (Capacitor.isNativePlatform()) Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
         if (dx < 0) { setDate(new Date(y, m + 1)); setSelected(null); }
         else { setDate(new Date(y, m - 1)); setSelected(null); }
     }, [y, m]);

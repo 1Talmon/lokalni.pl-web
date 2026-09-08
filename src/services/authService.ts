@@ -5,7 +5,6 @@ import { tokenUtils } from '../utils/tokenUtils';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import { dataUrlToFile } from '../utils/imageUtils';
 import { secureStorage } from '../utils/secureStorage';
-import { Capacitor } from '@capacitor/core';
 import type { UserProfile } from '../types';
 
 // Ustawiamy adres API (zostawiamy dla metod publicznych)
@@ -268,9 +267,6 @@ export const authService = {
     // --- WSPÓLNA OBSŁUGA SUKCESU (ZAKTUALIZOWANE MAPOWANIE) ---
     handleAuthSuccess(result: RawAuthPayload, fallbackEmail?: string): AuthSuccessResult {
         if (result.token) tokenUtils.set(result.token);
-        if (result.refreshToken && Capacitor.isNativePlatform()) {
-            secureStorage.setRefreshToken(result.refreshToken).catch(() => {});
-        }
 
         const userData: RawUserPayload = result.data || result.user || result;
 

@@ -1,7 +1,5 @@
-import { Capacitor, registerPlugin } from '@capacitor/core'
 import { tokenUtils } from '../utils/tokenUtils'
 import { chatService } from './chatService'
-import { logger } from '../utils/logger'
 
 export type VideoUploadStatus = 'uploading' | 'done' | 'error'
 
@@ -15,25 +13,11 @@ export interface VideoUploadState {
     text?: string
 }
 
-// ── Native plugin (iOS / Android) ────────────────────────────────────────────
-interface VideoUploadPlugin {
-    initUpload(opts: { uploadId: string; filename: string; mimeType: string }): Promise<void>
-    appendChunk(opts: { uploadId: string; data: string }): Promise<void>
-    performUpload(opts: { uploadId: string; token: string; apiUrl: string }): Promise<{ url: string }>
-    cancelUpload(opts: { uploadId: string }): Promise<void>
-}
-
-const NativeVideoUpload = Capacitor.isNativePlatform()
-    ? registerPlugin<VideoUploadPlugin>('VideoUpload')
-    : null
-
-const CHUNK_SIZE = 2 * 1024 * 1024 // 2 MB
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api'
 
 // ── Shared state ──────────────────────────────────────────────────────────────
 let _state: VideoUploadState | null = null
 let _xhr: XMLHttpRequest | null = null
-let _nativeId: string | null = null
 let _cancelled = false
 let _onSent: ((url: string) => void) | null = null
 
@@ -49,10 +33,6 @@ function dispatch(next: VideoUploadState) {
 function abortCurrent() {
     _cancelled = true
     if (_xhr) { _xhr.abort(); _xhr = null }
-    if (_nativeId) {
-        NativeVideoUpload?.cancelUpload({ uploadId: _nativeId }).catch(() => void 0)
-        _nativeId = null
-    }
 }
 
 // ── Entry point — publiczne API (niezmienione) ────────────────────────────────
@@ -67,76 +47,10 @@ export function startVideoUpload(
     _cancelled = false
     _onSent = onSent ?? null
 
-    if (NativeVideoUpload) {
-        runNativeUpload(sessionId, tempId, file, text)
-    } else {
-        runXhrUpload(sessionId, tempId, file, text)
-    }
+    runXhrUpload(sessionId, tempId, file, text)
 }
 
-// ── Natywny chunked upload (iOS / Android) ────────────────────────────────────
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer)
-    let binary = ''
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-    return btoa(binary)
-}
-
-async function runNativeUpload(sessionId: string, tempId: string, file: File, text?: string) {
-    const uploadId = `v-${Date.now()}`
-    _nativeId = uploadId
-
-    dispatch({ status: 'uploading', sessionId, tempId, progress: 0, text })
-
-    try {
-        await NativeVideoUpload!.initUpload({
-            uploadId,
-            filename: file.name || 'video.mp4',
-            mimeType: file.type || 'video/mp4',
-        })
-
-        let offset = 0
-        while (offset < file.size) {
-            if (_cancelled) throw new Error('Upload anulowany.')
-            const slice = file.slice(offset, offset + CHUNK_SIZE)
-            const buffer = await slice.arrayBuffer()
-            await NativeVideoUpload!.appendChunk({ uploadId, data: arrayBufferToBase64(buffer) })
-            offset += buffer.byteLength
-            // Progress 0–80% podczas przesyłania chunków, 80–100% podczas przetwarzania serwera
-            if (_state?.status === 'uploading') {
-                dispatch({ ..._state, progress: Math.round((offset / file.size) * 80) })
-            }
-        }
-
-        if (_cancelled) throw new Error('Upload anulowany.')
-
-        const token = tokenUtils.get()
-        if (!token) throw new Error('Brak tokenu — zaloguj się ponownie.')
-
-        if (_state?.status === 'uploading') dispatch({ ..._state, progress: 85 })
-
-        const result = await NativeVideoUpload!.performUpload({ uploadId, token, apiUrl: API_URL })
-        _nativeId = null
-
-        dispatch({ status: 'done', sessionId, tempId, progress: 100, url: result.url, text })
-
-        await chatService.sendMessage(sessionId, text || undefined, undefined, result.url)
-        _onSent?.(result.url)
-    } catch (err: unknown) {
-        if (!_cancelled) {
-            const msg = err instanceof Error ? err.message : 'Błąd wysyłania wideo'
-            logger.error('[videoUpload] native FAILED:', msg)
-            NativeVideoUpload?.cancelUpload({ uploadId }).catch(() => void 0)
-            dispatch({ status: 'error', sessionId, tempId, progress: 0, error: msg, text })
-        }
-    } finally {
-        _nativeId = null
-        _state = null
-        _onSent = null
-    }
-}
-
-// ── XHR upload (web) ──────────────────────────────────────────────────────────
+// ── XHR upload ────────────────────────────────────────────────────────────────
 function runXhrUpload(sessionId: string, tempId: string, file: File, text?: string) {
     const token = tokenUtils.get()
     const xhr = new XMLHttpRequest()

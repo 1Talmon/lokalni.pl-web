@@ -1,6 +1,5 @@
 import { useRef, useEffect, useLayoutEffect, useCallback, type PointerEvent } from 'react';
 import { useMotionValue, animate, useTransform, useDragControls, type PanInfo } from 'framer-motion';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export const useBottomSheet = (onClose: () => void, isOpen?: boolean) => {
     const dragControls = useDragControls();
@@ -39,7 +38,6 @@ export const useBottomSheet = (onClose: () => void, isOpen?: boolean) => {
 
     const onDragEnd = useCallback((_: unknown, info: PanInfo) => {
         if (info.offset.y > 80 || info.velocity.y > 400) {
-            Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
             triggerClose(info.velocity.y);
         }
         // else: dragTransition spring handles snap-back to y=0
