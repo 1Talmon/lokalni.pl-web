@@ -48,7 +48,7 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                 <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
                     <div className="w-9 h-9 bg-gray-100 rounded-full shrink-0" aria-hidden="true" />
                     <h1 className="font-bold text-gray-900 text-base truncate">
-                        {data.title}{cityPart}
+                        {data.title}
                     </h1>
                 </div>
             </div>
@@ -93,7 +93,7 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
 
                 <div className="mt-5 space-y-3">
                     <h2 className="text-2xl font-black text-gray-900 leading-tight">
-                        {data.title}{cityPart}
+                        {data.title}
                     </h2>
 
                     {(data.price !== undefined && data.price !== null && data.price !== '') && (

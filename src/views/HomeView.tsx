@@ -108,6 +108,7 @@ interface HomeViewProps {
     showOnlineOnly: boolean;
     setShowOnlineOnly: (val: boolean) => void;
     onSearch?: (phrase: string, category: string) => void;
+    skipInitialAnimation?: boolean;
 }
 
 const HomeView = ({
@@ -136,6 +137,7 @@ const HomeView = ({
     showOnlineOnly,
     setShowOnlineOnly,
     onSearch,
+    skipInitialAnimation,
 }: HomeViewProps) => {
     const { isNative, isIos } = usePlatform();
 
@@ -265,9 +267,9 @@ const HomeView = ({
     const animationKey = `${filterType}-${activeCategory}-${showOnlineOnly}-${location}-${sortBy}`;
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+        <motion.div
+            initial={skipInitialAnimation ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             className="pb-24 md:pb-32 bg-[#F4F4F9]"
         >

@@ -43,6 +43,7 @@ export function SlugContent() {
             categories={CATEGORIES_DATA}
             onServiceClick={actions.onServiceClick}
             onStartChat={actions.startChat}
+            skipInitialAnimation={!isFreshLoad.current}
         />
     );
 }
