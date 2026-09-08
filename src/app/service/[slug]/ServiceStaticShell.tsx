@@ -6,6 +6,9 @@ function StarIcon() {
     );
 }
 
+import Link from 'next/link';
+import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_SLUG } from '@/lib/seo-data';
+
 function normalizeUrl(url: string | null | undefined): string | null {
     if (!url) return null;
     return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
@@ -15,6 +18,7 @@ interface ServiceShellData {
     title?: string;
     description?: string;
     city?: string;
+    category?: string;
     price?: string | number;
     priceUnit?: string;
     rating?: string | number;
@@ -33,6 +37,10 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
     const rating = parseFloat(String(data.rating ?? 0)) || 0;
     const reviewsCount = parseInt(String(data.reviewsCount ?? 0)) || 0;
     const providerAvatar = normalizeUrl(data.provider?.profilowe);
+    const catSlug = data.category ? (CATEGORY_SLUG[data.category] ?? null) : null;
+    const catLabel = catSlug ? (KEYWORD_DISPLAY[catSlug] ?? null) : null;
+    const citySlug = data.city ? (CITY_SLUG[data.city] ?? null) : null;
+    const catCitySlug = catSlug && citySlug ? `${catSlug}-${citySlug}` : null;
 
     return (
         <div data-ssr-shell>
@@ -46,6 +54,28 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
             </div>
 
             <div className="max-w-2xl mx-auto px-4 pb-32">
+                {(catSlug || data.city) && (
+                    <nav aria-label="breadcrumb" className="pt-3 pb-1">
+                        <ol className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs text-gray-400">
+                            <li><Link href="/" className="hover:text-indigo-600 transition-colors">Strona główna</Link></li>
+                            {catSlug && catLabel && (
+                                <>
+                                    <li aria-hidden="true">/</li>
+                                    <li><Link href={`/${catSlug}`} className="hover:text-indigo-600 transition-colors">{catLabel}</Link></li>
+                                </>
+                            )}
+                            {catCitySlug && data.city && (
+                                <>
+                                    <li aria-hidden="true">/</li>
+                                    <li><Link href={`/${catCitySlug}`} className="hover:text-indigo-600 transition-colors">{data.city}</Link></li>
+                                </>
+                            )}
+                            <li aria-hidden="true">/</li>
+                            <li className="text-gray-600 font-medium truncate max-w-[180px]">{data.title}</li>
+                        </ol>
+                    </nav>
+                )}
+
                 {image && (
                     <div className="mt-4">
                         <img
@@ -108,6 +138,17 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                             <p className="text-xs text-gray-400 font-medium">Specjalista</p>
                             <p className="font-bold text-gray-900 text-sm">{data.provider.name}</p>
                         </div>
+                    </div>
+                )}
+
+                {(catCitySlug || catSlug) && catLabel && (
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                        <Link
+                            href={`/${catCitySlug ?? catSlug}`}
+                            className="inline-flex items-center gap-2 text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors"
+                        >
+                            ← Więcej: {catLabel}{data.city ? ` w ${data.city}` : ''}
+                        </Link>
                     </div>
                 )}
             </div>

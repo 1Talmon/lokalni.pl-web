@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BASE_URL, parseSlug, LANDING_SLUGS } from '@/lib/seo-data';
+import Link from 'next/link';
+import { BASE_URL, parseSlug, LANDING_SLUGS, KEYWORD_DISPLAY } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
 import { SlugSeoServer } from './_components/SlugSeoServer';
@@ -70,13 +71,22 @@ export default async function SlugPage({ params }: Props) {
         ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
         : null;
 
+    // 3-level breadcrumb for keyword-city, 2-level for keyword/city
+    const breadcrumbItems = parsed.type === 'keyword-city'
+        ? [
+            { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
+            { '@type': 'ListItem', position: 2, name: KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword, item: `${BASE_URL}/${parsed.keyword}` },
+            { '@type': 'ListItem', position: 3, name: h1, item: `${BASE_URL}/${slug}` },
+        ]
+        : [
+            { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
+            { '@type': 'ListItem', position: 2, name: h1, item: `${BASE_URL}/${slug}` },
+        ];
+
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
-        itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
-            { '@type': 'ListItem', position: 2, name: h1, item: `${BASE_URL}/${slug}` },
-        ],
+        itemListElement: breadcrumbItems,
     };
 
     const itemListJsonLd = {
@@ -110,7 +120,32 @@ export default async function SlugPage({ params }: Props) {
 
             <SlugNavbar />
 
-            <div className="max-w-7xl mx-auto px-4 pt-6 pb-4">
+            <div className="max-w-7xl mx-auto px-4 pt-4 pb-4">
+                <nav aria-label="breadcrumb" className="mb-3">
+                    <ol className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs text-gray-400">
+                        <li><Link href="/" className="hover:text-indigo-600 transition-colors">Strona główna</Link></li>
+                        {parsed.type === 'keyword-city' && (
+                            <>
+                                <li aria-hidden="true">/</li>
+                                <li>
+                                    <Link href={`/${parsed.keyword}`} className="hover:text-indigo-600 transition-colors">
+                                        {KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword}
+                                    </Link>
+                                </li>
+                            </>
+                        )}
+                        {parsed.type === 'city' && parsed.citySlug && (
+                            <>
+                                <li aria-hidden="true">/</li>
+                                <li>
+                                    <Link href="/warszawa" className="hover:text-indigo-600 transition-colors">Usługi</Link>
+                                </li>
+                            </>
+                        )}
+                        <li aria-hidden="true">/</li>
+                        <li className="text-gray-600 font-medium truncate max-w-[200px]">{h1}</li>
+                    </ol>
+                </nav>
                 <div className="mb-6">
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1}</h1>
                     {total > 0 && (

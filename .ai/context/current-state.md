@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-07 20:53 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-08 12:41 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **5**
-- Ahead of origin: **1** commits
+- Uncommitted files: **1**
+- Ahead of origin: **11** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-a3f3081 feat(seo): dynamiczne strony wyszukiwania z indeksowaniem i auto-redirect
-1ffd67b fix(ux): landing pages nigdy nie nawigują między sobą — zawsze apka
-57a91ed revert(ux): cofnij nawigację URL z wyszukiwania w apce
-ca0748c feat(ux): unifikacja landing pages z wyglądem apki + URL-driven search
-16ab0f4 fix(seo): noindex na wszystkich pustych landing pages — nie tylko keyword-city
-a0bb78d feat(sitemap): sitemap-categories dynamicznie z API — usuń hardcoded keywords/miasta
-da05bcb fix(seo): wymusz nowy hash buildu — v2 komentarz w sitemap-categories
-ef87fdb fix(seo): sitemap-categories force-dynamic — fix stale static cache CF Pages
-a9a11b0 fix(seo): noindex tylko dla pustych keyword-city + sitemap-categories z miastami
-69356c9 fix(seo): force-dynamic na sitemap edge routes — bypass CF Cache API
+faf4fab perf(seo): kompleksowy audyt — ISR, RSC split, AggregateRating, LCP, sitemaps
+ea8be6e refactor(seo): [slug] → (seo)/ group + generateStaticParams — 924 static HTML pages
+ae52561 fix(seo): architektoniczne poprawki — SSR content dla Googlebot, og noindex, robots
+0d1cba6 feat(seo): kompleksowy audyt SEO — notFound, title.template, OG boty, cache, lazy tabs
+a41c601 feat(seo): FAQPage JSON-LD, sitemap-locations, LCP priority, SearchAction fix
+c929a9d fix(api): route handler slug-services zwraca tablicę, nie { services, total }
+ba830a3 fix(seo): totalCount z meta.total API zamiast services.length
+c107d55 refactor(seo): pełny SSR dla slug pages — H1, karty serwisów, FAQ w HTML
+712d7ca feat(seo): treść SEO (opis, FAQ, linki miast) wbudowana bezpośrednio w HomeView
+ccabbea fix(seo): wyklucz znane trasy z isSlugRoute — /dashboard, /faq itp. nie są slug routes
 ```
 
 <!-- AI_AUTO_END -->

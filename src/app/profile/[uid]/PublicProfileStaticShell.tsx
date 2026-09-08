@@ -14,6 +14,8 @@ function MapPinIcon() {
     );
 }
 
+import Link from 'next/link';
+
 function normalizeUrl(url: string | null | undefined): string | null {
     if (!url) return null;
     return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
@@ -47,6 +49,15 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
             </div>
 
             <div className="max-w-2xl mx-auto pb-32">
+                <nav aria-label="breadcrumb" className="px-4 pt-3 pb-1">
+                    <ol className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs text-gray-400">
+                        <li><Link href="/" className="hover:text-indigo-600 transition-colors">Strona główna</Link></li>
+                        <li aria-hidden="true">/</li>
+                        <li><Link href="/warszawa" className="hover:text-indigo-600 transition-colors">Specjaliści</Link></li>
+                        <li aria-hidden="true">/</li>
+                        <li className="text-gray-600 font-medium truncate max-w-[200px]">{name}</li>
+                    </ol>
+                </nav>
                 {cover ? (
                     <div className="relative h-44 bg-gray-200">
                         <img

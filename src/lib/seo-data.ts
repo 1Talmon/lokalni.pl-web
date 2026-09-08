@@ -58,6 +58,11 @@ export const CITY_DISPLAY: Record<string, string> = {
     tychy: 'Tychy', tarnow: 'Tarnów', koszalin: 'Koszalin', kalisz: 'Kalisz',
 };
 
+/** Reverse of CITY_DISPLAY — display name → slug, e.g. "Warszawa" → "warszawa" */
+export const CITY_SLUG: Record<string, string> = Object.fromEntries(
+    Object.entries(CITY_DISPLAY).map(([slug, display]) => [display, slug])
+);
+
 /** Locative case — used in "Usługi w <locative>" */
 export const CITY_LOCATIVE: Record<string, string> = {
     warszawa: 'Warszawie', krakow: 'Krakowie', wroclaw: 'Wrocławiu',
