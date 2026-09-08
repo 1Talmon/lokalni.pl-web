@@ -15,12 +15,12 @@ export function SlugContent() {
         });
     }, []);
 
-    // Once app + services ready, scroll to results — same feel as clicking Szukaj in-app
+    // Scroll as soon as app is ready — identical to clicking Szukaj (doesn't wait for services)
     useEffect(() => {
-        if (state.servicesLoading || state.isLoadingApp || didScroll.current) return;
+        if (state.isLoadingApp || didScroll.current) return;
         didScroll.current = true;
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, [state.servicesLoading, state.isLoadingApp]);
+    }, [state.isLoadingApp]);
 
     return (
         <HomeView
