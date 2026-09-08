@@ -1,4 +1,4 @@
-import { BASE_URL } from './seo-data';
+import { BASE_URL, CATEGORY_SLUG, KEYWORD_DISPLAY } from './seo-data';
 
 type RawService = Record<string, unknown>;
 type RawProfile = Record<string, unknown>;
@@ -6,8 +6,10 @@ type RawProfile = Record<string, unknown>;
 export function buildServiceJsonLd(s: RawService, slug: string) {
     const provider = s.provider as RawProfile | undefined;
     const providerUid = provider?.uid ?? provider?.id;
+    const catSlug = typeof s.category === 'string' ? (CATEGORY_SLUG[s.category] ?? null) : null;
+    const catLabel = catSlug ? (KEYWORD_DISPLAY[catSlug] ?? catSlug) : null;
 
-    return {
+    const serviceJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Service',
         name: s.title,
@@ -26,6 +28,18 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
             ...(providerUid ? { url: `${BASE_URL}/profile/${providerUid}` } : {}),
         } : undefined,
     };
+
+    const breadcrumbJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
+            ...(catSlug && catLabel ? [{ '@type': 'ListItem', position: 2, name: catLabel, item: `${BASE_URL}/${catSlug}` }] : []),
+            { '@type': 'ListItem', position: catSlug ? 3 : 2, name: String(s.title ?? ''), item: `${BASE_URL}/service/${slug}` },
+        ],
+    };
+
+    return [serviceJsonLd, breadcrumbJsonLd];
 }
 
 export function buildProfileJsonLd(p: RawProfile, uid: string) {

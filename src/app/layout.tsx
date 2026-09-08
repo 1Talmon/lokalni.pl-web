@@ -77,8 +77,18 @@ const orgJsonLd = {
     '@type': 'Organization',
     name: 'MyLokalni.pl',
     url: BASE_URL,
-    logo: `${BASE_URL}/icons/favicon-96x96.png`,
-    sameAs: [],
+    logo: {
+        '@type': 'ImageObject',
+        url: `${BASE_URL}/icons/favicon-96x96.png`,
+        width: 96,
+        height: 96,
+    },
+    contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        availableLanguage: 'Polish',
+        areaServed: 'PL',
+    },
 };
 
 const websiteJsonLd = {

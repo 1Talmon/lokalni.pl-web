@@ -5,7 +5,10 @@ import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
-import { SlugPageClient } from '../_components/SlugPageClient';
+import { SlugNavbar } from '../_components/SlugNavbar';
+import { SlugServiceGrid } from '../_components/SlugServiceGrid';
+import { SlugLoadMore } from '../_components/SlugLoadMore';
+import { Footer } from '@/components/layout/Footer';
 
 interface Props {
     params: Promise<{ slug: string; page: string }>;
@@ -83,19 +86,31 @@ export default async function SlugPageN({ params }: Props) {
         }).filter(item => item.url),
     };
 
+    const pageH1 = `${h1} — strona ${page}`;
+
     return (
         <>
             <link rel="prev" href={prevUrl} />
             {hasMore && <link rel="next" href={`${baseUrl}/${page + 1}`} />}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
-            <SlugPageClient
-                services={services}
-                h1={`${h1} — strona ${page}`}
-                slug={slug}
-                hasMore={hasMore}
-                totalCount={total}
-            />
+
+            <SlugNavbar />
+
+            <div className="max-w-7xl mx-auto px-4 pt-6 pb-4">
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{pageH1}</h1>
+                    {total > 0 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            {total} {total === 1 ? 'oferta' : total < 5 ? 'oferty' : 'ofert'}
+                        </p>
+                    )}
+                </div>
+                <SlugServiceGrid services={services} />
+                <SlugLoadMore slug={slug} initialCount={services.length} hasMore={hasMore} />
+            </div>
+
+            <Footer />
         </>
     );
 }

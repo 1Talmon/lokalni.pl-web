@@ -10,6 +10,7 @@ export function GET() {
   <sitemap><loc>${BASE_URL}/sitemap-static.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-categories.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-services.xml</loc></sitemap>
+  <sitemap><loc>${BASE_URL}/sitemap-profiles.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-locations.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-keywords.xml</loc></sitemap>
   <sitemap><loc>${BASE_URL}/sitemap-search.xml</loc></sitemap>

@@ -3,10 +3,13 @@ import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug, LANDING_SLUGS } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
-import { SlugPageClient } from './_components/SlugPageClient';
 import { SlugSeoServer } from './_components/SlugSeoServer';
+import { SlugNavbar } from './_components/SlugNavbar';
+import { SlugServiceGrid } from './_components/SlugServiceGrid';
+import { SlugLoadMore } from './_components/SlugLoadMore';
+import { Footer } from '@/components/layout/Footer';
 
-export const dynamicParams = false;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
     return [...LANDING_SLUGS].map(slug => ({ slug }));
@@ -20,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const { services, total } = await fetchServices(fetchParams);
+    const { total } = await fetchServices(fetchParams);
 
     const url = `${BASE_URL}/${slug}`;
     const noindex = total >= 2
@@ -87,10 +90,12 @@ export default async function SlugPage({ params }: Props) {
         }).filter(item => item.url),
     };
 
+    const areaServed = citySlug ? { '@type': 'City', name: citySlug.replace(/-/g, ' ') } : undefined;
     const aggregateRatingJsonLd = avgRating ? {
         '@context': 'https://schema.org',
-        '@type': 'Service',
+        '@type': 'LocalBusiness',
         name: h1,
+        ...(areaServed ? { areaServed } : {}),
         aggregateRating: { '@type': 'AggregateRating', ratingValue: avgRating, reviewCount: ratings.length, bestRating: '5', worstRating: '1' },
     } : null;
 
@@ -102,14 +107,24 @@ export default async function SlugPage({ params }: Props) {
             {aggregateRatingJsonLd && (
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
             )}
-            <SlugPageClient
-                services={services}
-                h1={h1}
-                slug={slug}
-                hasMore={hasMore}
-                totalCount={total}
-            />
+
+            <SlugNavbar />
+
+            <div className="max-w-7xl mx-auto px-4 pt-6 pb-4">
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1}</h1>
+                    {total > 0 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            {total} {total === 1 ? 'oferta' : total < 5 ? 'oferty' : 'ofert'}
+                        </p>
+                    )}
+                </div>
+                <SlugServiceGrid services={services} />
+                <SlugLoadMore slug={slug} initialCount={services.length} hasMore={hasMore} />
+            </div>
+
             <SlugSeoServer keywordSlug={keywordSlug} citySlug={citySlug} h1={h1} />
+            <Footer />
         </>
     );
 }

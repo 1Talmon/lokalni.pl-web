@@ -68,14 +68,17 @@ export default async function ServicePage({ params }: Props) {
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
-    const jsonLd = buildServiceJsonLd(service, slug);
+    const jsonLdSchemas = buildServiceJsonLd(service, slug);
 
     return (
         <>
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
+            {jsonLdSchemas.map((schema, i) => (
+                <script
+                    key={i}
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+                />
+            ))}
             <ServiceDetailsContent />
         </>
     );
