@@ -6,6 +6,7 @@ import { BASE_URL, parseSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '@/lib/seo-da
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1 } from '@/lib/slug-services';
 import { SlugContent } from './_components/SlugContent';
+import { SlugStaticShell } from './_components/SlugStaticShell';
 
 // Slug routes live in (app) so AppShell handles them natively:
 // - detects isSlugRoute, hides tab strip, pre-fills search state (useLayoutEffect)
@@ -99,13 +100,17 @@ export default async function SlugPage({ params }: Props) {
 
     return (
         <>
-            {/* JSON-LD for Googlebot — invisible to users, no HTML flash */}
+            {/* JSON-LD for Googlebot */}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
             {aggregateRatingJsonLd && (
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
             )}
-            {/* AppShell pre-fills search state (useLayoutEffect) and renders this as children */}
+            {/* SSR shell — widoczny HTML dla użytkownika i Googlebota zanim JS się załaduje */}
+            {services.length > 0 && (
+                <SlugStaticShell parsed={parsed} services={services} total={total} />
+            )}
+            {/* HomeView — przejmuje po hydratacji, chowa shell */}
             <SlugContent />
         </>
     );
