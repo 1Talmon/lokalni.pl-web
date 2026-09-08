@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
+import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import ServiceDetailsContent from './ServiceDetailsContent';
 
 interface Props { params: Promise<{ slug: string }> }
@@ -70,8 +71,21 @@ export default async function ServicePage({ params }: Props) {
     if (!service) notFound();
     const jsonLdSchemas = buildServiceJsonLd(service, slug);
 
+    // Hero image for LCP preload — sent in <head> before any body content
+    const heroImage = (service.ogImage || service.image ||
+        (Array.isArray(service.images) ? service.images[0] : null)) as string | null;
+
     return (
         <>
+            {/* Preload hero — browser fetches before parser reaches <img> in body */}
+            {heroImage && (
+                <link
+                    rel="preload"
+                    as="image"
+                    href={heroImage}
+                    {...{ fetchPriority: 'high' }}
+                />
+            )}
             {jsonLdSchemas.map((schema, i) => (
                 <script
                     key={i}
@@ -79,6 +93,10 @@ export default async function ServicePage({ params }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
                 />
             ))}
+            {/* SSR visible content — LCP candidate for real users + Googlebot indexable HTML.
+                Hidden by ServiceDetailsClient once interactive version renders. */}
+            <ServiceStaticShell data={service as Parameters<typeof ServiceStaticShell>[0]['data']} />
+            {/* Client component — takes over when JS is ready */}
             <ServiceDetailsContent />
         </>
     );

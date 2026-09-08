@@ -107,6 +107,15 @@ export default function ServiceDetailsClient() {
         }
     }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Hide SSR static shell once the interactive component has data and will render.
+    // Shell stays visible during loading so users see content instead of blank screen.
+    useEffect(() => {
+        if (!isPending && service && !state.isLoadingApp) {
+            const shell = document.querySelector('[data-ssr-shell]');
+            if (shell instanceof HTMLElement) shell.style.display = 'none';
+        }
+    }, [isPending, service, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
+
     useEffect(() => {
         if (!service || (service as Service & { __deleted?: boolean }).__deleted) return;
         const cityPart = service.city ? ` w ${service.city}` : '';
