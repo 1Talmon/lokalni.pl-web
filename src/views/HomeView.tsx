@@ -6,7 +6,8 @@ import { usePlatform } from '../hooks/usePlatform';
 import { Search, Filter, ArrowUpDown, MapPin, Star, CreditCard, MessageCircle, Globe, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { buildLandingSlug } from '../lib/seo-data';
+import { buildLandingSlug, KEYWORD_DISPLAY } from '../lib/seo-data';
+import { getLandingContent, TOP_CITIES_DISPLAY } from '../lib/landing-content';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { CityAutocomplete } from '../components/ui/CityAutocomplete';
@@ -561,7 +562,77 @@ const HomeView = ({
                 <img key={`preload-${service.publicId}`} src={service.image} alt="" loading="eager" />
             ))}
         </div>
+
+        {!isNative && searchQuery && <SlugSeoContent searchQuery={searchQuery} location={location} />}
       </motion.div>
+    );
+}
+
+function SlugFaqItem({ q, a }: { q: string; a: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="py-4 border-b border-gray-100 last:border-0">
+            <button onClick={() => setOpen(v => !v)} className="w-full flex justify-between items-start text-left gap-4" aria-expanded={open}>
+                <span className="font-medium text-gray-900 text-sm">{q}</span>
+                <span className="text-gray-400 flex-shrink-0">{open ? '−' : '+'}</span>
+            </button>
+            {open && <p className="mt-2 text-gray-600 text-sm leading-relaxed">{a}</p>}
+        </div>
+    );
+}
+
+function SlugSeoContent({ searchQuery, location }: { searchQuery: string; location: string }) {
+    const keywordSlug = Object.keys(KEYWORD_DISPLAY).find(
+        k => KEYWORD_DISPLAY[k].toLowerCase() === searchQuery.toLowerCase()
+    ) ?? null;
+
+    const content = getLandingContent(keywordSlug);
+
+    const otherCities = TOP_CITIES_DISPLAY.filter(
+        c => c.display.toLowerCase() !== location.toLowerCase()
+    );
+
+    return (
+        <div className="max-w-3xl mx-auto px-4 pb-16 mt-4">
+            <p className="text-gray-500 text-sm leading-relaxed">{content.description}</p>
+
+            {keywordSlug && otherCities.length > 0 && (
+                <div className="mt-8">
+                    <h2 className="text-base font-semibold text-gray-800 mb-3">
+                        {searchQuery} w innych miastach
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                        {otherCities.map(c => (
+                            <a key={c.slug} href={`/${keywordSlug}-${c.slug}`}
+                                className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
+                                {c.display}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {content.related.length > 0 && (
+                <div className="mt-8">
+                    <h2 className="text-base font-semibold text-gray-800 mb-3">Powiązane kategorie</h2>
+                    <div className="flex flex-wrap gap-2">
+                        {content.related.map(rel => (
+                            <a key={rel} href={`/${rel}`}
+                                className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
+                                {KEYWORD_DISPLAY[rel] ?? rel.replace(/-/g, ' ')}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-10">
+                <h2 className="text-lg font-bold text-gray-900 mb-2">Najczęstsze pytania</h2>
+                <div>
+                    {content.faq.map((item, i) => <SlugFaqItem key={i} q={item.q} a={item.a} />)}
+                </div>
+            </div>
+        </div>
     );
 }
 
