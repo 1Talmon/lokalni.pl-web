@@ -11,9 +11,10 @@ interface ServiceCardProps {
     onStartChat: (service: Service) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    priority?: boolean;
 }
 
-export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter, onMouseLeave }: ServiceCardProps) {
+export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter, onMouseLeave, priority = false }: ServiceCardProps) {
     const isRemote = !!service.isRemote;
     const isUserActive = service.isOnline === true;
     const isOffer = (service.type || 'offer') === 'offer';
@@ -34,7 +35,7 @@ export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter
             className={`relative bg-white rounded-3xl overflow-hidden shadow-lg md:transition-[transform,box-shadow] md:duration-300 md:hover:-translate-y-2 md:hover:shadow-2xl md:hover:z-30 cursor-pointer md:transform-gpu md:will-change-transform ${service.isMine ? 'ring-2 ring-[#6366F1]' : ''}`}
         >
             <div className="relative h-48 w-full bg-gray-200">
-                <ImageWithSkeleton src={service.image} alt={service.title} />
+                <ImageWithSkeleton src={service.image} alt={service.title} priority={priority} />
                 <div className="absolute top-3 left-3 right-12 flex flex-wrap gap-1.5 z-10 items-start pointer-events-none">
                     {isRemote ? (
                         <div className="bg-black/80 backdrop-blur text-white px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-semibold flex items-center gap-1 shadow-sm shrink-0 max-w-full">

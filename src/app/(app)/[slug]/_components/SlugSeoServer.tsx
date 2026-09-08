@@ -12,11 +12,25 @@ export function SlugSeoServer({ keywordSlug, citySlug, h1 }: SlugSeoServerProps)
     const content = getLandingContent(keywordSlug);
     const keywordDisplay = keywordSlug ? (KEYWORD_DISPLAY[keywordSlug] ?? keywordSlug.replace(/-/g, ' ')) : null;
 
+    const faqJsonLd = content.faq.length > 0 ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: content.faq.map(item => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: { '@type': 'Answer', text: item.a },
+        })),
+    } : null;
+
     const otherCities = citySlug
         ? TOP_CITIES_DISPLAY.filter(c => c.slug !== citySlug)
         : TOP_CITIES_DISPLAY;
 
     return (
+        <>
+        {faqJsonLd && (
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        )}
         <section className="max-w-3xl mx-auto px-4 pb-16 mt-8" aria-label="Informacje o usłudze">
             <p className="text-gray-500 text-sm leading-relaxed">{content.description}</p>
 
@@ -88,5 +102,6 @@ export function SlugSeoServer({ keywordSlug, citySlug, h1 }: SlugSeoServerProps)
                 </div>
             </div>
         </section>
+        </>
     );
 }

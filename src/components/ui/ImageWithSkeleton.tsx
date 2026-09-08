@@ -2,7 +2,7 @@
 import { useState, memo } from 'react';
 import Image from 'next/image';
 
-export const ImageWithSkeleton = memo(({ src, alt }: { src: string, alt: string }) => {
+export const ImageWithSkeleton = memo(({ src, alt, priority = false }: { src: string; alt: string; priority?: boolean }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     return (
@@ -11,11 +11,12 @@ export const ImageWithSkeleton = memo(({ src, alt }: { src: string, alt: string 
                 src={src}
                 alt={alt}
                 fill
-                priority
+                priority={priority}
+                loading={priority ? 'eager' : 'lazy'}
                 onLoad={() => setIsLoaded(true)}
                 className={`object-cover block transition-opacity duration-700 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             />
         </div>
     );
-}, (prev, next) => prev.src === next.src);
+}, (prev, next) => prev.src === next.src && prev.priority === next.priority);

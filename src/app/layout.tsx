@@ -86,14 +86,6 @@ const websiteJsonLd = {
     '@type': 'WebSite',
     name: 'MyLokalni.pl',
     url: BASE_URL,
-    potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-            '@type': 'EntryPoint',
-            urlTemplate: `${BASE_URL}/{search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-    },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

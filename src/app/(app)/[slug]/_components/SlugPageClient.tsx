@@ -45,12 +45,13 @@ export function SlugPageClient({ services: initial, h1, slug, hasMore: initialHa
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {services.map((service) => (
+                {services.map((service, i) => (
                     <ServiceCard
                         key={service.publicId}
                         service={service}
                         onServiceClick={actions.onServiceClick}
                         onStartChat={actions.startChat}
+                        priority={i < 3}
                     />
                 ))}
             </div>

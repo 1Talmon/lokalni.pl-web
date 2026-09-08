@@ -496,7 +496,7 @@ const HomeView = ({
                   </div>
                 )}
 
-                {displayServices.slice(0, loadedCount).map((service) => (
+                {displayServices.slice(0, loadedCount).map((service, i) => (
                     <ServiceCard
                         key={service.publicId}
                         service={service}
@@ -504,6 +504,7 @@ const HomeView = ({
                         onStartChat={onStartChat}
                         onMouseEnter={() => service.publicId && handleCardMouseEnter(service.publicId)}
                         onMouseLeave={handleCardMouseLeave}
+                        priority={i < 3}
                     />
                 ))}
              </motion.div>
