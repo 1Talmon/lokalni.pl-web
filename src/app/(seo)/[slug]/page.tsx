@@ -1,7 +1,9 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { BASE_URL, parseSlug, LANDING_SLUGS, KEYWORD_DISPLAY } from '@/lib/seo-data';
+import { BASE_URL, parseSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
 import { SlugSeoServer } from './_components/SlugSeoServer';
@@ -10,11 +12,9 @@ import { SlugServiceGrid } from './_components/SlugServiceGrid';
 import { SlugLoadMore } from './_components/SlugLoadMore';
 import { Footer } from '@/components/layout/Footer';
 
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-    return [...LANDING_SLUGS].map(slug => ({ slug }));
-}
+// Fully dynamic edge rendering — no static pre-generation.
+// Every slug from sitemap-locations.xml resolves here (e.g. /inne-rowy, /dom-ogrod-gdynia).
+// fetchServices uses next: { revalidate: 3600 } so CF edge caches responses per slug.
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -54,9 +54,55 @@ export default async function SlugPage({ params }: Props) {
     const fetchParams = resolveFetchParams(parsed);
     const { services, total } = await fetchServices(fetchParams);
 
-    if (services.length === 0) notFound();
-
     const h1 = buildH1(parsed);
+
+    // 0 results — keyword/city pages with no services: show helpful redirect, don't 404.
+    // Search-type slugs (no known keyword match) with 0 results: 404.
+    if (services.length === 0) {
+        if (parsed.type === 'search') notFound();
+
+        const keywordLabel = parsed.type === 'keyword' || parsed.type === 'keyword-city'
+            ? (KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' '))
+            : null;
+        const cityLabel = parsed.type === 'city' || parsed.type === 'keyword-city'
+            ? (CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '))
+            : null;
+
+        return (
+            <>
+                <SlugNavbar />
+                <div className="max-w-2xl mx-auto px-4 pt-16 pb-32 text-center">
+                    <p className="text-4xl mb-4">🔍</p>
+                    <h1 className="text-xl font-black text-gray-900 mb-2">
+                        Brak ogłoszeń
+                        {keywordLabel ? `: ${keywordLabel}` : ''}
+                        {cityLabel ? ` w ${cityLabel}` : ''}
+                    </h1>
+                    <p className="text-sm text-gray-500 mb-8 max-w-xs mx-auto">
+                        Nie ma jeszcze ogłoszeń dla tego zapytania. Sprawdź wyniki dla całej Polski lub wróć na stronę główną.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        {parsed.type === 'keyword-city' && (
+                            <Link
+                                href={`/${parsed.keyword}`}
+                                className="px-6 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors"
+                            >
+                                {keywordLabel} — cała Polska
+                            </Link>
+                        )}
+                        <Link
+                            href="/"
+                            className="px-6 py-3 rounded-2xl border border-gray-200 text-gray-700 text-sm font-semibold hover:border-indigo-400 transition-colors"
+                        >
+                            Strona główna
+                        </Link>
+                    </div>
+                </div>
+                <Footer />
+            </>
+        );
+    }
+
     const hasMore = services.length === PAGE_SIZE;
 
     const keywordSlug = (parsed.type === 'keyword' || parsed.type === 'keyword-city')
@@ -71,7 +117,6 @@ export default async function SlugPage({ params }: Props) {
         ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
         : null;
 
-    // 3-level breadcrumb for keyword-city, 2-level for keyword/city
     const breadcrumbItems = parsed.type === 'keyword-city'
         ? [
             { '@type': 'ListItem', position: 1, name: 'Strona główna', item: BASE_URL },
