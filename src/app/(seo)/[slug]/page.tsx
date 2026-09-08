@@ -56,20 +56,6 @@ export default async function SlugPage({ params }: Props) {
 
     const h1 = buildH1(parsed);
 
-    // Build main app URL with pre-filled search params — AppShell reads ?q= and ?city= on mount
-    const appSearchParams = new URLSearchParams();
-    if (parsed.type === 'keyword' || parsed.type === 'keyword-city') {
-        appSearchParams.set('q', KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' '));
-    } else if (parsed.type === 'search') {
-        appSearchParams.set('q', parsed.query);
-    }
-    if (parsed.type === 'keyword-city' || parsed.type === 'city') {
-        appSearchParams.set('city', CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
-    } else if (parsed.type === 'search' && parsed.citySlug) {
-        appSearchParams.set('city', CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
-    }
-    const mainAppUrl = appSearchParams.toString() ? `/?${appSearchParams}` : '/';
-
     // 0 results — keyword/city pages with no services: show helpful redirect, don't 404.
     // Search-type slugs (no known keyword match) with 0 results: 404.
     if (services.length === 0) {
@@ -105,10 +91,10 @@ export default async function SlugPage({ params }: Props) {
                             </Link>
                         )}
                         <Link
-                            href={mainAppUrl}
+                            href="/"
                             className="px-6 py-3 rounded-2xl border border-gray-200 text-gray-700 text-sm font-semibold hover:border-indigo-400 transition-colors"
                         >
-                            Wyszukaj na MyLokalni.pl
+                            Strona główna
                         </Link>
                     </div>
                 </div>
@@ -205,21 +191,13 @@ export default async function SlugPage({ params }: Props) {
                         <li className="text-gray-600 font-medium truncate max-w-[200px]">{h1}</li>
                     </ol>
                 </nav>
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1}</h1>
-                        {total > 0 && (
-                            <p className="text-sm text-gray-500 mt-1">
-                                {total} {total === 1 ? 'oferta' : total < 5 ? 'oferty' : 'ofert'}
-                            </p>
-                        )}
-                    </div>
-                    <Link
-                        href={mainAppUrl}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors shrink-0"
-                    >
-                        Znajdź specjalistę →
-                    </Link>
+                <div className="mb-6">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1}</h1>
+                    {total > 0 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            {total} {total === 1 ? 'oferta' : total < 5 ? 'oferty' : 'ofert'}
+                        </p>
+                    )}
                 </div>
                 <SlugServiceGrid services={services} />
                 <SlugLoadMore slug={slug} initialCount={services.length} hasMore={hasMore} />
