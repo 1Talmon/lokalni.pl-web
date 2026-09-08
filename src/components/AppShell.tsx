@@ -25,6 +25,7 @@ import { FavoritesListView } from '../views/FavoritesListView';
 
 const isAndroid = Capacitor.getPlatform() === 'android';
 const SWIPE_TAB_SET = new Set(SWIPE_TABS);
+const SLUG_RE = /^\/[a-z0-9][a-z0-9-]*(?:\/\d+)?$/;
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -183,6 +184,35 @@ function AppShellContent({ children }: AppShellProps) {
     }, [state.activeModal, pathname, router, actions]);
 
     const isTabRoute = SWIPE_TAB_SET.has(pathname as '/');
+    const isSlugRoute = !Capacitor.isNativePlatform() && SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/');
+
+    // Pre-populate search from slug URL
+    useEffect(() => {
+        if (!isSlugRoute || state.isLoadingApp) return;
+        const slug = pathname.split('/').filter(Boolean)[0];
+        const parsed = parseSlug(slug);
+        if (parsed.type === 'keyword') {
+            const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
+            actions.homeActions.setSearchQuery(kw);
+            actions.homeActions.setSearchDisplay(kw);
+            actions.homeActions.setLocation('');
+        } else if (parsed.type === 'city') {
+            const city = CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ');
+            actions.homeActions.setSearchQuery('');
+            actions.homeActions.setSearchDisplay('');
+            actions.homeActions.setLocation(city);
+        } else if (parsed.type === 'keyword-city') {
+            const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
+            const city = CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ');
+            actions.homeActions.setSearchQuery(kw);
+            actions.homeActions.setSearchDisplay(kw);
+            actions.homeActions.setLocation(city);
+        } else {
+            actions.homeActions.setSearchQuery(parsed.query);
+            actions.homeActions.setSearchDisplay(parsed.query);
+            if (parsed.citySlug) actions.homeActions.setLocation(CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
+        }
+    }, [pathname, isSlugRoute, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openChat = useCallback(async (chatId: string) => {
         if (Capacitor.isNativePlatform()) {
@@ -288,6 +318,7 @@ function AppShellContent({ children }: AppShellProps) {
                                 hasUnreadMessages={state.hasUnreadMessages}
                                 hideNavigation={state.isFullScreen || (state.activeModal !== 'none' && state.activeModal !== 'add_service' && state.activeModal !== 'report' && state.activeModal !== 'chat_detail' && state.activeModal !== 'support')}
                                 tabElements={tabElements}
+                                isSlugRoute={isSlugRoute}
                                 onOpenSupport={() => state.isLoggedIn ? handleOpenSupport() : router.push('/auth')}
                             >
                                 {!isTabRoute && children}

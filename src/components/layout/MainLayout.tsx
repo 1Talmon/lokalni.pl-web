@@ -36,6 +36,7 @@ interface MainLayoutProps {
     hasUnreadMessages: boolean;
     hideNavigation?: boolean;
     tabElements?: React.ReactNode[];
+    isSlugRoute?: boolean;
     onOpenSupport?: () => void;
     children?: React.ReactNode;
 }
@@ -73,6 +74,7 @@ export const MainLayout = ({
     hasUnreadMessages,
     hideNavigation = false,
     tabElements,
+    isSlugRoute = false,
     onOpenSupport,
     children,
 }: MainLayoutProps) => {
@@ -114,7 +116,7 @@ export const MainLayout = ({
     // Tracks which tab index we last fired haptic for — avoids double-firing
     const prevTabRef = useRef(initialIdx);
 
-    const isOnTabRoute = !!tabElements && SWIPE_TABS.includes(pathname as typeof SWIPE_TABS[number]);
+    const isOnTabRoute = !!tabElements && (SWIPE_TABS.includes(pathname as typeof SWIPE_TABS[number]) || isSlugRoute);
     const isNativeTabStrip = Capacitor.isNativePlatform() && isOnTabRoute;
 
     const { isNativeNavActive } = useNativeBottomNav({
@@ -195,11 +197,18 @@ export const MainLayout = ({
     useLayoutEffect(() => {
         if (!tabScrollRef.current) return;
         const idx = SWIPE_TABS.indexOf(pathname as typeof SWIPE_TABS[number]);
-        if (idx === -1) return;
+        if (idx === -1) {
+            if (isSlugRoute) {
+                tabScrollRef.current.scrollLeft = 0;
+                scrollProgress.set(0);
+                prevTabRef.current = 0;
+            }
+            return;
+        }
         tabScrollRef.current.scrollLeft = idx * window.innerWidth;
         scrollProgress.set(idx);
         prevTabRef.current = idx;
-    }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [pathname, isSlugRoute]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Minimum 20% displacement before a tab switch commits — cancels velocity flicks
     // Does NOT mutate CSS mid-gesture (which breaks iOS scroll entirely)
@@ -359,6 +368,8 @@ export const MainLayout = ({
                                     ))}
                                 </div>
                             </div>
+                            {/* JSON-LD scripts from slug pages — rendered but not visible */}
+                            {isSlugRoute && <div style={{ display: 'none' }}>{children}</div>}
                             {!isOnTabRoute && (
                                 <>
                                     <div

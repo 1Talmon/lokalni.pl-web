@@ -2,10 +2,9 @@ export const runtime = 'edge';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BASE_URL, parseSlug, CITY_DISPLAY } from '@/lib/seo-data';
+import { BASE_URL, parseSlug } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '../_lib/shared';
-import { LandingAppWrapper } from '../_components/LandingAppWrapper';
 
 interface Props {
     params: Promise<{ slug: string; page: string }>;
@@ -23,11 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const offset = (page - 1) * PAGE_SIZE;
-    const services = await fetchServices(fetchParams, offset);
+    const services = await fetchServices(fetchParams, (page - 1) * PAGE_SIZE);
 
-    const baseUrl = `${BASE_URL}/${slug}`;
-    const url = `${baseUrl}/${page}`;
+    const url = `${BASE_URL}/${slug}/${page}`;
     const noindex = services.length >= 2
         ? { robots: { index: true, follow: true } }
         : { robots: { index: false, follow: true } };
@@ -35,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const h1 = buildH1(parsed);
     const count = services.length;
     const title = `Strona ${page}: ${h1} | MyLokalni.pl`;
-    const description = `Strona ${page} — ${count} ofert${count === 1 ? 'a' : count < 5 ? 'y' : ''}: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny, szybki kontakt na MyLokalni.pl.`;
+    const description = `Strona ${page} — ${count} ofert: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny na MyLokalni.pl.`;
 
     return {
         title,
@@ -60,9 +57,9 @@ export default async function SlugPageN({ params }: Props) {
     if (services.length === 0) notFound();
 
     const h1 = buildH1(parsed);
-    const keyword = parsed.type === 'keyword' || parsed.type === 'keyword-city' ? parsed.keyword : null;
-    const citySlug = parsed.type === 'keyword' ? null : (parsed.type === 'city' || parsed.type === 'keyword-city' || parsed.type === 'search' ? parsed.citySlug : null);
-    const cityDisplay = citySlug ? (CITY_DISPLAY[citySlug] ?? null) : null;
+    const hasMore = services.length === PAGE_SIZE;
+    const baseUrl = `${BASE_URL}/${slug}`;
+    const prevUrl = page === 2 ? baseUrl : `${baseUrl}/${page - 1}`;
 
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
@@ -87,25 +84,12 @@ export default async function SlugPageN({ params }: Props) {
         }).filter(item => item.url),
     };
 
-    const baseUrl = `${BASE_URL}/${slug}`;
-    const prevUrl = page === 2 ? baseUrl : `${baseUrl}/${page - 1}`;
-    const hasMore = services.length === PAGE_SIZE;
-
     return (
         <>
             <link rel="prev" href={prevUrl} />
             {hasMore && <link rel="next" href={`${baseUrl}/${page + 1}`} />}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
-            <LandingAppWrapper
-                initialServices={services}
-                keyword={keyword}
-                city={cityDisplay ?? citySlug}
-                slug={slug}
-                page={page}
-                prevUrl={prevUrl}
-                nextUrl={hasMore ? `${baseUrl}/${page + 1}` : null}
-            />
         </>
     );
 }

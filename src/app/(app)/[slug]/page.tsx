@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug, CITY_DISPLAY } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from './_lib/shared';
-import { LandingAppWrapper } from './_components/LandingAppWrapper';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -48,13 +47,9 @@ export default async function SlugPage({ params }: Props) {
     if (services.length === 0) notFound();
 
     const h1 = buildH1(parsed);
-    const keyword = parsed.type === 'keyword' || parsed.type === 'keyword-city' ? parsed.keyword : null;
-    const citySlug = parsed.type === 'keyword' ? null : (parsed.type === 'city' || parsed.type === 'keyword-city' || parsed.type === 'search' ? parsed.citySlug : null);
-    const cityDisplay = citySlug ? (CITY_DISPLAY[citySlug] ?? null) : null;
+    const citySlug = parsed.type === 'keyword' ? null : (parsed.type !== 'search' ? parsed.citySlug : parsed.citySlug);
 
-    const ratings = services
-        .map(s => parseFloat(s.rating as string) || 0)
-        .filter(r => r > 0);
+    const ratings = services.map(s => parseFloat(s.rating as string) || 0).filter(r => r > 0);
     const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
 
     const breadcrumbJsonLd = {
@@ -83,13 +78,7 @@ export default async function SlugPage({ params }: Props) {
         '@context': 'https://schema.org',
         '@type': 'Service',
         name: h1,
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: avgRating,
-            reviewCount: ratings.length,
-            bestRating: '5',
-            worstRating: '1',
-        },
+        aggregateRating: { '@type': 'AggregateRating', ratingValue: avgRating, reviewCount: ratings.length, bestRating: '5', worstRating: '1' },
     } : null;
 
     const hasMore = services.length === PAGE_SIZE;
@@ -102,12 +91,6 @@ export default async function SlugPage({ params }: Props) {
             {aggregateRatingJsonLd && (
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
             )}
-            <LandingAppWrapper
-                initialServices={services}
-                keyword={keyword}
-                city={cityDisplay ?? citySlug}
-                slug={slug}
-            />
         </>
     );
 }
