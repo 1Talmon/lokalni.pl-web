@@ -2,7 +2,7 @@ export const runtime = 'edge';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BASE_URL, parseSlug, CITY_DISPLAY } from '@/lib/seo-data';
+import { BASE_URL, parseSlug } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from './_lib/shared';
 
@@ -47,7 +47,6 @@ export default async function SlugPage({ params }: Props) {
     if (services.length === 0) notFound();
 
     const h1 = buildH1(parsed);
-    const citySlug = parsed.type === 'keyword' ? null : (parsed.type !== 'search' ? parsed.citySlug : parsed.citySlug);
 
     const ratings = services.map(s => parseFloat(s.rating as string) || 0).filter(r => r > 0);
     const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;

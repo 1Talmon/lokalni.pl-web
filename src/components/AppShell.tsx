@@ -26,6 +26,11 @@ import { FavoritesListView } from '../views/FavoritesListView';
 const isAndroid = Capacitor.getPlatform() === 'android';
 const SWIPE_TAB_SET = new Set(SWIPE_TABS);
 const SLUG_RE = /^\/[a-z0-9][a-z0-9-]*(?:\/\d+)?$/;
+const KNOWN_APP_ROUTES = new Set([
+    '/dashboard', '/booking-form', '/support', '/faq', '/regulamin',
+    '/polityka-prywatnosci', '/o-nas', '/zasady-bezpieczenstwa',
+    '/jak-to-dziala', '/zgoda-rodzica',
+]);
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -184,7 +189,7 @@ function AppShellContent({ children }: AppShellProps) {
     }, [state.activeModal, pathname, router, actions]);
 
     const isTabRoute = SWIPE_TAB_SET.has(pathname as '/');
-    const isSlugRoute = !Capacitor.isNativePlatform() && SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/');
+    const isSlugRoute = !Capacitor.isNativePlatform() && SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/') && !KNOWN_APP_ROUTES.has(pathname);
 
     // Pre-populate search from slug URL
     useEffect(() => {
