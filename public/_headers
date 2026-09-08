@@ -19,6 +19,11 @@
 /sitemap-locations.xml
   Cache-Control: public, max-age=86400, s-maxage=86400
 
+/og
+  X-Robots-Tag: noindex, nofollow
+/og/*
+  X-Robots-Tag: noindex, nofollow
+
 /dashboard
   X-Robots-Tag: noindex, nofollow
 /dashboard/*

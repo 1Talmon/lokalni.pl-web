@@ -7,11 +7,13 @@ export default function robots(): MetadataRoute.Robots {
             {
                 userAgent: ['Googlebot', 'Bingbot', 'Twitterbot', 'facebookexternalhit'],
                 allow: '/',
+                disallow: ['/og/'],
             },
             {
                 userAgent: '*',
                 allow: '/',
                 disallow: [
+                    '/og/',
                     '/chat',
                     '/chat/',
                     '/calendar',

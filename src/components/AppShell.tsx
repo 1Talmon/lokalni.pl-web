@@ -296,6 +296,14 @@ function AppShellContent({ children }: AppShellProps) {
                     removeToast={actions.removeToast}
                 />
 
+                {/* Slug routes: render in initial SSR HTML so Googlebot indexes H1/content/FAQ
+                    without JS execution. LoadingScreen overlays this; after auth MainLayout takes over. */}
+                {isSlugRoute && state.isLoadingApp && !Capacitor.isNativePlatform() && (
+                    <div style={{ paddingTop: 'var(--total-nav-h, 73px)' }}>
+                        {children}
+                    </div>
+                )}
+
                 {!state.isLoadingApp && androidReady && (
                     <>
                         <ErrorBoundary context="Layout">
