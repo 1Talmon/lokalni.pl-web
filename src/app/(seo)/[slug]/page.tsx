@@ -1,12 +1,16 @@
-export const runtime = 'edge';
-
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BASE_URL, parseSlug } from '@/lib/seo-data';
+import { BASE_URL, parseSlug, LANDING_SLUGS } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
 import { SlugPageClient } from './_components/SlugPageClient';
 import { SlugSeoServer } from './_components/SlugSeoServer';
+
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+    return [...LANDING_SLUGS].map(slug => ({ slug }));
+}
 
 interface Props {
     params: Promise<{ slug: string }>;
