@@ -118,10 +118,10 @@ export default function ServiceDetailsClient() {
 
     useEffect(() => {
         if (!service || (service as Service & { __deleted?: boolean }).__deleted) return;
-        const cityPart = service.city ? ` w ${service.city}` : '';
         const rawDesc = typeof service.description === 'string' ? service.description : '';
-        const desc = rawDesc.length > 15 ? `${rawDesc.slice(0, 148).trimEnd()}…` : `${service.title}${cityPart} – sprawdź opinie i zarezerwuj usługę online na MyLokalni.pl.`;
-        setPageMeta({ title: `${service.title}${cityPart} | MyLokalni.pl`, description: desc, url: `https://mylokalni.pl/service/${service.publicId}`, image: service.image || service.images?.[0] });
+        const cityFallback = service.city ? ` w ${service.city}` : '';
+        const desc = rawDesc.length > 15 ? `${rawDesc.slice(0, 148).trimEnd()}…` : `${service.title}${cityFallback} – sprawdź opinie i zarezerwuj usługę online na MyLokalni.pl.`;
+        setPageMeta({ title: `${service.title} | MyLokalni.pl`, description: desc, url: `https://mylokalni.pl/service/${service.publicId}`, image: service.image || service.images?.[0] });
         return () => resetPageMeta();
     }, [service?.publicId]); // eslint-disable-line react-hooks/exhaustive-deps
 

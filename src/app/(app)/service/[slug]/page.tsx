@@ -37,8 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
 
-    const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
-    const title = `${service.title}${city}`;
+    const title = service.title as string;
     const description = buildDescription(service);
     const url = `${BASE_URL}/service/${slug}`;
     // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
@@ -49,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description,
         alternates: { canonical: url },
         openGraph: {
-            title: `${service.title}${city}`,
+            title,
             description,
             url,
             type: 'website',
@@ -57,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${service.title}${city}`,
+            title,
             description,
             ...(image ? { images: [image] } : {}),
         },

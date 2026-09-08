@@ -171,7 +171,7 @@ export function buildH1(parsed: ParsedSlug): string {
             const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
             const city = CITY_LOCATIVE[parsed.citySlug]
                 ? `w ${CITY_LOCATIVE[parsed.citySlug]}`
-                : CITY_DISPLAY[parsed.citySlug] ?? slugToCity(parsed.citySlug);
+                : `w ${CITY_DISPLAY[parsed.citySlug] ?? slugToCity(parsed.citySlug)}`;
             return `${kw} ${city}`;
         }
         case 'search': {

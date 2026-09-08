@@ -237,7 +237,7 @@ const HomeView = ({
         }
         if (!isNative) {
             const slug = buildLandingSlug(searchDisplay.trim(), location || null);
-            router.push(`/${slug}`);
+            router.push(`/${slug}`, { scroll: false });
             return;
         }
         const resultsSection = document.getElementById('results-section');
