@@ -9,7 +9,7 @@ import { SlugServiceGrid } from './_components/SlugServiceGrid';
 import { SlugLoadMore } from './_components/SlugLoadMore';
 import { Footer } from '@/components/layout/Footer';
 
-export const revalidate = 3600;
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
     return [...LANDING_SLUGS].map(slug => ({ slug }));

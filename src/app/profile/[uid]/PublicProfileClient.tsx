@@ -88,6 +88,14 @@ export default function PublicProfileClient() {
         }
     }, [isLoading, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Hide SSR static shell once the interactive component has data and will render.
+    useEffect(() => {
+        if (!isLoading && profile && !state.isLoadingApp) {
+            const shell = document.querySelector('[data-ssr-shell]');
+            if (shell instanceof HTMLElement) shell.style.display = 'none';
+        }
+    }, [isLoading, profile, state.isLoadingApp]);
+
     const { data: servicesData } = useQuery({
         queryKey: ['provider-services', uid],
         queryFn: async () => {

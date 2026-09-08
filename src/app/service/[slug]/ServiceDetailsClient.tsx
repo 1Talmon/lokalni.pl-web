@@ -114,7 +114,7 @@ export default function ServiceDetailsClient() {
             const shell = document.querySelector('[data-ssr-shell]');
             if (shell instanceof HTMLElement) shell.style.display = 'none';
         }
-    }, [isPending, service, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isPending, service, state.isLoadingApp]);
 
     useEffect(() => {
         if (!service || (service as Service & { __deleted?: boolean }).__deleted) return;

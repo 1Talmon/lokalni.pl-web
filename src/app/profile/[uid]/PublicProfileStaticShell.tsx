@@ -53,6 +53,8 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
                             src={cover}
                             alt={`Zdjęcie tła – ${name}`}
                             className="w-full h-full object-cover"
+                            decoding="sync"
+                            fetchPriority="high"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     </div>

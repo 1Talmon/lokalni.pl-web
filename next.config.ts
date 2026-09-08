@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 import path from 'path';
 import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -78,4 +79,5 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default nextConfig;
+const bundleAnalyzer = withBundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
+export default bundleAnalyzer(nextConfig);

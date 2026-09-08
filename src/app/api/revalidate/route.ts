@@ -66,6 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return NextResponse.json({ error: 'unknown_event', event }, { status: 400 });
     }
 
+    // eslint-disable-next-line no-console
     console.log('[revalidate]', event, revalidated);
     return NextResponse.json({ revalidated, event });
 }

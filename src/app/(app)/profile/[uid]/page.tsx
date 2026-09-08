@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
+import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 import PublicProfileContent from './PublicProfileContent';
 
 interface Props { params: Promise<{ uid: string }> }
@@ -66,12 +67,26 @@ export default async function ProfilePage({ params }: Props) {
     if (!profile || profile.deleted) notFound();
     const jsonLd = buildProfileJsonLd(profile, uid);
 
+    // Cover is full-width (h-44) — primary LCP candidate; avatar is fallback
+    const heroImage = ((profile.zdjecieTla || profile.profilowe || profile.avatar) as string | null) || null;
+
     return (
         <>
+            {heroImage && (
+                <link
+                    rel="preload"
+                    as="image"
+                    href={heroImage}
+                    {...{ fetchPriority: 'high' }}
+                />
+            )}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+            {/* SSR visible shell — LCP candidate for real users + Googlebot indexable HTML.
+                Hidden by PublicProfileClient once interactive version renders. */}
+            <PublicProfileStaticShell data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']} />
             <PublicProfileContent />
         </>
     );

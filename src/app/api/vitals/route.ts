@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     try {
         const metric = await request.json() as VitalMetric;
 
-        // Logs visible in CF Dashboard → Pages → Functions (real-time + historical)
-        // Replace with Datadog / Grafana Faro / PostHog when analytics infra is ready
+        // Visible in CF Dashboard → Pages → Functions (real-time + historical)
+        // eslint-disable-next-line no-console
         console.log(JSON.stringify({ t: 'cwv', ...metric, ts: Date.now() }));
 
         return NextResponse.json({ ok: true });
