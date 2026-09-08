@@ -49,13 +49,6 @@ export function LandingView({ initialServices, keyword, city, slug, page, prevUr
         ? `${kwDisplay} ${cityDisplay}`
         : kwDisplay ?? (cityDisplay ? `Usługi w ${cityDisplay}` : 'Usługi w Twojej okolicy');
 
-    const ctaUrl = (() => {
-        const p = new URLSearchParams();
-        if (kwDisplay) p.set('q', kwDisplay);
-        if (cityDisplay) p.set('city', cityDisplay);
-        return `/?${p}`;
-    })();
-
     const content = getLandingContent(keyword);
 
     const handleOpenSupportNoop = useCallback(() => {
@@ -121,15 +114,6 @@ export function LandingView({ initialServices, keyword, city, slug, page, prevUr
                         )}
                     </nav>
                 )}
-
-                <div className="mt-10 text-center">
-                    <Link
-                        href={ctaUrl}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
-                    >
-                        Pokaż na mapie / zaawansowane filtry →
-                    </Link>
-                </div>
 
                 {/* Category description */}
                 <div className="mt-12 max-w-3xl">
