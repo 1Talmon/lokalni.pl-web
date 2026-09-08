@@ -5,8 +5,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { usePlatform } from '../hooks/usePlatform';
 import { Search, Filter, ArrowUpDown, MapPin, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { buildLandingSlug } from '../lib/seo-data';
+import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { CityAutocomplete } from '../components/ui/CityAutocomplete';
@@ -227,8 +226,6 @@ const HomeView = ({
         }
     }, []);
 
-    const router = useRouter();
-
     const handleSearchClick = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         if (!searchDisplay.trim()) {
@@ -237,13 +234,11 @@ const HomeView = ({
             setActiveCategory('all');
             return;
         }
-        if (!isNative) {
-            const slug = buildLandingSlug(searchDisplay.trim(), location || null);
-            router.push(`/${slug}`, { scroll: false });
-            return;
-        }
-        const resultsSection = document.getElementById('results-section');
-        resultsSection?.scrollIntoView({ behavior: 'smooth' });
+        // In-app: update state in-place — no navigation, no flash
+        // External links (/keyword-city URLs) continue to work via SSR + AppShell pre-fill
+        setSearchQuery(searchDisplay.trim());
+        document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
+        if (isNative) return;
     };
 
     const nextBatchToPreload = services.slice(loadedCount, loadedCount + 24);
