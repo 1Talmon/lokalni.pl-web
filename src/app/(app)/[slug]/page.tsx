@@ -16,15 +16,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams);
+    const { services, total } = await fetchServices(fetchParams);
 
     const url = `${BASE_URL}/${slug}`;
-    const noindex = services.length >= 2
+    const noindex = total >= 2
         ? { robots: { index: true, follow: true } }
         : { robots: { index: false, follow: true } };
 
     const h1 = buildH1(parsed);
-    const count = services.length;
+    const count = total;
     const title = count >= 2
         ? `${count} ofert: ${h1} | MyLokalni.pl`
         : `${h1} | MyLokalni.pl`;
@@ -44,7 +44,7 @@ export default async function SlugPage({ params }: Props) {
     const { slug } = await params;
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams);
+    const { services, total } = await fetchServices(fetchParams);
 
     if (services.length === 0) notFound();
 
@@ -103,7 +103,7 @@ export default async function SlugPage({ params }: Props) {
                 h1={h1}
                 slug={slug}
                 hasMore={hasMore}
-                totalCount={services.length}
+                totalCount={total}
             />
             <SlugSeoServer keywordSlug={keywordSlug} citySlug={citySlug} h1={h1} />
         </>

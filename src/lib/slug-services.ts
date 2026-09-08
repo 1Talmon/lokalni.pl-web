@@ -50,7 +50,7 @@ export async function fetchServices(
     params: { keyword?: string | null; city?: string | null; citySlug?: string | null; query?: string | null },
     offset = 0,
     limit = PAGE_SIZE,
-): Promise<Service[]> {
+): Promise<{ services: Service[]; total: number }> {
     try {
         const p = new URLSearchParams({ limit: String(limit), sort: 'rating', offset: String(offset) });
 
@@ -64,12 +64,13 @@ export async function fetchServices(
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
             next: { revalidate: 3600 },
         });
-        if (!res.ok) return [];
+        if (!res.ok) return { services: [], total: 0 };
         const json = await res.json() as Record<string, unknown>;
         const raw = Array.isArray(json) ? json : ((json.data as unknown[]) ?? []);
-        return (raw as Record<string, unknown>[]).map(mapService);
+        const total = (json.meta as Record<string, unknown> | undefined)?.total as number | undefined ?? raw.length;
+        return { services: (raw as Record<string, unknown>[]).map(mapService), total };
     } catch {
-        return [];
+        return { services: [], total: 0 };
     }
 }
 

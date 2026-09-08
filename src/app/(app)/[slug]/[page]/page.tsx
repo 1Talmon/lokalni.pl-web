@@ -23,10 +23,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
-    const services = await fetchServices(fetchParams, (page - 1) * PAGE_SIZE);
+    const { services, total } = await fetchServices(fetchParams, (page - 1) * PAGE_SIZE);
 
     const url = `${BASE_URL}/${slug}/${page}`;
-    const noindex = services.length >= 2
+    const noindex = total >= 2
         ? { robots: { index: true, follow: true } }
         : { robots: { index: false, follow: true } };
 
@@ -53,7 +53,7 @@ export default async function SlugPageN({ params }: Props) {
     const parsed = parseSlug(slug);
     const fetchParams = resolveFetchParams(parsed);
     const offset = (page - 1) * PAGE_SIZE;
-    const services = await fetchServices(fetchParams, offset);
+    const { services, total } = await fetchServices(fetchParams, offset);
 
     if (services.length === 0) notFound();
 
@@ -94,7 +94,7 @@ export default async function SlugPageN({ params }: Props) {
                 h1={`${h1} — strona ${page}`}
                 slug={slug}
                 hasMore={hasMore}
-                totalCount={services.length}
+                totalCount={total}
             />
         </>
     );
