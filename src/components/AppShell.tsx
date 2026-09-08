@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useEffect, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -191,8 +191,8 @@ function AppShellContent({ children }: AppShellProps) {
     const isTabRoute = SWIPE_TAB_SET.has(pathname as '/');
     const isSlugRoute = !Capacitor.isNativePlatform() && SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/') && !KNOWN_APP_ROUTES.has(pathname);
 
-    // Pre-populate search from slug URL
-    useEffect(() => {
+    // Pre-populate search from slug URL — useLayoutEffect prevents flash (runs before browser paint)
+    useLayoutEffect(() => {
         if (!isSlugRoute || state.isLoadingApp) return;
         const slug = pathname.split('/').filter(Boolean)[0];
         const parsed = parseSlug(slug);
