@@ -1,8 +1,6 @@
-import Link from 'next/link';
 import { createServiceUrl } from '@/utils/helpers';
-import { KEYWORD_DISPLAY, CITY_DISPLAY, CITY_LOCATIVE } from '@/lib/seo-data';
 import type { Service } from '@/types';
-import type { ParsedSlug } from '@/lib/slug-services';
+import { buildH1, type ParsedSlug } from '@/lib/slug-services';
 
 interface Props {
     parsed: ParsedSlug;
@@ -84,23 +82,7 @@ function StaticCard({ s, priority }: { s: Service; priority: boolean }) {
 }
 
 export function SlugStaticShell({ parsed, services, total }: Props) {
-    // Build human-readable title
-    let h1 = '';
-    if (parsed.type === 'keyword') {
-        h1 = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
-    } else if (parsed.type === 'city') {
-        const loc = CITY_LOCATIVE[parsed.citySlug] ?? CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug;
-        h1 = `Usługi w ${loc}`;
-    } else if (parsed.type === 'keyword-city') {
-        const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
-        const loc = CITY_LOCATIVE[parsed.citySlug]
-            ? `w ${CITY_LOCATIVE[parsed.citySlug]}`
-            : CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ');
-        h1 = `${kw} ${loc}`;
-    } else {
-        const city = parsed.citySlug ? (CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ')) : null;
-        h1 = city ? `${parsed.query} ${city}` : parsed.query;
-    }
+    const h1 = buildH1(parsed);
 
     return (
         <div data-slug-shell>

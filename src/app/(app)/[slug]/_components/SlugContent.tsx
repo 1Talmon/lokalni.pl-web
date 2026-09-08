@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { CATEGORIES_DATA } from '@/data/categories';
 import HomeView from '@/views/HomeView';
 import { useApp } from '@/providers/AppProvider';
@@ -7,11 +7,12 @@ import { useApp } from '@/providers/AppProvider';
 export function SlugContent() {
     const { state, actions } = useApp();
 
-    // Hide SSR shell once HomeView has finished loading services
-    useEffect(() => {
+    // Hide all SSR shells synchronously before paint once HomeView has loaded services
+    useLayoutEffect(() => {
         if (state.servicesLoading) return;
-        const shell = document.querySelector('[data-slug-shell]');
-        if (shell instanceof HTMLElement) shell.style.display = 'none';
+        document.querySelectorAll('[data-slug-shell]').forEach(el => {
+            if (el instanceof HTMLElement) el.style.display = 'none';
+        });
     }, [state.servicesLoading]);
 
     return (

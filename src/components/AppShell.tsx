@@ -296,6 +296,9 @@ function AppShellContent({ children }: AppShellProps) {
                     removeToast={actions.removeToast}
                 />
 
+                {/* Slug SSR shell: rendered before app loads so initial HTML contains service cards */}
+                {isSlugRoute && state.isLoadingApp && children}
+
                 {!state.isLoadingApp && androidReady && (
                     <>
                         <ErrorBoundary context="Layout">
