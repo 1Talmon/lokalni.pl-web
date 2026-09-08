@@ -29,7 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { services, total } = await fetchServices(fetchParams, (page - 1) * PAGE_SIZE);
 
     const url = `${BASE_URL}/${slug}/${page}`;
-    const noindex = total >= 2
+    // Index pages 2–10 when there are enough results; deep pages waste crawl budget
+    const noindex = (total >= 2 && page <= 10)
         ? { robots: { index: true, follow: true } }
         : { robots: { index: false, follow: true } };
 

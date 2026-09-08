@@ -55,7 +55,7 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                             height={450}
                             fetchPriority="high"
                             loading="eager"
-                            decoding="async"
+                            decoding="sync"
                             className="w-full aspect-video object-cover rounded-2xl"
                         />
                     </div>

@@ -111,6 +111,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <html lang="pl" className={font.variable}>
             <head>
                 <meta property="fb:app_id" content="1082296997226159" />
+                {/* Preconnects — reduce connection latency for critical origins */}
+                <link rel="preconnect" href="https://api.mylokalni.pl" />
+                <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+                <link rel="dns-prefetch" href="https://accounts.google.com" />
+                <link rel="dns-prefetch" href="https://maps.googleapis.com" />
             </head>
             <body className={font.className}>
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />

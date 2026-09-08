@@ -9,6 +9,13 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
     const catSlug = typeof s.category === 'string' ? (CATEGORY_SLUG[s.category] ?? null) : null;
     const catLabel = catSlug ? (KEYWORD_DISPLAY[catSlug] ?? catSlug) : null;
 
+    // priceValidUntil: 30 days from now — services are periodically revalidated via ISR
+    const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+
+    const isDeleted = s.isDeleted === true || s.status === 'deleted' || s.status === 'inactive';
+
     const serviceJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Service',
@@ -16,16 +23,31 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
         description: typeof s.description === 'string' ? s.description.slice(0, 500) : undefined,
         url: `${BASE_URL}/service/${slug}`,
         image: s.ogImage || s.image || (Array.isArray(s.images) ? s.images[0] : undefined) || undefined,
+        ...(catLabel ? { serviceType: catLabel } : {}),
         offers: s.price ? {
             '@type': 'Offer',
             price: String(s.price),
             priceCurrency: 'PLN',
+            priceValidUntil,
+            availability: isDeleted
+                ? 'https://schema.org/Discontinued'
+                : 'https://schema.org/InStock',
+            url: `${BASE_URL}/service/${slug}`,
         } : undefined,
         areaServed: s.city ? { '@type': 'City', name: s.city } : undefined,
         provider: provider ? {
             '@type': 'Person',
             name: provider.name,
             ...(providerUid ? { url: `${BASE_URL}/profile/${providerUid}` } : {}),
+            ...(provider.avgRating && provider.reviewsCount ? {
+                aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: provider.avgRating,
+                    reviewCount: provider.reviewsCount,
+                    bestRating: 5,
+                    worstRating: 1,
+                },
+            } : {}),
         } : undefined,
     };
 

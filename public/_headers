@@ -106,6 +106,10 @@
 
 /reset-password
   X-Robots-Tag: noindex, nofollow
+/reset-password/*
+  X-Robots-Tag: noindex, nofollow
 
 /zgoda-rodzica
+  X-Robots-Tag: noindex, nofollow
+/zgoda-rodzica/*
   X-Robots-Tag: noindex, nofollow
