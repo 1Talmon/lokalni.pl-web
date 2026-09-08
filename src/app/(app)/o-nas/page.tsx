@@ -3,7 +3,7 @@ import { Users, Target, Heart, Award, Mail, Building2, MapPin, Phone } from 'luc
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'O nas | MyLokalni.pl – Platforma lokalnych specjalistów';
+const title = 'O nas – Platforma lokalnych specjalistów';
 const description = 'Poznaj MyLokalni.pl – największą polską platformę łączącą klientów ze sprawdzonymi lokalnymi specjalistami w całej Polsce.';
 const url = `${BASE_URL}/o-nas`;
 

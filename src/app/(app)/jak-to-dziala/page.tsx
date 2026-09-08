@@ -3,7 +3,7 @@ import { Rocket, Search, Star, CheckCircle, ShieldCheck } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'Jak to działa | MyLokalni.pl – Znajdź specjalistę w 3 krokach';
+const title = 'Jak to działa – Znajdź specjalistę w 3 krokach';
 const description = 'Jak znaleźć i zamówić usługę na MyLokalni.pl – trzy proste kroki: wyszukaj, porównaj opinie, zarezerwuj.';
 const url = `${BASE_URL}/jak-to-dziala`;
 

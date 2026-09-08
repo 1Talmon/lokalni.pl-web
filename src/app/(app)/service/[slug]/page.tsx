@@ -1,13 +1,15 @@
 export const runtime = 'edge';
 
+import { cache } from 'react';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import ServiceDetailsContent from './ServiceDetailsContent';
 
 interface Props { params: Promise<{ slug: string }> }
 
-async function fetchServiceMeta(publicId: string) {
+const fetchServiceMeta = cache(async function fetchServiceMeta(publicId: string) {
     try {
         const res = await fetch(`${API_URL}/services/${publicId}`, {
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
@@ -19,7 +21,7 @@ async function fetchServiceMeta(publicId: string) {
     } catch {
         return null;
     }
-}
+});
 
 function buildDescription(service: Record<string, unknown>): string {
     const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
@@ -32,10 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
-    if (!service) return { title: 'Ogłoszenie | MyLokalni.pl' };
+    if (!service) notFound();
 
     const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
-    const title = `${service.title}${city} | MyLokalni.pl`;
+    const title = `${service.title}${city}`;
     const description = buildDescription(service);
     const url = `${BASE_URL}/service/${slug}`;
     // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
@@ -65,16 +67,15 @@ export default async function ServicePage({ params }: Props) {
     const { slug } = await params;
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
-    const jsonLd = service ? buildServiceJsonLd(service, slug) : null;
+    if (!service) notFound();
+    const jsonLd = buildServiceJsonLd(service, slug);
 
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <ServiceDetailsContent />
         </>
     );

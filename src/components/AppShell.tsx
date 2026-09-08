@@ -240,8 +240,8 @@ function AppShellContent({ children }: AppShellProps) {
         }
     }, [router, actions]);
 
-    // Tab views — always mounted in the scroll-snap strip
-    const tabElements = [
+    // On slug routes tab strip is display:none — skip mounting tab views to avoid unnecessary renders
+    const tabElements = isSlugRoute ? [null, null, null, null] : [
         <HomeView
             key="home"
             {...state.homeProps}

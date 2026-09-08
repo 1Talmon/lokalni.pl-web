@@ -1,13 +1,15 @@
 export const runtime = 'edge';
 
+import { cache } from 'react';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import PublicProfileContent from './PublicProfileContent';
 
 interface Props { params: Promise<{ uid: string }> }
 
-async function fetchProfileMeta(uid: string) {
+const fetchProfileMeta = cache(async function fetchProfileMeta(uid: string) {
     try {
         const res = await fetch(`${API_URL}/users/${uid}/profile`, {
             headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
@@ -19,7 +21,7 @@ async function fetchProfileMeta(uid: string) {
     } catch {
         return null;
     }
-}
+});
 
 function buildProfileName(p: Record<string, unknown>): string {
     return [p.imie, p.nazwisko].filter(Boolean).join(' ') || (p.name as string) || 'Specjalista';
@@ -28,10 +30,10 @@ function buildProfileName(p: Record<string, unknown>): string {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { uid } = await params;
     const profile = await fetchProfileMeta(uid);
-    if (!profile || profile.deleted) return { title: 'Profil | MyLokalni.pl' };
+    if (!profile || profile.deleted) notFound();
 
     const name = buildProfileName(profile);
-    const title = `${name} | MyLokalni.pl`;
+    const title = name;
     const bio = typeof profile.bio === 'string' && profile.bio
         ? `${profile.bio.slice(0, 155).trimEnd()}…`
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
@@ -61,16 +63,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProfilePage({ params }: Props) {
     const { uid } = await params;
     const profile = await fetchProfileMeta(uid);
-    const jsonLd = profile && !profile.deleted ? buildProfileJsonLd(profile, uid) : null;
+    if (!profile || profile.deleted) notFound();
+    const jsonLd = buildProfileJsonLd(profile, uid);
 
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <PublicProfileContent />
         </>
     );

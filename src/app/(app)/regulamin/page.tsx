@@ -3,7 +3,7 @@ import { FileText, Scale, Mail, AlertTriangle } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'Regulamin | MyLokalni.pl';
+const title = 'Regulamin';
 const description = 'Regulamin korzystania z platformy MyLokalni.pl – prawa i obowiązki użytkowników, warunki świadczenia usług.';
 const url = `${BASE_URL}/regulamin`;
 

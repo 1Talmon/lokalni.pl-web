@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
@@ -32,10 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
-    if (!service) return { title: 'Ogłoszenie | MyLokalni.pl' };
+    if (!service) notFound();
 
     const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
-    const title = `${service.title}${city} | MyLokalni.pl`;
+    const title = `${service.title}${city}`;
     const description = buildDescription(service);
     const url = `${BASE_URL}/service/${slug}`;
     const image = ((service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined) ?? DEFAULT_OG_IMAGE;
@@ -66,17 +67,16 @@ export default async function OgServicePage({ params }: Props) {
     const { slug } = await params;
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
-    const jsonLd = service ? buildServiceJsonLd(service, slug) : null;
+    if (!service) notFound();
+    const jsonLd = buildServiceJsonLd(service, slug);
 
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
-            {service && <ServiceStaticShell data={service as Parameters<typeof ServiceStaticShell>[0]['data']} />}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <ServiceStaticShell data={service as Parameters<typeof ServiceStaticShell>[0]['data']} />
         </>
     );
 }

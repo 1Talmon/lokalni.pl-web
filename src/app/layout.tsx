@@ -5,7 +5,7 @@ import '../index.css';
 import '../App.css';
 
 const font = Plus_Jakarta_Sans({
-    subsets: ['latin'],
+    subsets: ['latin', 'latin-ext'],
     weight: ['400', '500', '600', '700', '800'],
     display: 'swap',
     variable: '--font-jakarta',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     metadataBase: new URL(BASE_URL),
     title: {
         default: 'MyLokalni.pl – znajdź specjalistę w swoim mieście',
-        template: '%s',
+        template: '%s | MyLokalni.pl',
     },
     description: 'Platforma łącząca klientów ze sprawdzonymi lokalnymi specjalistami w Polsce. Hydraulik, sprzątanie, korepetycje i wiele więcej – znajdź, porównaj, zarezerwuj.',
     keywords: ['lokalny specjalista', 'usługi lokalne', 'hydraulik', 'sprzątanie', 'korepetycje', 'Polska'],
@@ -86,6 +86,14 @@ const websiteJsonLd = {
     '@type': 'WebSite',
     name: 'MyLokalni.pl',
     url: BASE_URL,
+    potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${BASE_URL}/{search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+    },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

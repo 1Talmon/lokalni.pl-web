@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const h1 = buildH1(parsed);
     const count = services.length;
-    const title = `Strona ${page}: ${h1} | MyLokalni.pl`;
+    const title = `Strona ${page}: ${h1}`;
     const description = `Strona ${page} — ${count} ofert: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny na MyLokalni.pl.`;
 
     return {

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import type { Metadata } from 'next';
 export const metadata: Metadata = {
-    title: 'Strona nie znaleziona | MyLokalni.pl',
+    title: 'Strona nie znaleziona',
     robots: { index: false, follow: false },
 };
 

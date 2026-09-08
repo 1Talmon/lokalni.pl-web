@@ -3,7 +3,7 @@ import { ShieldCheck, Lock, AlertTriangle, CheckCircle, Mail, UserCheck } from '
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'Zasady bezpieczeństwa | MyLokalni.pl';
+const title = 'Zasady bezpieczeństwa';
 const description = 'Zasady bezpiecznego korzystania z MyLokalni.pl – weryfikacja specjalistów, ochrona danych, zgłaszanie nadużyć.';
 const url = `${BASE_URL}/zasady-bezpieczenstwa`;
 

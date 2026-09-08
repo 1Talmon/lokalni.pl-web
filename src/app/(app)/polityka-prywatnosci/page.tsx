@@ -3,7 +3,7 @@ import { Lock, Eye, Database, ShieldCheck, Cookie, Mail, MapPin, Bell, Fingerpri
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'Polityka prywatności | MyLokalni.pl';
+const title = 'Polityka prywatności';
 const description = 'Polityka prywatności MyLokalni.pl – jak chronimy Twoje dane osobowe zgodnie z RODO.';
 const url = `${BASE_URL}/polityka-prywatnosci`;
 

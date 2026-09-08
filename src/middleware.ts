@@ -24,13 +24,18 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(`/service/${slug}`, request.url), 301);
     }
 
-    // Rewrite social bot requests for service/profile pages to /og/* — a
-    // lightweight server page where og: tags are in <head> (not streamed after
-    // the (app)/ 'use client' RSC payload which Facebook's scraper may not reach).
+    // Rewrite social bot requests to /og/* — lightweight server pages where og:
+    // tags land in <head> synchronously (not streamed after (app)/ RSC payload).
     const ua = request.headers.get('user-agent') ?? '';
-    if (SOCIAL_BOT_RE.test(ua) &&
-        (pathname.startsWith('/service/') || pathname.startsWith('/profile/'))) {
-        return NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+    if (SOCIAL_BOT_RE.test(ua)) {
+        if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
+            return NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+        }
+        // Landing slug pages: /hydraulik-warszawa, /sprzatanie, /warszawa etc.
+        // Detect slug pattern: single path segment, all lowercase + hyphens, no extension
+        if (/^\/[a-z][a-z0-9-]*$/.test(pathname)) {
+            return NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+        }
     }
 
     return NextResponse.next();

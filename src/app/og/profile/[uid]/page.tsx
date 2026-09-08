@@ -1,6 +1,7 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
@@ -28,10 +29,10 @@ function buildProfileName(p: Record<string, unknown>): string {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { uid } = await params;
     const profile = await fetchProfileMeta(uid);
-    if (!profile || profile.deleted) return { title: 'Profil | MyLokalni.pl' };
+    if (!profile || profile.deleted) notFound();
 
     const name = buildProfileName(profile);
-    const title = `${name} | MyLokalni.pl`;
+    const title = name;
     const bio = typeof profile.bio === 'string' && profile.bio
         ? `${profile.bio.slice(0, 155).trimEnd()}…`
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
@@ -63,19 +64,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function OgProfilePage({ params }: Props) {
     const { uid } = await params;
     const profile = await fetchProfileMeta(uid);
-    const jsonLd = profile && !profile.deleted ? buildProfileJsonLd(profile, uid) : null;
+    if (!profile || profile.deleted) notFound();
+    const jsonLd = buildProfileJsonLd(profile, uid);
 
     return (
         <>
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
-            {profile && !profile.deleted && (
-                <PublicProfileStaticShell data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']} />
-            )}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <PublicProfileStaticShell data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']} />
         </>
     );
 }

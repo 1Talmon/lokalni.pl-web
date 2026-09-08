@@ -3,7 +3,7 @@ import { HelpCircle, MessageCircle, ShieldCheck, CreditCard, User } from 'lucide
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 
-const title = 'FAQ – Często zadawane pytania | MyLokalni.pl';
+const title = 'FAQ – Często zadawane pytania';
 const description = 'Odpowiedzi na najczęstsze pytania o MyLokalni.pl – jak znaleźć specjalistę, zarezerwować usługę i co zrobić w razie problemów.';
 const url = `${BASE_URL}/faq`;
 

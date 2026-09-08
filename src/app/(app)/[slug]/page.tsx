@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const h1 = buildH1(parsed);
     const count = total;
     const title = count >= 2
-        ? `${count} ofert: ${h1} | MyLokalni.pl`
-        : `${h1} | MyLokalni.pl`;
+        ? `${count} ofert: ${h1}`
+        : h1;
     const description = `Porównaj ${count > 0 ? count : ''} ofert${count === 1 ? 'ę' : ''}: ${h1.toLowerCase()}. Sprawdzone opinie, przejrzyste ceny, szybki kontakt na MyLokalni.pl.`.trim();
 
     return {

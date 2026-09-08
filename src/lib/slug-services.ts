@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { API_URL, parseSlug, CITY_DISPLAY, CITY_LOCATIVE, KEYWORD_DISPLAY } from './seo-data';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import type { Service } from '../types';
@@ -46,7 +47,7 @@ function mapService(s: Record<string, unknown>): Service {
     };
 }
 
-export async function fetchServices(
+export const fetchServices = cache(async function fetchServices(
     params: { keyword?: string | null; city?: string | null; citySlug?: string | null; query?: string | null },
     offset = 0,
     limit = PAGE_SIZE,
@@ -72,7 +73,7 @@ export async function fetchServices(
     } catch {
         return { services: [], total: 0 };
     }
-}
+});
 
 export function resolveFetchParams(parsed: ParsedSlug) {
     switch (parsed.type) {
