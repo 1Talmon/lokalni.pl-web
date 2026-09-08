@@ -10,6 +10,7 @@ import { SlugSeoServer } from './_components/SlugSeoServer';
 import { SlugNavbar } from './_components/SlugNavbar';
 import { SlugServiceGrid } from './_components/SlugServiceGrid';
 import { SlugLoadMore } from './_components/SlugLoadMore';
+import { SlugRedirect } from './_components/SlugRedirect';
 import { Footer } from '@/components/layout/Footer';
 
 // Fully dynamic edge rendering — no static pre-generation.
@@ -55,6 +56,20 @@ export default async function SlugPage({ params }: Props) {
     const { services, total } = await fetchServices(fetchParams);
 
     const h1 = buildH1(parsed);
+
+    // Build main app URL — mirrors AppShell handleUrl deep-link logic (lines 130-143)
+    const appParams = new URLSearchParams();
+    if (parsed.type === 'keyword' || parsed.type === 'keyword-city') {
+        appParams.set('q', KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' '));
+    } else if (parsed.type === 'search') {
+        appParams.set('q', parsed.query);
+    }
+    if (parsed.type === 'keyword-city' || parsed.type === 'city') {
+        appParams.set('city', CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
+    } else if (parsed.type === 'search' && parsed.citySlug) {
+        appParams.set('city', CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
+    }
+    const mainAppUrl = appParams.toString() ? `/?${appParams}` : '/';
 
     // 0 results — keyword/city pages with no services: show helpful redirect, don't 404.
     // Search-type slugs (no known keyword match) with 0 results: 404.
@@ -156,6 +171,8 @@ export default async function SlugPage({ params }: Props) {
 
     return (
         <>
+            {/* Client redirect: Google sees SSR content; real users go to HomeView with pre-filled search */}
+            <SlugRedirect href={mainAppUrl} />
             {hasMore && <link rel="next" href={`${BASE_URL}/${slug}/2`} />}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
