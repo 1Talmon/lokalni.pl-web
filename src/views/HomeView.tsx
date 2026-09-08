@@ -5,7 +5,8 @@ import { Geolocation } from '@capacitor/geolocation';
 import { usePlatform } from '../hooks/usePlatform';
 import { Search, Filter, ArrowUpDown, MapPin, Star, CreditCard, MessageCircle, Globe, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { buildLandingSlug } from '../lib/seo-data';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { CityAutocomplete } from '../components/ui/CityAutocomplete';
@@ -226,12 +227,20 @@ const HomeView = ({
         }
     }, []);
 
+    const router = useRouter();
+
     const handleSearchClick = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         if (!searchDisplay.trim()) {
             setSearchQuery('');
             setSearchDisplay('');
             setActiveCategory('all');
+            return;
+        }
+        if (!isNative) {
+            const slug = buildLandingSlug(searchDisplay.trim(), location || null);
+            router.push(`/${slug}`);
+            return;
         }
         const resultsSection = document.getElementById('results-section');
         resultsSection?.scrollIntoView({ behavior: 'smooth' });
