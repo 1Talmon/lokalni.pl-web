@@ -95,6 +95,7 @@ export const MainLayout = ({
     const NO_GLOBAL_BACK = useMemo(() => new Set([...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard']), []);
     const showGlobalBack = !isIos
         && !NO_GLOBAL_BACK.has(pathname)
+        && !isSlugRoute
         && !pathname.startsWith('/service/')
         && !pathname.startsWith('/profile/');
     const isDetailRoute = pathname.startsWith('/service/') || pathname.startsWith('/profile/');
@@ -116,7 +117,7 @@ export const MainLayout = ({
     // Tracks which tab index we last fired haptic for — avoids double-firing
     const prevTabRef = useRef(initialIdx);
 
-    const isOnTabRoute = !!tabElements && (SWIPE_TABS.includes(pathname as typeof SWIPE_TABS[number]) || isSlugRoute);
+    const isOnTabRoute = !!tabElements && SWIPE_TABS.includes(pathname as typeof SWIPE_TABS[number]);
     const isNativeTabStrip = Capacitor.isNativePlatform() && isOnTabRoute;
 
     const { isNativeNavActive } = useNativeBottomNav({
@@ -368,8 +369,6 @@ export const MainLayout = ({
                                     ))}
                                 </div>
                             </div>
-                            {/* JSON-LD scripts from slug pages — rendered but not visible */}
-                            {isSlugRoute && <div style={{ display: 'none' }}>{children}</div>}
                             {!isOnTabRoute && (
                                 <>
                                     <div

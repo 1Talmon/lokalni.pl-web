@@ -4,7 +4,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
-import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '../_lib/shared';
+import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
+import { SlugPageClient } from '../_components/SlugPageClient';
 
 interface Props {
     params: Promise<{ slug: string; page: string }>;
@@ -77,10 +78,8 @@ export default async function SlugPageN({ params }: Props) {
         name: `${h1} — strona ${page}`,
         numberOfItems: services.length,
         itemListElement: services.slice(0, 10).map((s, i) => {
-            const id = (s.publicId ?? s.id) as string | undefined;
-            const title = s.title as string | undefined;
-            const svcSlug = id && title ? createServiceUrl(title, id) : null;
-            return { '@type': 'ListItem', position: offset + i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
+            const svcSlug = s.publicId && s.title ? createServiceUrl(s.title, s.publicId) : null;
+            return { '@type': 'ListItem', position: offset + i + 1, name: s.title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
         }).filter(item => item.url),
     };
 
@@ -90,6 +89,13 @@ export default async function SlugPageN({ params }: Props) {
             {hasMore && <link rel="next" href={`${baseUrl}/${page + 1}`} />}
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
+            <SlugPageClient
+                services={services}
+                h1={`${h1} — strona ${page}`}
+                slug={slug}
+                hasMore={hasMore}
+                totalCount={services.length}
+            />
         </>
     );
 }

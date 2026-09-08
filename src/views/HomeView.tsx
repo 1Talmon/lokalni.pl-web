@@ -3,21 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Geolocation } from '@capacitor/geolocation';
 import { usePlatform } from '../hooks/usePlatform';
-import { Search, Filter, ArrowUpDown, MapPin, Star, CreditCard, MessageCircle, Globe, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, MapPin, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { buildLandingSlug, KEYWORD_DISPLAY } from '../lib/seo-data';
-import { getLandingContent, TOP_CITIES_DISPLAY } from '../lib/landing-content';
+import { buildLandingSlug } from '../lib/seo-data';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { CityAutocomplete } from '../components/ui/CityAutocomplete';
 import { cityService } from '../services/cityService';
 import { ServiceSearchAutocomplete } from '../components/ui/ServiceSearchAutocomplete';
-import { ImageWithSkeleton } from '../components/ui/ImageWithSkeleton';
 import { Service, Category } from '../types';
-import { createServiceUrl } from '../utils/helpers';
 import { MobileMapSheet } from '../components/map/MobileMapSheet';
-import { UserAvatar } from '../components/ui/UserAvatar';
+import { ServiceCard } from '../components/ui/ServiceCard';
 import { serviceService, mapApiService } from '../services/serviceService';
 import { apiClient } from '../services/apiClient';
 
@@ -499,58 +496,16 @@ const HomeView = ({
                   </div>
                 )}
 
-                {displayServices.slice(0, loadedCount).map((service, _serviceIndex) => {
-                    const isRemote = !!service.isRemote;
-                    const isUserActive = service.isOnline === true;
-                    const isOffer = (service.type || 'offer') === 'offer';
-
-                    const handleCardClick = (e: React.MouseEvent) => {
-                        if (e.ctrlKey || e.metaKey) {
-                            window.open(`/service/${createServiceUrl(service.title, service.publicId ?? '')}`, '_blank');
-                        } else {
-                            onServiceClick(service);
-                        }
-                    };
-
-                    return (
-                      <div
+                {displayServices.slice(0, loadedCount).map((service) => (
+                    <ServiceCard
                         key={service.publicId}
-                        onClick={handleCardClick}
+                        service={service}
+                        onServiceClick={onServiceClick}
+                        onStartChat={onStartChat}
                         onMouseEnter={() => service.publicId && handleCardMouseEnter(service.publicId)}
                         onMouseLeave={handleCardMouseLeave}
-                        className={`relative bg-white rounded-3xl overflow-hidden shadow-lg md:transition-[transform,box-shadow] md:duration-300 md:hover:-translate-y-2 md:hover:shadow-2xl md:hover:z-30 cursor-pointer md:transform-gpu md:will-change-transform ${service.isMine ? 'ring-2 ring-[#6366F1]' : ''}`}
-                      >
-                        <div className="relative h-48 w-full bg-gray-200">
-                            <ImageWithSkeleton src={service.image} alt={service.title} />
-                            
-                            <div className="absolute top-3 left-3 right-12 flex flex-wrap gap-1.5 z-10 items-start pointer-events-none">
-                                {isRemote ? (
-                                    <div className="bg-black/80 backdrop-blur text-white px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-semibold flex items-center gap-1 shadow-sm shrink-0 max-w-full"><Globe size={10} className="shrink-0"/> <span className="truncate">Zdalnie</span></div>
-                                ) : (
-                                    <div className="bg-black/80 backdrop-blur text-white px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-semibold flex items-center gap-1 shadow-sm shrink-0 max-w-full"><MapPin size={10} className="shrink-0"/> <span className="truncate">{service.city}</span> {service.radius > 0 ? `+${service.radius}km` : ''}</div>
-                                )}
-                                <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-semibold flex items-center gap-1 shadow-sm shrink-0 ${isOffer ? 'bg-indigo-500 text-white' : 'bg-violet-600 text-white'}`}>{isOffer ? 'Oferta' : 'Zlecenie'}</div>
-                            </div>
-                            <div className="absolute bottom-3 right-3 z-10"><div className="bg-white px-3 py-2 md:px-4 md:py-3 rounded-xl shadow-sm text-right"><div className="font-bold text-lg md:text-xl text-gray-900">{service.price} zł</div><div className="text-[10px] md:text-xs text-gray-500">{service.priceUnit}</div></div></div>
-                        </div>
-                        <div className="p-4 md:p-5">
-                          <div className="flex items-start justify-between mb-2 md:mb-3">
-                            <div className="flex items-center gap-2 md:gap-3">
-                              <div className="relative"><UserAvatar src={service.provider.avatar} name={service.provider.name} size={36} className="rounded-full border-2 border-white shadow" />{isUserActive && (<span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-green-500"></span>)}</div>
-                              <div><div className="font-bold text-sm md:text-base text-gray-900">{service.provider.name}</div></div>
-                            </div>
-                            <div className="flex items-center gap-1 bg-amber-50 text-amber-900 px-2 py-1 md:px-3 md:py-1.5 rounded-lg"><Star size={12} fill="currentColor" /><span className="font-bold text-xs md:text-sm">{service.rating}</span></div>
-                          </div>
-                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 md:mb-2 line-clamp-1">{service.title}</h3>
-                          <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2 min-h-[32px] md:min-h-[40px]">{service.description}</p>
-                          <div className="flex gap-2 md:gap-3">
-                            <button onClick={(e) => { e.stopPropagation(); if (isNative) Haptics.impact({ style: ImpactStyle.Medium }); onServiceClick(service); }} className={`flex-1 text-white py-2.5 md:py-3 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 transition-colors active:scale-95 ${isOffer ? 'bg-gray-900 hover:bg-gray-800' : 'bg-[#6366F1] hover:bg-[#4F46E5]'}`}><CreditCard size={16} /> {isOffer ? 'Zarezerwuj' : 'Zgłoś się'}</button>
-                            <button onClick={(e) => { e.stopPropagation(); if (isNative) Haptics.impact({ style: ImpactStyle.Light }); onStartChat(service); }} aria-label={`Napisz do ${service.provider.name}`} className="w-10 md:w-12 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 flex items-center justify-center transition-colors active:scale-95"><MessageCircle size={18} className="text-gray-700" /></button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                })}
+                    />
+                ))}
              </motion.div>
           </AnimatePresence>
 
@@ -563,76 +518,7 @@ const HomeView = ({
             ))}
         </div>
 
-        {!isNative && searchQuery && <SlugSeoContent searchQuery={searchQuery} location={location} />}
       </motion.div>
-    );
-}
-
-function SlugFaqItem({ q, a }: { q: string; a: string }) {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="py-4 border-b border-gray-100 last:border-0">
-            <button onClick={() => setOpen(v => !v)} className="w-full flex justify-between items-start text-left gap-4" aria-expanded={open}>
-                <span className="font-medium text-gray-900 text-sm">{q}</span>
-                <span className="text-gray-400 flex-shrink-0">{open ? '−' : '+'}</span>
-            </button>
-            {open && <p className="mt-2 text-gray-600 text-sm leading-relaxed">{a}</p>}
-        </div>
-    );
-}
-
-function SlugSeoContent({ searchQuery, location }: { searchQuery: string; location: string }) {
-    const keywordSlug = Object.keys(KEYWORD_DISPLAY).find(
-        k => KEYWORD_DISPLAY[k].toLowerCase() === searchQuery.toLowerCase()
-    ) ?? null;
-
-    const content = getLandingContent(keywordSlug);
-
-    const otherCities = TOP_CITIES_DISPLAY.filter(
-        c => c.display.toLowerCase() !== location.toLowerCase()
-    );
-
-    return (
-        <div className="max-w-3xl mx-auto px-4 pb-16 mt-4">
-            <p className="text-gray-500 text-sm leading-relaxed">{content.description}</p>
-
-            {keywordSlug && otherCities.length > 0 && (
-                <div className="mt-8">
-                    <h2 className="text-base font-semibold text-gray-800 mb-3">
-                        {searchQuery} w innych miastach
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                        {otherCities.map(c => (
-                            <a key={c.slug} href={`/${keywordSlug}-${c.slug}`}
-                                className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
-                                {c.display}
-                            </a>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {content.related.length > 0 && (
-                <div className="mt-8">
-                    <h2 className="text-base font-semibold text-gray-800 mb-3">Powiązane kategorie</h2>
-                    <div className="flex flex-wrap gap-2">
-                        {content.related.map(rel => (
-                            <a key={rel} href={`/${rel}`}
-                                className="px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
-                                {KEYWORD_DISPLAY[rel] ?? rel.replace(/-/g, ' ')}
-                            </a>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="mt-10">
-                <h2 className="text-lg font-bold text-gray-900 mb-2">Najczęstsze pytania</h2>
-                <div>
-                    {content.faq.map((item, i) => <SlugFaqItem key={i} q={item.q} a={item.a} />)}
-                </div>
-            </div>
-        </div>
     );
 }
 

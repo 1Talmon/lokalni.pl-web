@@ -4,7 +4,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, parseSlug } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
-import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from './_lib/shared';
+import { fetchServices, resolveFetchParams, buildH1, PAGE_SIZE } from '@/lib/slug-services';
+import { SlugPageClient } from './_components/SlugPageClient';
+import { SlugSeoServer } from './_components/SlugSeoServer';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -47,9 +49,19 @@ export default async function SlugPage({ params }: Props) {
     if (services.length === 0) notFound();
 
     const h1 = buildH1(parsed);
+    const hasMore = services.length === PAGE_SIZE;
 
-    const ratings = services.map(s => parseFloat(s.rating as string) || 0).filter(r => r > 0);
-    const avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
+    const keywordSlug = (parsed.type === 'keyword' || parsed.type === 'keyword-city')
+        ? parsed.keyword
+        : null;
+    const citySlug = (parsed.type === 'city' || parsed.type === 'keyword-city' || parsed.type === 'search')
+        ? parsed.citySlug
+        : null;
+
+    const ratings = services.map(s => s.rating).filter(r => r > 0);
+    const avgRating = ratings.length > 0
+        ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+        : null;
 
     const breadcrumbJsonLd = {
         '@context': 'https://schema.org',
@@ -66,10 +78,8 @@ export default async function SlugPage({ params }: Props) {
         name: h1,
         numberOfItems: services.length,
         itemListElement: services.slice(0, 10).map((s, i) => {
-            const id = (s.publicId ?? s.id) as string | undefined;
-            const title = s.title as string | undefined;
-            const svcSlug = id && title ? createServiceUrl(title, id) : null;
-            return { '@type': 'ListItem', position: i + 1, name: title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
+            const svcSlug = s.publicId && s.title ? createServiceUrl(s.title, s.publicId) : null;
+            return { '@type': 'ListItem', position: i + 1, name: s.title, url: svcSlug ? `${BASE_URL}/service/${svcSlug}` : undefined };
         }).filter(item => item.url),
     };
 
@@ -80,8 +90,6 @@ export default async function SlugPage({ params }: Props) {
         aggregateRating: { '@type': 'AggregateRating', ratingValue: avgRating, reviewCount: ratings.length, bestRating: '5', worstRating: '1' },
     } : null;
 
-    const hasMore = services.length === PAGE_SIZE;
-
     return (
         <>
             {hasMore && <link rel="next" href={`${BASE_URL}/${slug}/2`} />}
@@ -90,6 +98,14 @@ export default async function SlugPage({ params }: Props) {
             {aggregateRatingJsonLd && (
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
             )}
+            <SlugPageClient
+                services={services}
+                h1={h1}
+                slug={slug}
+                hasMore={hasMore}
+                totalCount={services.length}
+            />
+            <SlugSeoServer keywordSlug={keywordSlug} citySlug={citySlug} h1={h1} />
         </>
     );
 }
