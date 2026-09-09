@@ -195,8 +195,16 @@ export const authService = {
         const result: RawAuthPayload = await response.json();
 
         if (!response.ok) {
-            const errorMessage = result.message || result.info || result.error || 'Błąd logowania';
-            throw new Error(errorMessage as string);
+            const code = result.code as string | undefined;
+            const LOGIN_ERROR_MAP: Record<string, string> = {
+                USER_NOT_FOUND:       'Nieprawidłowy email lub hasło.',
+                INVALID_PASSWORD:     'Nieprawidłowy email lub hasło.',
+                WRONG_PASSWORD:       'Nieprawidłowy email lub hasło.',
+                ACCOUNT_LOCKED:       'Konto zostało tymczasowo zablokowane.',
+                EMAIL_NOT_VERIFIED:   'Zweryfikuj adres email przed zalogowaniem.',
+                ACCOUNT_SUSPENDED:    'Konto zostało zawieszone. Skontaktuj się z pomocą techniczną.',
+            };
+            throw new Error((code && LOGIN_ERROR_MAP[code]) ?? 'Nieprawidłowy email lub hasło.');
         }
 
         // 2FA wymagane — zwracamy specjalny obiekt
