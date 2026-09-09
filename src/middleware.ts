@@ -20,6 +20,21 @@ const APP_SEGMENTS = new Set([
     'service', 'profile', 'og', 'api',
 ]);
 
+function buildCsp(nonce: string): string {
+    return [
+        "default-src 'self'",
+        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://accounts.google.com https://maps.googleapis.com",
+        "frame-src 'self' https://accounts.google.com",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+    ].join('; ');
+}
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -39,18 +54,29 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(`/service/${slug}`, request.url), 301);
     }
 
+    const nonce = btoa(crypto.randomUUID());
+    const csp = buildCsp(nonce);
+
     const ua = request.headers.get('user-agent') ?? '';
     const isSocialBot = SOCIAL_BOT_RE.test(ua);
+
+    // Forward nonce to Server Components via request header
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-nonce', nonce);
 
     // Rewrite social bot requests to /og/* — lightweight server pages where og:
     // tags land in <head> synchronously (not streamed after (app)/ RSC payload).
     if (isSocialBot) {
         if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
-            return NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+            res.headers.set('Content-Security-Policy', csp);
+            return res;
         }
         // Landing slug pages: /hydraulik-warszawa, /sprzatanie, /warszawa etc.
         if (LANDING_SLUG_RE.test(pathname)) {
-            return NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
+            res.headers.set('Content-Security-Policy', csp);
+            return res;
         }
     }
 
@@ -59,8 +85,6 @@ export function middleware(request: NextRequest) {
     // ISR revalidate=3600 on pages; stale-while-revalidate allows CF edge to serve
     // stale content while regenerating, eliminating cold-miss latency spikes.
     if (!isSocialBot) {
-        const response = NextResponse.next();
-
         const firstSegment = pathname.split('/')[1] ?? '';
         const isLandingSlug =
             (LANDING_SLUG_RE.test(pathname) || PAGINATED_SLUG_RE.test(pathname)) &&
@@ -68,24 +92,30 @@ export function middleware(request: NextRequest) {
 
         if (isLandingSlug) {
             // Landing pages: ISR 1h, stale served for 24h, error fallback 7 days
+            const response = NextResponse.next({ request: { headers: requestHeaders } });
             response.headers.set(
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800',
             );
+            response.headers.set('Content-Security-Policy', csp);
             return response;
         }
 
         if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
             // Service/profile: ISR 1h, stale served 30min (fresher — user-generated content)
+            const response = NextResponse.next({ request: { headers: requestHeaders } });
             response.headers.set(
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=1800, stale-if-error=86400',
             );
+            response.headers.set('Content-Security-Policy', csp);
             return response;
         }
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    response.headers.set('Content-Security-Policy', csp);
+    return response;
 }
 
 export const config = {

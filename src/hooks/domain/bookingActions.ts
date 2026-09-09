@@ -1,10 +1,8 @@
 import { apiClient } from '../../services/apiClient';
-import { chatService } from '../../services/chatService';
-import type { Service } from '../../types';
-import type { ToastType } from '../../types';
+import type { ApiMessage } from '../../services/chatService';
+import type { Service, ToastType } from '../../types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { QueryClient } from '@tanstack/react-query';
-import type { ApiMessage } from '../../services/chatService';
 
 export interface BookingPayload {
     type: 'offer' | 'request';
@@ -103,7 +101,7 @@ export async function executeBookingAction(
     action: 'accept' | 'decline' | 'cancel' | 'complete',
     deps: BookingActionDeps,
 ): Promise<void> {
-    const { addToast, queryClient, setCurrentChatId, setActiveModal } = deps;
+    const { addToast, queryClient } = deps;
     try {
         let res: Response;
         if (action === 'complete') {

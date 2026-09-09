@@ -222,7 +222,6 @@ export const useAppLogic = () => {
         });
         const bgUrl: string | null = freshUser.zdjecieTla ?? null;
         if (bgUrl) { const img = new Image(); img.src = bgUrl; }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [freshUser]);
 
     // --- USŁUGI Z API ---
