@@ -308,7 +308,6 @@ export const authService = {
             zdjecieTla: userData.zdjecieTla ?? null,
         };
 
-        localStorage.setItem('user_profile', JSON.stringify(frontendUser));
         localStorage.setItem('is_logged_in', 'true');
 
         return { user: frontendUser };
@@ -371,32 +370,16 @@ export const authService = {
         }
     },
 
-    // --- AKTUALIZACJA DANYCH (Bez zmian) ---
+    // --- AKTUALIZACJA DANYCH ---
     async updateProfileData(data: ProfileUpdateData) {
         const nameParts = data.name.trim().split(' ');
         const imie = nameParts[0];
         const nazwisko = nameParts.slice(1).join(' ');
 
-        const payload = {
-            imie: imie,
-            nazwisko: nazwisko,
-            telefon: data.phone
-        };
-
-        const response = await apiClient.patch('/users/me', payload);
-
+        const response = await apiClient.patch('/users/me', { imie, nazwisko, telefon: data.phone });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || 'Błąd aktualizacji danych');
-
-        const currentUser = this.getCurrentUser();
-        const updatedUser = {
-            ...currentUser,
-            name: data.name,
-            phone: data.phone
-        };
-        localStorage.setItem('user_profile', JSON.stringify(updatedUser));
-
-        return updatedUser;
+        return result;
     },
 
     // --- ZMIANA AVATARA — upload przez POST /upload/image → URL → PATCH /users/me/avatar ---
@@ -405,7 +388,6 @@ export const authService = {
             ? dataUrlToFile(fileOrBase64, 'avatar.jpg')
             : fileOrBase64;
 
-        // 2. Upload pliku → dostajemy URL z CDN
         const formData = new FormData();
         formData.append('file', file);
         formData.append('context', 'avatar');
@@ -416,31 +398,18 @@ export const authService = {
 
         const avatarUrl: string = normalizeMediaUrl(uploadResult.url) || uploadResult.url;
 
-        // 2. Zapisz URL w profilu
         const response = await apiClient.patch('/users/me/avatar', { avatarUrl });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || result.message || 'Błąd zmiany zdjęcia');
 
-        const currentUser = this.getCurrentUser();
-        const updatedUser = { ...currentUser, avatar: avatarUrl, profilowe: avatarUrl };
-        localStorage.setItem('user_profile', JSON.stringify(updatedUser));
-        return updatedUser;
+        return { avatar: avatarUrl };
     },
 
-    // --- ZMIANA NUMERU TELEFONU (DODANO) ---
+    // --- ZMIANA NUMERU TELEFONU ---
     async changePhoneNumber(nowyNumerTelefonu: string) {
         const response = await apiClient.patch('/users/me/phone', { nowyNumerTelefonu });
         const result = await response.json();
-
         if (!response.ok) throw new Error(result.message || 'Błąd zmiany numeru telefonu');
-
-        // Aktualizacja lokalnego stanu użytkownika, by UI odświeżyło się od razu
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-            const updatedUser = { ...currentUser, phone: nowyNumerTelefonu };
-            localStorage.setItem('user_profile', JSON.stringify(updatedUser));
-        }
-
         return result;
     },
 
@@ -464,13 +433,6 @@ export const authService = {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || 'Błąd ustawiania hasła');
-
-        // Aktualizujemy lokalny profil, aby odzwierciedlić posiadanie hasła
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-            const updatedUser = { ...currentUser, ustawionehaslo: true };
-            localStorage.setItem('user_profile', JSON.stringify(updatedUser));
-        }
         return result;
     },
 

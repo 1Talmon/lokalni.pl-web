@@ -104,7 +104,7 @@ export const useAppLogic = () => {
     const [filterType, setFilterType] = useState<'all' | 'offer' | 'request'>('all');
     const [showOnlineOnly, setShowOnlineOnly] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = usePersistedState('is_logged_in', false);
-    const [userProfile, setUserProfile] = usePersistedState<UserProfile | null>('user_profile', null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
     const [loadedCount, setLoadedCount] = useState(48);
     const [activeModal, setActiveModal] = useState<'none' | 'chat_detail' | 'add_service' | 'report' | 'support'>('none');
@@ -267,7 +267,7 @@ export const useAppLogic = () => {
     useEffect(() => {
         if (!freshUser) return;
         setUserProfile(prev => {
-            if (!prev) return prev;
+            if (!prev) return freshUser;
             const updates: Record<string, unknown> = {};
             if (freshUser.isPremium !== undefined && freshUser.isPremium !== prev.isPremium) updates.isPremium = freshUser.isPremium;
             if (freshUser.zdjecieTla !== undefined) updates.zdjecieTla = freshUser.zdjecieTla;
