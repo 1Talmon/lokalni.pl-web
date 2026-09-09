@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
@@ -108,8 +107,7 @@ const websiteJsonLd = {
     },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-    const nonce = (await headers()).get('x-nonce') ?? '';
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="pl" className={font.variable}>
             <head>
@@ -123,8 +121,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <body className={font.className}>
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <WebVitals />
-                <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
-                <script nonce={nonce} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
                 {children}
             </body>
         </html>
