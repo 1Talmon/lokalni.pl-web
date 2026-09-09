@@ -14,7 +14,7 @@ import { ModalsManager } from './modals/ModalsManager';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { AppLock } from './AppLock';
 import { logger } from '../utils/logger';
-const HomeView          = dynamic(() => import('../views/HomeView'),                                                  { ssr: false });
+import HomeView from '../views/HomeView';
 const ChatListView      = dynamic(() => import('../views/ChatListView').then(m => ({ default: m.ChatListView })),     { ssr: false });
 const GrafikView        = dynamic(() => import('../views/GrafikView'),                                                { ssr: false });
 const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });

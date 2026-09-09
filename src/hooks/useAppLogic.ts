@@ -453,8 +453,7 @@ export const useAppLogic = () => {
         removeToast,
         onServiceClick: (s: Service) => {
             setSelectedService(s);
-            const cached = queryClient.getQueryData(['service', s.publicId]);
-            if (!cached) setIsNavLoading(true);
+            setIsNavLoading(true);
             router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
         },
         toggleFavorite: (publicId: string) => {
