@@ -8,11 +8,7 @@ function StarIcon() {
 
 import Link from 'next/link';
 import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_SLUG } from '@/lib/seo-data';
-
-function normalizeUrl(url: string | null | undefined): string | null {
-    if (!url) return null;
-    return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
-}
+import { normalizeMediaUrl } from '@/utils/normalizeUrl';
 
 interface ServiceShellData {
     title?: string;
@@ -32,10 +28,10 @@ interface ServiceShellData {
 }
 
 export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
-    const image = normalizeUrl(data.image || data.images?.[0] || data.provider?.profilowe);
+    const image = normalizeMediaUrl(data.image || data.images?.[0] || data.provider?.profilowe);
     const rating = parseFloat(String(data.rating ?? 0)) || 0;
     const reviewsCount = parseInt(String(data.reviewsCount ?? 0)) || 0;
-    const providerAvatar = normalizeUrl(data.provider?.profilowe);
+    const providerAvatar = normalizeMediaUrl(data.provider?.profilowe);
     const catSlug = data.category ? (CATEGORY_SLUG[data.category] ?? null) : null;
     const catLabel = catSlug ? (KEYWORD_DISPLAY[catSlug] ?? null) : null;
     const citySlug = data.city ? (CITY_SLUG[data.city] ?? null) : null;
