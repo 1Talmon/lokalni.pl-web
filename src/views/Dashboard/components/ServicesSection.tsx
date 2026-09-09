@@ -144,7 +144,7 @@ export const ServicesSection = ({ myServices, onAddService, onEditService, setSe
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
     const [showArchived, setShowArchived] = useState(false);
-    const [archivedServices, setArchivedServices] = useState<{ image?: string | null; title: string; deletedAt?: string | null; publicId: string }[]>([]);
+    const [archivedServices, setArchivedServices] = useState<Service[]>([]);
     const [loadingArchived, setLoadingArchived] = useState(false);
 
     const handleConfirmDelete = () => {
@@ -252,7 +252,7 @@ export const ServicesSection = ({ myServices, onAddService, onEditService, setSe
                             <p className="text-sm text-gray-400 text-center py-4">Brak zarchiwizowanych ogłoszeń.</p>
                         )}
                         {archivedServices.map(s => (
-                            <ArchivedCard key={s.publicId} service={s} onRestore={() => handleRestore(s.publicId)} />
+                            <ArchivedCard key={s.publicId} service={s} onRestore={() => { if (s.publicId) handleRestore(s.publicId); }} />
                         ))}
                     </div>
                 )}

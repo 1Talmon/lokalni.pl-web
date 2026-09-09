@@ -1,6 +1,7 @@
 // src/services/serviceService.ts
 import { apiClient } from './apiClient';
-import { normalizeMediaUrl } from '../utils/normalizeUrl';
+import { mapServiceRaw } from '../lib/mappers/serviceMapper';
+import type { Service } from '../types';
 
 interface ApiErrorPayload {
   code?: string;
@@ -93,46 +94,8 @@ export interface CreateServicePayload {
   addressLng?: number;
 }
 
-// Konwertuje ApiService na format kompatybilny z typem Service frontend
-export function mapApiService(s: ApiService) {
-  type ProviderPayload = { uid?: string; imie?: string; nazwisko?: string; profilowe?: string | null; online?: boolean; isPremium?: boolean };
-  const p: ProviderPayload = s.provider ?? {};
-  return {
-    publicId: s.publicId,
-    title: s.title,
-    description: s.description,
-    price: String(s.price),
-    priceUnit: s.priceUnit,
-    rating: s.rating,
-    distance: '0',
-    city: s.city || '',
-    location: s.location ?? undefined,
-    category: s.category,
-    radius: s.radius,
-    type: s.type,
-    isRemote: s.isRemote,
-    provider: {
-      uid: p.uid || '',
-      name: `${p.imie || ''} ${p.nazwisko || ''}`.trim(),
-      avatar: normalizeMediaUrl(p.profilowe) || '',
-      responseRate: '100%',
-      isPremium: p.isPremium ?? false,
-    },
-    address: s.address ?? undefined,
-    image: normalizeMediaUrl(s.image) || '',
-    images: (s.images ?? []).map(u => normalizeMediaUrl(u) || u),
-    isOnline: p.online ?? false,
-    deliveryTime: s.deliveryTime || '',
-    durationMinutes: s.durationMinutes ?? 60,
-    bookings: s.bookings,
-    isMine: s.isMine,
-    isFavorite: s.isFavorite,
-    phoneNumber: '',
-    distanceKm: s.distanceKm ?? null,
-    views: s.views ?? 0,
-    createdAt: s.createdAt,
-    videos: s.videos ?? [],
-  };
+export function mapApiService(s: ApiService): Service {
+    return mapServiceRaw(s as unknown as Record<string, unknown>);
 }
 
 export const serviceService = {
