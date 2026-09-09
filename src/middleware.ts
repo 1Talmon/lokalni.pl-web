@@ -21,9 +21,10 @@ const APP_SEGMENTS = new Set([
 ]);
 
 function buildCsp(nonce: string): string {
+    const isDev = process.env.NODE_ENV === 'development';
     return [
         "default-src 'self'",
-        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
+        `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} 'nonce-${nonce}' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
