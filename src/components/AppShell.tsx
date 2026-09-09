@@ -14,10 +14,10 @@ import { ModalsManager } from './modals/ModalsManager';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { AppLock } from './AppLock';
 import { logger } from '../utils/logger';
-import HomeView from '../views/HomeView';
-import { ChatListView } from '../views/ChatListView';
-import GrafikView from '../views/GrafikView';
-import { FavoritesListView } from '../views/FavoritesListView';
+const HomeView          = dynamic(() => import('../views/HomeView'),                                                  { ssr: false });
+const ChatListView      = dynamic(() => import('../views/ChatListView').then(m => ({ default: m.ChatListView })),     { ssr: false });
+const GrafikView        = dynamic(() => import('../views/GrafikView'),                                                { ssr: false });
+const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });
 
 const CookieBanner      = dynamic(() => import('./ui/CookieBanner'),          { ssr: false });
 const TourOverlay       = dynamic(() => import('./tour/TourOverlay').then(m => ({ default: m.TourOverlay })),   { ssr: false });

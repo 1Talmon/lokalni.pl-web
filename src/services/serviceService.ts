@@ -123,17 +123,13 @@ export const serviceService = {
   },
 
   async getMyServices(): Promise<ReturnType<typeof mapApiService>[]> {
-    const res = await apiClient.get('/users/me/services');
-    if (!res.ok) throw new Error('Błąd pobierania Twoich usług');
-    const json = await res.json();
-    return (json.data as ApiService[]).map(mapApiService);
+    const json = await apiClient.getJson<{ data: ApiService[] }>('/users/me/services');
+    return json.data.map(mapApiService);
   },
 
   async getArchivedServices(): Promise<ReturnType<typeof mapApiService>[]> {
-    const res = await apiClient.get('/users/me/services?archived=true');
-    if (!res.ok) throw new Error('Błąd pobierania archiwalnych usług');
-    const json = await res.json();
-    return (json.data as ApiService[]).map(mapApiService);
+    const json = await apiClient.getJson<{ data: ApiService[] }>('/users/me/services?archived=true');
+    return json.data.map(mapApiService);
   },
 
   async trackEvent(eventType: 'favorite' | 'search', category?: string): Promise<void> {
@@ -157,9 +153,7 @@ export const serviceService = {
   },
 
   async getService(publicId: string): Promise<ReturnType<typeof mapApiService>> {
-    const res = await apiClient.get(`/services/${publicId}`);
-    if (!res.ok) throw new Error('Błąd pobierania usługi');
-    const json = await res.json();
+    const json = await apiClient.getJson<{ data?: ApiService } & ApiService>(`/services/${publicId}`);
     return mapApiService(json.data ?? json);
   },
 
