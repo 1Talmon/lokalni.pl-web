@@ -147,4 +147,42 @@ apiClientFn.postFormData = async (endpoint: string, body: FormData, signal?: Abo
 
 apiClientFn.request = request;
 
+// Typed JSON wrappers — parsują response i rzucają Error przy !ok.
+// Użyj zamiast .get()/.post() gdy chcesz od razu dostać wpisany T bez ręcznego .json().
+apiClientFn.getJson = async <T>(endpoint: string, init?: RequestInit): Promise<T> => {
+    const res = await request(endpoint, { method: 'GET', ...init });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        throw new Error(err.message ?? err.error ?? 'Błąd API');
+    }
+    return res.json() as Promise<T>;
+};
+
+apiClientFn.postJson = async <T>(endpoint: string, body: Record<string, unknown>): Promise<T> => {
+    const res = await request(endpoint, { method: 'POST', body: JSON.stringify(body) });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        throw new Error(err.message ?? err.error ?? 'Błąd API');
+    }
+    return res.json() as Promise<T>;
+};
+
+apiClientFn.patchJson = async <T>(endpoint: string, body: Record<string, unknown>): Promise<T> => {
+    const res = await request(endpoint, { method: 'PATCH', body: JSON.stringify(body) });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        throw new Error(err.message ?? err.error ?? 'Błąd API');
+    }
+    return res.json() as Promise<T>;
+};
+
+apiClientFn.deleteJson = async <T>(endpoint: string, body?: Record<string, unknown>): Promise<T> => {
+    const res = await request(endpoint, { method: 'DELETE', ...(body ? { body: JSON.stringify(body) } : {}) });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        throw new Error(err.message ?? err.error ?? 'Błąd API');
+    }
+    return res.json() as Promise<T>;
+};
+
 export const apiClient = apiClientFn;
