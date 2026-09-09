@@ -392,12 +392,12 @@ export const ChatModal = ({
     }, [currentChatId, queryClient]));
 
     useWsEvent('booking_update', useCallback((payload) => {
-        const { bookingId, status } = payload as { bookingId: number | string; status: string };
+        const { bookingId, status, clientReviewed } = payload as { bookingId: number | string; status: string; clientReviewed?: boolean };
         // Aktualizuj olderMsgs (lokalne state) — messagesData jest odświeżane przez globalny invalidateQueries
         setOlderMsgs(prev => prev.map((msg: any) =>
             // eslint-disable-next-line eqeqeq
             msg.bookingData?.id != null && String(msg.bookingData.id) === String(bookingId)
-                ? { ...msg, bookingData: { ...msg.bookingData, status } }
+                ? { ...msg, bookingData: { ...msg.bookingData, status, ...(clientReviewed !== undefined && { clientReviewed }) } }
                 : msg
         ));
     }, []));
@@ -792,7 +792,10 @@ export const ChatModal = ({
     });
 
     const msgs = useMemo(() => {
-        const realMsgs = [...olderMsgs.map(mapMsg), ...(messagesData ?? []).map(mapMsg)];
+        const freshMapped = (messagesData ?? []).map(mapMsg);
+        const freshIds = new Set(freshMapped.map(m => m.id));
+        const olderDeduped = olderMsgs.map(mapMsg).filter(m => !freshIds.has(m.id));
+        const realMsgs = [...olderDeduped, ...freshMapped];
         if (optimisticMsgs.length === 0) return realMsgs;
 
         const pendingOptimistic = optimisticMsgs.filter(m => !(m as any).uploadId);
