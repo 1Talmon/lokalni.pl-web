@@ -7,6 +7,7 @@ function StarIcon() {
 }
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_SLUG } from '@/lib/seo-data';
 import { normalizeMediaUrl } from '@/utils/normalizeUrl';
 
@@ -73,14 +74,13 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
 
                 {image && (
                     <div className="mt-4">
-                        <img
+                        <Image
                             src={image}
                             alt={data.title ?? ''}
                             width={800}
                             height={450}
-                            fetchPriority="high"
-                            loading="eager"
-                            decoding="sync"
+                            priority
+                            sizes="(max-width: 768px) 100vw, 800px"
                             className="w-full aspect-video object-cover rounded-2xl"
                         />
                     </div>
@@ -115,11 +115,12 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                 {data.provider?.name && (
                     <div className="mt-6 flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         {providerAvatar ? (
-                            <img
+                            <Image
                                 src={providerAvatar}
                                 alt={data.provider.name}
                                 width={40}
                                 height={40}
+                                loading="lazy"
                                 className="w-10 h-10 rounded-full object-cover shrink-0"
                             />
                         ) : (
