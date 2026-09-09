@@ -18,7 +18,7 @@ const SECURITY_HEADERS = [
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob: https:",
-            "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://api.cypriantalmon.pl wss://api.cypriantalmon.pl https://accounts.google.com https://maps.googleapis.com",
+            "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://accounts.google.com https://maps.googleapis.com",
             "frame-src 'self' https://accounts.google.com",
             "object-src 'none'",
             "base-uri 'self'",
@@ -47,7 +47,6 @@ const nextConfig: NextConfig = {
         remotePatterns: [
             { protocol: 'https', hostname: 'api.mylokalni.pl' },
             { protocol: 'https', hostname: 'media.mylokalni.pl' },
-            { protocol: 'https', hostname: 'api.cypriantalmon.pl' },
             { protocol: 'https', hostname: '*.googleusercontent.com' },
             { protocol: 'https', hostname: '*.fbcdn.net' },
             { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
