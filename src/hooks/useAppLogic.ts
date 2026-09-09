@@ -12,7 +12,7 @@ import { useWebSocket } from './useWebSocket';
 import { authService } from '../services/authService';
 import { notificationService } from '../services/notificationService';
 import { serviceService, mapApiService, type ApiService } from '../services/serviceService';
-import { chatService, type ApiChatSession, type ApiMessage } from '../services/chatService';
+import { chatService, type ApiChatSession } from '../services/chatService';
 import { apiClient } from '../services/apiClient';
 import { unregisterPushToken, takePendingNavigation, setActiveChatId } from '../services/pushNotificationService';
 import { createServiceUrl } from '../utils/helpers';
@@ -22,64 +22,11 @@ import { Service, UserProfile, ToastNotification, ToastType } from '../types';
 import type { ReportType } from '../types/appTypes';
 import { tokenUtils } from '../utils/tokenUtils';
 import { secureStorage } from '../utils/secureStorage';
-import { dataUrlToFile } from '../utils/imageUtils';
+import { submitBooking, executeBookingAction, rescheduleBooking } from './domain/bookingActions';
+import { submitService } from './domain/serviceActions';
+import { startChatWith, sendMessage } from './domain/chatActions';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
-
-// --- LOCAL TYPES ---
-
-interface ServiceFormData {
-    publicId?: string;
-    title: string;
-    description: string;
-    price: string;
-    priceUnit?: string;
-    category: string;
-    type: 'offer' | 'request';
-    city?: string;
-    isRemote?: boolean;
-    radius?: number;
-    deliveryTime?: string;
-    durationMinutes?: number;
-    images?: string[];
-    videos?: Array<{ url: string; thumbnailUrl?: string | null }>;
-    address?: string;
-    addressLat?: number;
-    addressLng?: number;
-}
-
-interface ServiceApiPayload {
-    title: string;
-    description: string;
-    price: number;
-    priceUnit: string;
-    category: string;
-    type: 'offer' | 'request';
-    city: string;
-    radius: number;
-    isRemote: boolean;
-    deliveryTime?: string;
-    durationMinutes?: number;
-    images: string[];
-    videos: Array<{ url: string; thumbnailUrl?: string | null }>;
-    address?: string;
-    addressLat?: number;
-    addressLng?: number;
-}
-
-interface BookingPayload {
-    type: 'offer' | 'request';
-    servicePublicId: string;
-    date?: string;
-    time?: string;
-    address?: string;
-    notes?: string;
-    addressLat?: number;
-    addressLng?: number;
-    message?: string;
-    proposedPrice?: number;
-    availableFrom?: string;
-}
 
 export const useAppLogic = () => {
     const router = useRouter();
@@ -465,195 +412,25 @@ export const useAppLogic = () => {
 
     // --- OGŁOSZENIA: submit przez API + upload zdjęć ---
     const handleServiceSubmit = useCallback(async (rawData: unknown) => {
-        const data = rawData as ServiceFormData;
-        try {
-            const imageUrls: string[] = (await Promise.all(
-                (data.images || []).slice(0, 5).map(async (imgUrl: string) => {
-                    if (imgUrl.startsWith('data:')) {
-                        return await serviceService.uploadServiceImage(dataUrlToFile(imgUrl, 'image.jpg'));
-                    } else if (imgUrl.startsWith('http')) {
-                        return imgUrl;
-                    }
-                    return null;
-                })
-            )).filter(Boolean) as string[];
-
-            const payload: ServiceApiPayload = {
-                title: data.title,
-                description: data.description,
-                price: parseFloat(data.price),
-                priceUnit: data.priceUnit || 'za usługę',
-                category: data.category,
-                type: data.type,
-                city: data.isRemote ? '' : (data.city || ''),
-                radius: data.isRemote ? 0 : (data.radius ?? 20),
-                isRemote: !!data.isRemote,
-                deliveryTime: data.deliveryTime || undefined,
-                durationMinutes: data.durationMinutes ?? undefined,
-                images: imageUrls,
-                videos: data.videos ?? [],
-                address: data.address || undefined,
-                addressLat: data.addressLat ?? undefined,
-                addressLng: data.addressLng ?? undefined,
-            };
-
-            if (payload.address && !payload.addressLat) {
-                try {
-                    const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}`);
-                    const geoJson = await geoRes.json();
-                    if (geoJson.data?.[0]) {
-                        payload.addressLat = geoJson.data[0].lat;
-                        payload.addressLng = geoJson.data[0].lng;
-                    }
-                } catch { /* geo lookup failed — proceed without coords */ }
-            }
-
-            if (data.publicId) {
-                await serviceService.updateService(data.publicId, payload);
-                addToast("Ogłoszenie zaktualizowane!");
-            } else {
-                await serviceService.createService(payload);
-                addToast("Opublikowano!", "success");
-            }
-
-            const uid = userProfile?.uid || freshUser?.uid;
-            await Promise.all([
-                refetchMyServices(),
-                queryClient.invalidateQueries({ queryKey: ['services'] }),
-                queryClient.invalidateQueries({ queryKey: ['public-profile', uid] }),
-                queryClient.invalidateQueries({ queryKey: ['my-profile'] }),
-                queryClient.invalidateQueries({ queryKey: ['recommended'] }),
-                ...(data.publicId ? [queryClient.invalidateQueries({ queryKey: ['service'] })] : []),
-            ]);
-            setActiveModal('none');
-        } catch (err: unknown) {
-            addToast((err as Error).message || "Błąd zapisu ogłoszenia", "error");
-        }
+        await submitService(rawData, { addToast, queryClient, refetchMyServices, userProfile, freshUser, setActiveModal });
     }, [addToast, queryClient, refetchMyServices, freshUser, userProfile]);
 
     // --- CHAT: otwórz / stwórz sesję ---
     const startChat = useCallback(async (s: Service, msg: string = '') => {
-        if (!isLoggedIn) { router.push('/auth'); return; }
-        setInitialChatText(msg);
-        setCurrentChatServiceId(s.publicId ?? null);
-
-        const providerUid = s.provider?.uid;
-        const existing = (chatSessions as ApiChatSession[]).find((c: ApiChatSession) =>
-            providerUid ? c.otherPartyUid === providerUid : c.servicePublicId === s.publicId
-        );
-
-        if (existing) {
-            setCurrentChatId(existing.id);
-        } else {
-            setCurrentChatId(null);
-        }
-        setActiveModal('chat_detail');
-    }, [isLoggedIn, router, chatSessions, setActiveModal]);
+        await startChatWith(s, msg, { isLoggedIn, router, chatSessions: chatSessions as ApiChatSession[], setInitialChatText, setCurrentChatServiceId, setCurrentChatId, setActiveModal });
+    }, [isLoggedIn, router, chatSessions]);
 
     // --- BOOKING ---
     const handleBookingSubmit = useCallback(async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsBookingLoading(true);
-        const formData = new FormData(e.target as HTMLFormElement);
-        const service = selectedService;
-        if (!service) { setIsBookingLoading(false); return; }
-
-        try {
-            const payload: BookingPayload = { type: service.type, servicePublicId: service.publicId ?? '' };
-            if (service.type === 'offer') {
-                payload.date = formData.get('date') as string;
-                payload.time = formData.get('time') as string;
-                payload.address = formData.get('address') as string || undefined;
-                payload.notes = formData.get('notes') as string || undefined;
-                const lat = formData.get('addressLat');
-                const lng = formData.get('addressLng');
-                if (lat && lng) {
-                    payload.addressLat = parseFloat(lat as string);
-                    payload.addressLng = parseFloat(lng as string);
-                } else if (payload.address) {
-                    // Użytkownik nie kliknął podpowiedzi — geocoduj przed wysłaniem
-                    try {
-                        const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}`);
-                        const geoJson = await geoRes.json();
-                        if (geoJson.data?.[0]) {
-                            payload.addressLat = geoJson.data[0].lat;
-                            payload.addressLng = geoJson.data[0].lng;
-                        }
-                    } catch { /* geo lookup failed — proceed without coords */ }
-                }
-            } else {
-                payload.message = formData.get('message') as string;
-                const pp = formData.get('proposed_price');
-                if (pp) payload.proposedPrice = parseFloat(pp as string);
-                payload.availableFrom = formData.get('available_from') as string || undefined;
-            }
-
-            const res = await apiClient.post('/bookings', payload as unknown as Record<string, unknown>);
-            const json = await res.json();
-            if (!res.ok) throw new Error(json.message || 'Błąd rezerwacji');
-
-            addToast(service.type === 'request' ? 'Oferta wysłana!' : 'Prośba wysłana!', 'success');
-
-            // Backend creates chat session + booking message — open chat immediately
-            if (json.chatId) {
-                const chatId = String(json.chatId);
-                setCurrentChatId(chatId);
-                setCurrentChatServiceId(service.publicId ?? null);
-                refetchChats();
-                // openChat w state routera — ServiceDetailsWrapper wykryje po montowaniu
-                // i otworzy modal dopiero gdy komponent jest w DOM. Brak setTimeout.
-                if (typeof window !== 'undefined') sessionStorage.setItem('__openChat__', chatId);
-                router.back();
-            } else {
-                router.back();
-            }
-        } catch (err: unknown) {
-            addToast((err as Error).message || 'Błąd rezerwacji', 'error');
-        } finally {
-            setIsBookingLoading(false);
-        }
-    }, [selectedService, addToast, router, refetchChats, setCurrentChatId, setCurrentChatServiceId]);
+        await submitBooking(e, { selectedService, addToast, router, refetchChats, setCurrentChatId, setCurrentChatServiceId, setIsBookingLoading });
+    }, [selectedService, addToast, router, refetchChats]);
 
     const handleBookingAction = useCallback(async (
         chatId: string | null,
         bookingId: number | string,
         action: 'accept' | 'decline' | 'cancel' | 'complete'
     ) => {
-        try {
-            let res: Response;
-            if (action === 'complete') {
-                res = await apiClient.post(`/bookings/${bookingId}/complete`, {});
-            } else {
-                const statusMap = { accept: 'accepted', decline: 'declined', cancel: 'cancelled' } as const;
-                res = await apiClient.patch(`/bookings/${bookingId}`, { status: statusMap[action as keyof typeof statusMap] });
-            }
-            if (!res.ok) {
-                const errJson = await res.json().catch(() => ({}));
-                throw new Error((errJson as { message?: string }).message || `Błąd (${res.status})`);
-            }
-            const newStatus = action === 'complete' ? 'completed'
-                : action === 'accept' ? 'accepted'
-                : action === 'decline' ? 'declined'
-                : 'cancelled';
-            // Optimistic update — natychmiastowa zmiana statusu w karcie bez czekania na refetch
-            if (chatId) {
-                queryClient.setQueryData<ApiMessage[]>(['chat-messages', chatId], (old) => {
-                    if (!old || !Array.isArray(old)) return old;
-                    return old.map((msg: ApiMessage) =>
-                        msg.bookingData?.id !== null && msg.bookingData?.id !== undefined && String(msg.bookingData.id) === String(bookingId)
-                            ? { ...msg, bookingData: { ...msg.bookingData, status: newStatus } }
-                            : msg
-                    );
-                });
-            }
-            queryClient.invalidateQueries({ queryKey: ['chats'] });
-            queryClient.invalidateQueries({ queryKey: ['bookings'] });
-            queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
-            const labels = { accept: 'Zaakceptowano!', decline: 'Odrzucono.', cancel: 'Anulowano.', complete: 'Zakończono!' };
-            addToast(labels[action], action === 'accept' || action === 'complete' ? 'success' : 'info');
-        } catch (err: unknown) {
-            addToast((err as Error).message || 'Błąd', 'error');
-        }
+        await executeBookingAction(chatId, bookingId, action, { addToast, queryClient, setCurrentChatId, setActiveModal });
     }, [addToast, queryClient]);
 
     // =================== STATE + ACTIONS ===================
@@ -778,22 +555,8 @@ export const useAppLogic = () => {
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             addToast(recurrence ? `Dodano ${recurrence.count} rezerwacji!` : 'Rezerwacja dodana!', 'success');
         },
-        handleBookingReschedule: async (_chatId: string | null, bookingId: number | string, newDate: string, newTime?: string) => {
-            try {
-                const res = await apiClient.patch(`/bookings/${bookingId}/reschedule`, { date: newDate, time: newTime });
-                if (!res.ok) throw new Error('Błąd zmiany terminu');
-                const json = await res.json() as { chatId?: string };
-                queryClient.invalidateQueries({ queryKey: ['bookings'] });
-                queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
-                addToast('Termin zmieniony!', 'success');
-                if (json.chatId) {
-                    setCurrentChatId(json.chatId);
-                    setActiveModal('chat_detail');
-                }
-            } catch (err: unknown) {
-                addToast((err as Error).message || 'Błąd zmiany terminu', 'error');
-            }
-        },
+        handleBookingReschedule: (_chatId: string | null, bookingId: number | string, newDate: string, newTime?: string) =>
+            rescheduleBooking(_chatId, bookingId, newDate, newTime, { addToast, queryClient, setCurrentChatId, setActiveModal }),
         homeActions: {
             setActiveCategory, setSearchQuery, setSearchDisplay, setLocation, setFilterType,
             setSortBy, setLoadedCount, setShowOnlineOnly,
@@ -805,29 +568,8 @@ export const useAppLogic = () => {
         },
         usePublicProfileHook: usePublicProfile,
         handleServiceSubmit,
-        handleSendMessage: async (text: string | null, imageUrl: string | null) => {
-            if (!text?.trim() && !imageUrl) return;
-            let sessionId = currentChatId;
-            if (!sessionId) {
-                if (!currentChatServiceId) return;
-                try {
-                    const session = await chatService.startChat(currentChatServiceId);
-                    setCurrentChatId(session.id);
-                    sessionId = session.id;
-                    await refetchChats();
-                } catch (err: unknown) {
-                    addToast((err as Error).message || 'Błąd tworzenia czatu', 'error');
-                    return;
-                }
-            }
-            try {
-                await chatService.sendMessage(sessionId, text || undefined, imageUrl || undefined);
-                queryClient.invalidateQueries({ queryKey: ['chats'] });
-                queryClient.invalidateQueries({ queryKey: ['chat-messages', sessionId] });
-            } catch {
-                addToast('Błąd wysyłania wiadomości', 'error');
-            }
-        },
+        handleSendMessage: (text: string | null, imageUrl: string | null) =>
+            sendMessage(text, imageUrl, { currentChatId, currentChatServiceId, addToast, queryClient, refetchChats, setCurrentChatId }),
         setSelectedService,
         setShowNotifications,
         setCurrentChatId,
