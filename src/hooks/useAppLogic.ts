@@ -361,7 +361,8 @@ export const useAppLogic = () => {
         queryKey: ['chats'],
         queryFn: () => chatService.getSessions(),
         enabled: authReady,
-        refetchInterval: authReady ? 15000 : false,
+        refetchInterval: false,
+        refetchOnWindowFocus: true,
         staleTime: 5000,
     });
     const chatSessions = useMemo(() => chatSessionsData ?? [], [chatSessionsData]);
