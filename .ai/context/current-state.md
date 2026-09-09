@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-08 12:41 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-09 07:56 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
-- Branch: `dev`
+- Branch: `main`
 - Uncommitted files: **1**
-- Ahead of origin: **11** commits
+- Ahead of origin: **1** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-faf4fab perf(seo): kompleksowy audyt — ISR, RSC split, AggregateRating, LCP, sitemaps
-ea8be6e refactor(seo): [slug] → (seo)/ group + generateStaticParams — 924 static HTML pages
-ae52561 fix(seo): architektoniczne poprawki — SSR content dla Googlebot, og noindex, robots
-0d1cba6 feat(seo): kompleksowy audyt SEO — notFound, title.template, OG boty, cache, lazy tabs
-a41c601 feat(seo): FAQPage JSON-LD, sitemap-locations, LCP priority, SearchAction fix
-c929a9d fix(api): route handler slug-services zwraca tablicę, nie { services, total }
-ba830a3 fix(seo): totalCount z meta.total API zamiast services.length
-c107d55 refactor(seo): pełny SSR dla slug pages — H1, karty serwisów, FAQ w HTML
-712d7ca feat(seo): treść SEO (opis, FAQ, linki miast) wbudowana bezpośrednio w HomeView
-ccabbea fix(seo): wyklucz znane trasy z isSlugRoute — /dashboard, /faq itp. nie są slug routes
+07d42d3 refactor(capacitor): kompletne usunięcie Capacitor z lokalni-web
+b862bc1 fix(ux): scroll po URL identyczny z przyciskiem — odpala przy isLoadingApp=false, nie czeka na serwisy
+46a204a fix(ux): shell ukryty przed pierwszą klatką + scroll do wyników po załadowaniu
+3a26430 fix(ux): slug routes — smooth scroll do wyników zamiast flash
+cfd8133 refactor(ux): wyszukiwanie in-app bez nawigacji — state update zamiast router.push
+43b32ef fix(ux): city z nagłówka serwisu + płynna nawigacja slug bez mignięcia
+07a069e fix(seo): 3 poprawki — H1 'w miasto', city w tytule serwisu, scroll po wyszukaniu
+e51771c fix(seo): poprawne filtry API — category ID zamiast query text + SSR shell poza isLoadingApp guard
+5255506 feat(seo): prawdziwe SSR — SlugStaticShell serwuje widoczne HTML przed JS
+7b7659b refactor(seo): jedna warstwa — [slug] przeniesiony do (app), brak osobnych HTML stron
 ```
 
 <!-- AI_AUTO_END -->
