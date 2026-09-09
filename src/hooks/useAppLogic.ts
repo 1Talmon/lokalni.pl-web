@@ -18,13 +18,14 @@ import { unregisterPushToken, takePendingNavigation, setActiveChatId } from '../
 import { createServiceUrl } from '../utils/helpers';
 import { isRemoteService, serviceMatchesLocation } from '../utils/serviceUtils';
 import { CITY_COORDS } from '../data/constants';
-import { Service, UserProfile, ToastNotification, ToastType } from '../types';
-import type { ReportType } from '../types/appTypes';
+import { Service, UserProfile } from '../types';
 import { tokenUtils } from '../utils/tokenUtils';
 import { secureStorage } from '../utils/secureStorage';
 import { submitBooking, executeBookingAction, rescheduleBooking } from './domain/bookingActions';
 import { submitService } from './domain/serviceActions';
 import { startChatWith, sendMessage } from './domain/chatActions';
+import { useToastState } from './domain/useToastState';
+import { useModalState } from './domain/useModalState';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 
@@ -52,17 +53,20 @@ export const useAppLogic = () => {
     const [showOnlineOnly, setShowOnlineOnly] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = usePersistedState('is_logged_in', false);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [toasts, setToasts] = useState<ToastNotification[]>([]);
+    const { toasts, addToast, removeToast } = useToastState();
+    const {
+        activeModal, setActiveModal,
+        showNotifications, setShowNotifications,
+        reportData, supportContext,
+        activeSupportTicketId, setActiveSupportTicketId,
+        editingServiceId, setEditingServiceId,
+        editingServiceFull, setEditingServiceFull,
+        openReportModal, openSupportModal,
+        openSupportTicket, closeSupportTicket,
+    } = useModalState();
     const [loadedCount, setLoadedCount] = useState(48);
-    const [activeModal, setActiveModal] = useState<'none' | 'chat_detail' | 'add_service' | 'report' | 'support'>('none');
-    const [showNotifications, setShowNotifications] = useState(false);
-    const [reportData, setReportData] = useState<{ type: 'service' | 'profile' | 'review', id: number | string } | null>(null);
-    const [supportContext, setSupportContext] = useState<{ bookingId?: number; category?: string } | null>(null);
-    const [activeSupportTicketId, setActiveSupportTicketId] = useState<string | null>(null);
     const [isBookingLoading, setIsBookingLoading] = useState(false);
     const [initialChatText, setInitialChatText] = useState<string>('');
-    const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
-    const [editingServiceFull, setEditingServiceFull] = useState<Service | null>(null);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const [currentChatServiceId, setCurrentChatServiceId] = useState<string | null>(null);
@@ -369,13 +373,6 @@ export const useAppLogic = () => {
         });
     }, [allServices, location, showOnlineOnly, userCoords]);
 
-    // --- TOAST ---
-    const addToast = useCallback((message: string, type: ToastType = 'success') => {
-        const id = Date.now();
-        setToasts(prev => [...prev.slice(-2), { id, message, type }]);
-        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
-    }, []);
-
     usePushNotifications(authReady, addToast);
 
     // Synchronizuj aktywny czat z serwisem push — wycisza powiadomienia od rozmówcy
@@ -453,7 +450,7 @@ export const useAppLogic = () => {
     const actions = {
         addToast,
         handleLogout,
-        removeToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
+        removeToast,
         onServiceClick: (s: Service) => {
             setSelectedService(s);
             const cached = queryClient.getQueryData(['service', s.publicId]);
@@ -531,16 +528,10 @@ export const useAppLogic = () => {
             addToast('Przekierowanie do płatności wkrótce dostępne.', 'info');
         },
         startChat,
-        openReportModal: (type: ReportType, id: number | string) => {
-            setReportData({ type, id });
-            setActiveModal('report');
-        },
-        openSupportModal: (context?: { bookingId?: number; category?: string }) => {
-            setSupportContext(context ?? null);
-            setActiveModal('support');
-        },
-        openSupportTicket: (id: string) => setActiveSupportTicketId(id),
-        closeSupportTicket: () => setActiveSupportTicketId(null),
+        openReportModal,
+        openSupportModal,
+        openSupportTicket,
+        closeSupportTicket,
         handleBookingSubmit,
         handleBookingAction,
         handleCreateBookingForClient: async (sessionId: string, date: string, time: string | undefined, servicePublicId: string, recurrence?: { interval: 'weekly' | 'biweekly' | 'monthly'; count: number }) => {
