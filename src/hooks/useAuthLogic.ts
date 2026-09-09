@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authService, type AuthResult, type TwoFAChallengeResult, type SocialDobResult, type AuthSuccessResult } from '../services/authService';
 import type { UserProfile } from '../types';
+import { z } from 'zod';
 
 // --- LOCAL TYPES ---
 
@@ -42,6 +43,36 @@ interface UseAuthLogicParams {
     setAuthMode: (mode: AuthMode) => void;
     onLoginSuccess: (userData: UserProfile | null) => void;
 }
+
+const emailFormatRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
+const loginSchema = z.object({
+    email: z.string().min(1, 'Adres email jest wymagany'),
+    password: z.string().min(1, 'Podaj hasło'),
+});
+
+const registerBaseSchema = z.object({
+    email: z.string()
+        .min(1, 'Adres email jest wymagany')
+        .regex(emailFormatRegex, 'Nieprawidłowy adres email'),
+    firstName: z.string().min(1, 'Podaj imię'),
+    lastName: z.string().min(1, 'Podaj nazwisko'),
+    password: z.string().min(1, 'Podaj hasło'),
+});
+
+const forgotPasswordSchema = z.object({
+    email: z.string().min(1, 'Podaj adres email'),
+});
+
+const resetPasswordSchema = z.object({
+    password: z.string()
+        .min(1, 'Podaj nowe hasło')
+        .min(8, 'Hasło jest za krótkie'),
+    confirmPassword: z.string().min(1, 'Potwierdź nowe hasło'),
+}).refine(d => d.password === d.confirmPassword, {
+    message: 'Hasła nie są identyczne',
+    path: ['confirmPassword'],
+});
 
 export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthLogicParams) {
     const router = useRouter();
@@ -227,11 +258,6 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         return colors[score] ?? 'bg-gray-200';
     };
 
-    const validateEmailLogic = (val: string) => {
-        if (!val) return true;
-        return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(val);
-    };
-
     const handleNameChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!/\d/.test(e.target.value)) setter(e.target.value);
     };
@@ -297,7 +323,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     };
 
     const handleEmailBlur = () => {
-        if (email && !validateEmailLogic(email)) setEmailError('Nieprawidłowy adres email');
+        if (email && !emailFormatRegex.test(email)) setEmailError('Nieprawidłowy adres email');
     };
 
     const handleCodeChange = (index: number, value: string) => {
@@ -433,7 +459,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         const age = calculateAge(dateOfBirth);
         if (age < 13) { setDateOfBirthError('Rejestracja jest dostępna od 13. roku życia'); setIsLoading(false); return; }
         if (age < 16 && !parentalEmail) { setParentalEmailError('Adres email rodzica jest wymagany'); setIsLoading(false); return; }
-        if (age < 16 && !validateEmailLogic(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); setIsLoading(false); return; }
+        if (age < 16 && !emailFormatRegex.test(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); setIsLoading(false); return; }
         try {
             const result = await authService.completeSocialLogin(socialDobToken, dateOfBirth, parentalEmail || undefined);
             if ((result as { parentalConsentRequired?: boolean }).parentalConsentRequired) {
@@ -508,18 +534,22 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
             let hasError = false;
             const digits = phoneNumber.replace(/\D/g, '');
             if (digits.length !== 9) { setPhoneError('Podaj pełny numer telefonu (9 cyfr)'); hasError = true; }
-            if (!email) { setEmailError('Adres email jest wymagany'); hasError = true; }
-            else if (!validateEmailLogic(email)) { setEmailError('Nieprawidłowy adres email'); hasError = true; }
-            if (!firstName) { setFirstNameError('Podaj imię'); hasError = true; }
-            if (!lastName) { setLastNameError('Podaj nazwisko'); hasError = true; }
-            if (!password) { setPasswordError('Podaj hasło'); hasError = true; }
+            const reg = registerBaseSchema.safeParse({ email, firstName, lastName, password });
+            if (!reg.success) {
+                hasError = true;
+                const fe = reg.error.flatten().fieldErrors;
+                const emailErr = fe.email?.[0]; if (emailErr) setEmailError(emailErr);
+                const firstErr = fe.firstName?.[0]; if (firstErr) setFirstNameError(firstErr);
+                const lastErr = fe.lastName?.[0]; if (lastErr) setLastNameError(lastErr);
+                const passErr = fe.password?.[0]; if (passErr) setPasswordError(passErr);
+            }
             if (!acceptTerms) { setApiError('Musisz zaakceptować Regulamin i Politykę Prywatności'); setTermsError(true); hasError = true; }
             else { setTermsError(false); }
             if (dateOfBirth) {
                 const age = calculateAge(dateOfBirth);
                 if (age < 13) { setDateOfBirthError('Rejestracja jest dostępna od 13. roku życia'); hasError = true; }
                 else if (age < 16 && !parentalEmail) { setParentalEmailError('Adres email rodzica jest wymagany'); hasError = true; }
-                else if (age < 16 && !validateEmailLogic(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); hasError = true; }
+                else if (age < 16 && !emailFormatRegex.test(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); hasError = true; }
             } else if (!acceptAgeConfirmation) {
                 setAgeConfirmationError(true);
                 hasError = true;
@@ -532,19 +562,31 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         } else if (authMode === '2fa') {
             handleVerify2FA();
         } else if (authMode === 'forgot-password') {
-            if (!email) { setEmailError('Podaj adres email'); return; }
+            const fp = forgotPasswordSchema.safeParse({ email });
+            if (!fp.success) {
+                const emailErr = fp.error.flatten().fieldErrors.email?.[0];
+                if (emailErr) setEmailError(emailErr);
+                return;
+            }
             handleRequestReset();
         } else if (authMode === 'reset-password') {
-            if (!password) { setPasswordError('Podaj nowe hasło'); return; }
-            if (password.length < 8) { setPasswordError('Hasło jest za krótkie'); return; }
-            if (!confirmPassword) { setConfirmPasswordError('Potwierdź nowe hasło'); return; }
-            if (password !== confirmPassword) { setConfirmPasswordError('Hasła nie są identyczne'); return; }
+            const rp = resetPasswordSchema.safeParse({ password, confirmPassword });
+            if (!rp.success) {
+                const fe = rp.error.flatten().fieldErrors;
+                const passErr = fe.password?.[0]; if (passErr) setPasswordError(passErr);
+                const confErr = fe.confirmPassword?.[0]; if (confErr) setConfirmPasswordError(confErr);
+                return;
+            }
             handleConfirmReset();
         } else {
-            let hasError = false;
-            if (!email) { setEmailError('Adres email jest wymagany'); hasError = true; }
-            if (!password) { setPasswordError('Podaj hasło'); hasError = true; }
-            if (!hasError) handleLogin();
+            const lg = loginSchema.safeParse({ email, password });
+            if (!lg.success) {
+                const fe = lg.error.flatten().fieldErrors;
+                const emailErr = fe.email?.[0]; if (emailErr) setEmailError(emailErr);
+                const passErr = fe.password?.[0]; if (passErr) setPasswordError(passErr);
+                return;
+            }
+            handleLogin();
         }
     };
 
