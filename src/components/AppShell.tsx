@@ -1,5 +1,6 @@
 'use client';
 import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CATEGORIES_DATA } from '../data/categories';
 import { parseSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '../lib/seo-data';
@@ -8,17 +9,18 @@ import { useApp } from '../providers/AppProvider';
 import { useBiometricLock } from '../hooks/useBiometricLock';
 import { ToastContainer } from './ui/ToastContainer';
 import { LoadingScreen } from './ui/LoadingScreen';
-import CookieBanner from './ui/CookieBanner';
 import { MainLayout } from './layout/MainLayout';
 import { ModalsManager } from './modals/ModalsManager';
 import { ErrorBoundary } from './ui/ErrorBoundary';
-import { TourOverlay } from './tour/TourOverlay';
 import { AppLock } from './AppLock';
 import { logger } from '../utils/logger';
-import HomeView from '../views/HomeView';
-import { ChatListView } from '../views/ChatListView';
-import GrafikView from '../views/GrafikView';
-import { FavoritesListView } from '../views/FavoritesListView';
+
+const HomeView          = dynamic(() => import('../views/HomeView'),          { ssr: false });
+const ChatListView      = dynamic(() => import('../views/ChatListView').then(m => ({ default: m.ChatListView })),       { ssr: false });
+const GrafikView        = dynamic(() => import('../views/GrafikView'),        { ssr: false });
+const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });
+const CookieBanner      = dynamic(() => import('./ui/CookieBanner'),          { ssr: false });
+const TourOverlay       = dynamic(() => import('./tour/TourOverlay').then(m => ({ default: m.TourOverlay })),   { ssr: false });
 
 const SWIPE_TAB_SET = new Set(SWIPE_TABS);
 const SLUG_RE = /^\/[a-z0-9][a-z0-9-]*(?:\/\d+)?$/;
