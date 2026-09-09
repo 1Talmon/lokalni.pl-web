@@ -2,19 +2,20 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { ClientPortal } from '../components/ui/ClientPortal';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../utils/logger';
 import { polishPlural } from '../utils/helpers';
-import { CATEGORIES_DATA } from '../data/categories';
 import { apiClient } from '../services/apiClient';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import {
-    ArrowLeft, MapPin, Star, Briefcase, Flag, ShieldCheck,
-    MessageCircle, Send, ChevronRight, FileCheck, Calendar,
-    CheckCircle, ThumbsUp, Globe, Share2, Trash2
+    Star, Flag,
+    Send, ChevronRight, FileCheck,
+    CheckCircle, ThumbsUp, Globe, Trash2,
+    Briefcase,
 } from 'lucide-react';
+import { ProfileHeader } from './PublicProfileView/ProfileHeader';
+import { ProfileServices } from './PublicProfileView/ProfileServices';
 import { ProviderProfile, Service, Review } from '../types';
 import type { AppActions } from '../types/appTypes';
 
@@ -389,171 +390,28 @@ const PublicProfileView = ({
     return (
         <div className="min-h-screen bg-[#F4F4F9] pb-32 font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
 
-            {/* Pasek nawigacji — portaled do body żeby transform motion.div nie tworzył
-                nowego containing block dla position:fixed (fixed wewnątrz transformed parenta
-                jest relatywny do parenta, nie viewportu → navbar skacze przy animacji wejścia) */}
-            <ClientPortal>
-                <div
-                    className="fixed left-0 right-0 z-[99999] lg:hidden flex items-center justify-between px-4 h-12 pointer-events-none"
-                    style={{ top: 'var(--total-nav-h, 73px)' }}
-                >
-                    <button
-                        onClick={onBack}
-                        type="button"
-                        aria-label="Wróć"
-                        className="pointer-events-auto flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
-                        style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm || reportConfig.isOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
-                    >
-                        <ArrowLeft size={15} strokeWidth={2.5} className="text-slate-700" />
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
-                    </button>
-                    <button
-                        onClick={handleShare}
-                        type="button"
-                        aria-label="Udostępnij profil"
-                        className="pointer-events-auto p-2.5 bg-white/90 hover:bg-white backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm text-slate-600 transition-all active:scale-95"
-                        style={(newsFeedOpen || certListOpen || galleryOpen || showReviewForm) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
-                    >
-                        <Share2 size={20} />
-                    </button>
-                </div>
-            </ClientPortal>
-
-            {/* Tło */}
-            <div
-                className="h-52 md:h-64 relative overflow-hidden"
-                style={bgImageUrl ? { cursor: 'pointer', userSelect: 'none' } : undefined}
-                onTouchStart={bgImageUrl ? () => startLongPress(bgImageUrl) : undefined}
-                onTouchMove={bgImageUrl ? moveLongPress : undefined}
-                onTouchEnd={bgImageUrl ? cancelLongPress : undefined}
-                onContextMenu={bgImageUrl ? (e) => e.preventDefault() : undefined}
-                onClick={bgImageUrl ? () => { setProfileViewerPhotos([bgImageUrl]); setProfileViewerOpen(true); } : undefined}
-            >
-                {providerIsPremium && providerData.zdjecieTla ? (
-                    <img
-                        src={providerData.zdjecieTla}
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        alt="Background"
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-500 via-slate-600 to-indigo-700" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/10 to-slate-900/30 pointer-events-none" />
-            </div>
+            <ProfileHeader
+                provider={provider}
+                fullName={fullName}
+                providerIsPremium={providerIsPremium}
+                avatarUrl={avatarUrl}
+                bgImageUrl={bgImageUrl}
+                isActiveNow={isActiveNow}
+                computedActivityStatus={computedActivityStatus}
+                allServices={allServices}
+                providerServices={providerServices}
+                isAnyModalOpen={newsFeedOpen || certListOpen || galleryOpen || showReviewForm}
+                isReportOpen={reportConfig.isOpen}
+                onBack={onBack}
+                onStartChat={onStartChat}
+                onShare={handleShare}
+                onLongPressStart={startLongPress}
+                onLongPressMove={moveLongPress}
+                onLongPressCancel={cancelLongPress}
+                onOpenViewer={(url) => { setProfileViewerPhotos([url]); setProfileViewerOpen(true); }}
+            />
 
             <div className="max-w-[1200px] mx-auto px-4 md:px-6 relative">
-
-                {/* Przycisk wróć — tylko desktop */}
-                <div className="hidden lg:block absolute -top-36 left-6 z-30">
-                    <button
-                        onClick={onBack}
-                        type="button"
-                        aria-label="Wróć do poprzedniej strony"
-                        className="flex items-center gap-2 bg-white/90 hover:bg-white backdrop-blur-md px-4 py-2.5 rounded-2xl text-[10px] font-black shadow-lg transition-all active:scale-95 text-slate-700 border border-white/50 uppercase tracking-wider"
-                    >
-                        <ArrowLeft size={13} strokeWidth={3} /> Wróć
-                    </button>
-                </div>
-
-                {/* ── HEADER CARD ── */}
-                <div className="bg-white rounded-3xl p-5 md:p-7 shadow-xl shadow-slate-200/50 border border-slate-100/80 flex flex-col md:flex-row items-center justify-between gap-5 -mt-14 relative z-20">
-                    <div className="flex flex-col md:flex-row items-center gap-5 w-full md:w-auto">
-                        {/* Avatar */}
-                        <div className="relative shrink-0">
-                            <div
-                                className="w-24 h-24 md:w-[100px] md:h-[100px] rounded-3xl overflow-hidden ring-4 ring-white shadow-lg relative bg-slate-100"
-                                style={avatarUrl ? { cursor: 'pointer', userSelect: 'none' } : undefined}
-                                onTouchStart={avatarUrl ? () => startLongPress(avatarUrl) : undefined}
-                                onTouchMove={avatarUrl ? moveLongPress : undefined}
-                                onTouchEnd={avatarUrl ? cancelLongPress : undefined}
-                                onContextMenu={avatarUrl ? (e) => e.preventDefault() : undefined}
-                                onClick={avatarUrl ? () => { setProfileViewerPhotos([avatarUrl]); setProfileViewerOpen(true); } : undefined}
-                            >
-                                <img
-                                    src={avatarUrl || '/default-profile-picture.webp'}
-                                    className="w-full h-full object-cover pointer-events-none"
-                                    alt="Avatar"
-                                    fetchPriority="high"
-                                    decoding="async"
-                                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-profile-picture.webp'; }}
-                                />
-                            </div>
-                            {isActiveNow && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-[3px] border-white shadow-sm" />
-                            )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="text-center md:text-left">
-                            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                                <h1 className="text-2xl md:text-[28px] font-black text-slate-900 tracking-tight leading-tight">{fullName}</h1>
-                                {providerIsPremium && <PlusBadge />}
-                                <div className="relative group/shield cursor-help">
-                                    <ShieldCheck size={22} className="text-indigo-500 fill-indigo-50 shrink-0" />
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-xl opacity-0 group-hover/shield:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">
-                                        Profil zweryfikowany
-                                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tagi statusu */}
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors ${
-                                    isActiveNow ? "bg-green-50 text-green-700 border-green-100" : "bg-slate-50 text-slate-500 border-slate-100"
-                                }`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${isActiveNow ? "bg-green-500" : "bg-slate-300"}`} />
-                                    {computedActivityStatus}
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
-                                    <MapPin size={11} /> {providerServices[0]?.city || providerData.city || 'Polska'}
-                                </span>
-                            </div>
-
-                            {/* Mini stats */}
-                            <div className="flex items-center justify-center md:justify-start gap-4 mt-3">
-                                <div className="flex items-center gap-1">
-                                    <Star size={13} className="fill-amber-400 text-amber-400" />
-                                    <span className="text-sm font-black text-slate-900">
-                                        {(providerData.avgRating ?? 0) > 0 ? Number(providerData.avgRating).toFixed(1) : '–'}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-semibold">({providerData.reviewsCount ?? 0})</span>
-                                </div>
-                                <div className="w-px h-3 bg-slate-200" />
-                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
-                                    <CheckCircle size={12} className="text-indigo-400" />
-                                    <span>{providerData.reviewsCount ?? 0} {polishPlural(providerData.reviewsCount ?? 0, 'realizacja', 'realizacje', 'realizacji')}</span>
-                                </div>
-                                <div className="w-px h-3 bg-slate-200" />
-                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
-                                    <Calendar size={12} className="text-slate-400" />
-                                    <span>{providerData.joinedAt
-                                        ? `od ${new Date(providerData.joinedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-                                        : providerData.joinedYear ? `od ${providerData.joinedYear}` : '–'
-                                    }</span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="w-full md:w-auto shrink-0 flex items-center gap-2">
-                        <button
-                            onClick={() => allServices.length > 0 && onStartChat(allServices[0])}
-                            className="flex-1 md:flex-none bg-[#6366F1] text-white px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-[#4F46E5] hover:shadow-lg hover:shadow-indigo-300/40 transition-all active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            <MessageCircle size={17} /> Napisz wiadomość
-                        </button>
-                        <button
-                            onClick={handleShare}
-                            aria-label="Udostępnij profil"
-                            className="hidden lg:flex w-12 h-12 shrink-0 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 items-center justify-center transition-all active:scale-95 shadow-sm"
-                        >
-                            <Share2 size={18} className="text-slate-600" />
-                        </button>
-                    </div>
-                </div>
 
                 {/* ── BIO + AKTUALNOŚCI ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6">
@@ -709,82 +567,14 @@ const PublicProfileView = ({
                     </div>}
                 </div>
 
-                {/* ── USŁUGI ── */}
-                <div className="mt-14">
-                    <div className="flex items-center gap-3 mb-7 px-1">
-                        <div className="w-1.5 h-7 bg-indigo-500 rounded-full" />
-                        <div>
-                            <h2 className="font-black text-2xl text-slate-900 tracking-tight leading-none">Usługi i cennik</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{allServices.length} aktywnych ofert</p>
-                        </div>
-                    </div>
-
-                    {allServices.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-14 rounded-3xl border border-dashed border-slate-200 text-center gap-3">
-                            <Briefcase size={28} className="text-slate-300" />
-                            <p className="text-sm font-bold text-slate-400">Brak aktywnych usług</p>
-                        </div>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {displayedServices.map((service, idx) => (
-                            <div
-                                key={service.publicId || idx}
-                                onClick={() => onServiceClick(service)}
-                                className="group bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/8 hover:-translate-y-1 transition-all duration-400 cursor-pointer flex flex-col"
-                            >
-                                <div className="relative h-52 w-full overflow-hidden rounded-t-3xl">
-                                    <img
-                                        src={normalizeMediaUrl(service.image) || service.image}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
-                                        alt={service.title}
-                                    />
-                                    {/* Cena */}
-                                    <div className="absolute bottom-3 left-3">
-                                        <div className="bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-2xl shadow-md">
-                                            <span className="text-slate-900 font-black text-sm">{service.price} {service.priceUnit || "zł"}</span>
-                                        </div>
-                                    </div>
-                                    {/* Rating */}
-                                    {service.rating > 0 && (
-                                        <div className="absolute top-3 right-3">
-                                            <div className="bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-xl flex items-center gap-1">
-                                                <Star size={10} className="fill-amber-400 text-amber-400" />
-                                                <span className="text-white font-black text-[11px]">{service.rating.toFixed(1)}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="p-5 flex flex-col flex-1">
-                                    <span className="inline-block px-2.5 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-wider rounded-lg self-start mb-2.5">
-                                        {CATEGORIES_DATA.find(c => c.id === service.category)?.name ?? service.category ?? "Premium"}
-                                    </span>
-                                    <h4 className="font-bold text-slate-900 text-[15px] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2 mb-3">
-                                        {service.title}
-                                    </h4>
-                                    <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
-                                        <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
-                                            <MapPin size={11} className="text-indigo-300" /> {service.city || "Gdańsk"}
-                                        </span>
-                                        <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all" />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {hasMoreServices && (
-                        <div className="mt-8 text-center">
-                            <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                className="inline-flex items-center gap-2.5 bg-white border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 px-7 py-3.5 rounded-2xl text-sm font-black text-slate-700 transition-all active:scale-95 shadow-sm"
-                            >
-                                {isExpanded ? "Zwiń" : `Pokaż wszystkie (${allServices.length})`}
-                                <ChevronRight size={16} className={`transition-transform ${isExpanded ? "rotate-90" : "-rotate-90 mt-px"}`} />
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <ProfileServices
+                    allServices={allServices}
+                    displayedServices={displayedServices}
+                    hasMoreServices={hasMoreServices}
+                    isExpanded={isExpanded}
+                    onToggleExpand={() => setIsExpanded(!isExpanded)}
+                    onServiceClick={onServiceClick}
+                />
 
                 {/* ── OPINIE ── */}
                 <div className="mt-20 mb-8">
