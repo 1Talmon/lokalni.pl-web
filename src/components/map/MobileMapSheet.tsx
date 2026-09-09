@@ -6,9 +6,9 @@ import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { MapPin, X, Star, ArrowLeft, Plus, Minus, Globe2, ChevronRight } from 'lucide-react';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import type { Service } from '../../types';
-import type { SelectedMarker } from '../MapView';
+import type { SelectedMarker } from './types';
 
-const MapView = dynamic(() => import('../../components/MapView').then(m => ({ default: m.MapView })), { ssr: false });
+const MapView = dynamic(() => import('./MapView').then(m => ({ default: m.MapView })), { ssr: false });
 
 const F = "'Plus Jakarta Sans',system-ui,-apple-system,sans-serif";
 const PRIMARY = '#6366F1';
