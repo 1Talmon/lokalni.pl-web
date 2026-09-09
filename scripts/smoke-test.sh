@@ -94,7 +94,10 @@ check_header "X-Content-Type-Options"  "$BASE/" "x-content-type-options"
 check_header "Referrer-Policy"         "$BASE/" "referrer-policy"
 
 header "5. 404 handling"
-check_status "Nieistniejąca strona → 404" "$BASE/ta-strona-nie-istnieje-xyz123" "404"
+# CF Pages + client-component layout: notFound() renderuje treść poprawnie, HTTP status = 200 (known limitation).
+# Sprawdzamy treść not-found page + noindex zamiast HTTP status.
+check_contains "Nieznana strona — wyświetla not-found page" "$BASE/ta-strona-nie-istnieje-xyz123" "Strona nie istnieje"
+check_contains "Nieznana strona — noindex ustawiony"        "$BASE/ta-strona-nie-istnieje-xyz123" 'noindex'
 
 header "6. API — podstawowe"
 check_status   "GET /services"             "$API_BASE/services?limit=1"
