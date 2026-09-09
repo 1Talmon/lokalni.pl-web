@@ -518,30 +518,6 @@ export const authService = {
         return result;
     },
 
-    // --- REFRESH TOKEN ---
-    async refreshToken() {
-        try {
-            const rt = await secureStorage.getRefreshToken();
-            const body: Record<string, string> = {};
-            if (rt) body.refreshToken = rt;
-            const response = await fetch(`${API_URL}/auth/refresh`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(body),
-            });
-            const result = await response.json();
-            if (response.ok && result.token) {
-                tokenUtils.set(result.token);
-                // refreshToken jest wyłącznie w httpOnly cookie — nie czytamy z body
-                return result.token;
-            }
-            return null;
-        } catch {
-            return null;
-        }
-    },
-
     // --- RESET HASŁA (Bez zmian) ---
     async requestPasswordReset(email: string) {
         const response = await fetch(`${API_URL}/auth/password/reset/request`, {
