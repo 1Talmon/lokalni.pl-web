@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // Rzuć notFound() jak najwcześniej — generateMetadata jest pierwszym punktem gdzie
     // możemy to zrobić i CF Pages edge poprawnie ustawia 404 przed wygenerowaniem RSC payload.
-    if (total === 0 && parsed.type === 'search') notFound();
+    if (total === 0) notFound();
 
     const url = `${BASE_URL}/${slug}`;
     const noindex = total >= 2
@@ -52,8 +52,8 @@ export default async function SlugPage({ params }: Props) {
     const fetchParams = resolveFetchParams(parsed);
     const { services, total } = await fetchServices(fetchParams);
 
-    // Unknown search-type slugs with no results → 404
-    if (total === 0 && parsed.type === 'search') notFound();
+    // No results for any slug type → 404
+    if (total === 0) notFound();
 
     const h1 = buildH1(parsed);
 
