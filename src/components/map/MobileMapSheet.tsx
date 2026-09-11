@@ -93,7 +93,7 @@ const ServiceCard = ({ svc, onServiceClick, onClose, onHandleDown }: {
         <div style={{ padding: '14px 16px 20px' }}>
             <button
                 onClick={() => onServiceClick(svc)}
-                className="w-full flex items-center justify-center gap-1.5 py-4 rounded-2xl font-black text-white text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-indigo-200"
+                className="w-full flex items-center justify-center gap-1.5 py-4 rounded-2xl font-black text-white text-sm tracking-wide transition-colors active:scale-95 shadow-lg shadow-indigo-200"
                 style={{ background: PRIMARY, fontFamily: F, border: 'none', cursor: 'pointer' }}
             >
                 Sprawdź ogłoszenie <ChevronRight size={16} strokeWidth={2.5} />
@@ -288,7 +288,7 @@ const DesktopServiceCard = ({ service, onServiceClick, onBack }: {
         <div style={{ padding: '12px 14px 16px', flexShrink: 0, borderTop: '1px solid #f3f4f6' }}>
             <button
                 onClick={() => onServiceClick(service)}
-                className="w-full flex items-center justify-center gap-1 py-3 rounded-xl font-black text-white text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-indigo-200 border-0 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1 py-3 rounded-xl font-black text-white text-sm tracking-wide transition-colors active:scale-95 shadow-lg shadow-indigo-200 border-0 cursor-pointer"
                 style={{ background: PRIMARY, fontFamily: F }}
             >
                 Sprawdź ogłoszenie <ChevronRight size={14} />
