@@ -28,12 +28,12 @@ interface PublicProfileResponse {
 }
 
 export const usePublicProfile = (uid: string | undefined) => {
-  const { data, isPending, isError, error } = useQuery<PublicProfileResponse>({
+  const { data, isPending, isError, isFetching, error } = useQuery<PublicProfileResponse>({
     queryKey: ['public-profile', uid],
     queryFn: () => authService.fetchPublicProfile(uid!),
     enabled: !!uid,
     staleTime: 10 * 60 * 1000,
-    retry: false,
+    retry: 1,
   });
 
   // Mapowanie danych
@@ -66,6 +66,7 @@ export const usePublicProfile = (uid: string | undefined) => {
     profile,
     isLoading: isPending,
     isError,
+    isFetching,
     isOnline: data?.online ?? false,
     activityStatus: data?.statusAktywnosci ?? "",
     error

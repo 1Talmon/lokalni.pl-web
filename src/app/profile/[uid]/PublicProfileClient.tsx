@@ -62,7 +62,7 @@ export default function PublicProfileClient() {
         doNav();
     }, [doNav, actions]);
 
-    const { profile, isOnline, activityStatus, isLoading, isError } = usePublicProfile(uid);
+    const { profile, isOnline, activityStatus, isLoading, isError, isFetching } = usePublicProfile(uid);
 
     // Show AppShell-level nav loading overlay — only when there's no cached data
     useEffect(() => {
@@ -104,11 +104,12 @@ export default function PublicProfileClient() {
     }, [profile, uid]);
 
     useEffect(() => {
-        if (isError) {
+        // isFetching guard: nie odpalaj na stale error z cache — czekaj aż fetch się skończy
+        if (isError && !isFetching) {
             actions.addToast('Nie udało się załadować profilu. Spróbuj ponownie.', 'error');
             doNav();
         }
-    }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isError, isFetching]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Restore scroll position on web (saved before navigating away from profile)
     const hasRestoredScroll = useRef(false);
