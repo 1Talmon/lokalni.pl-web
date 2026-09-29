@@ -788,7 +788,7 @@ const ServiceDetailsView = ({
                     {similarServices.length > 0 && (
                         <div className="mt-10">
                             <div className="flex items-center justify-between mb-4">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Podobne w okolicy</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap shrink-0">Podobne w okolicy</p>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => { const el = similarScrollRef.current; if (el) el.scrollTo({ left: Math.max(0, el.scrollLeft - 268), behavior: 'smooth' }); }}
