@@ -94,8 +94,8 @@ function apiClientFn(endpoint: string): Promise<Response> {
     return request(endpoint, { method: 'GET' });
 }
 
-apiClientFn.get = (endpoint: string) =>
-    request(endpoint, { method: 'GET' });
+apiClientFn.get = (endpoint: string, init?: Pick<RequestInit, 'signal'>) =>
+    request(endpoint, { method: 'GET', ...init });
 
 apiClientFn.post = (endpoint: string, body: Record<string, unknown>) =>
     request(endpoint, { method: 'POST', body: JSON.stringify(body) });

@@ -68,13 +68,20 @@ export default function ServiceDetailsClient() {
 
     const { data: service, isPending, isError } = useQuery({
         queryKey: ['service', publicId],
-        queryFn: async () => {
-            const res = await apiClient.get(`/services/${publicId}`);
-            if (res.status === 404) return null;
-            if (res.status === 410) return { __deleted: true } as unknown as Service;
-            if (!res.ok) throw new Error(`server_${res.status}`);
-            const json = await res.json();
-            try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
+        queryFn: async ({ signal }) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15_000);
+            signal?.addEventListener('abort', () => controller.abort(), { once: true });
+            try {
+                const res = await apiClient.get(`/services/${publicId}`, { signal: controller.signal });
+                if (res.status === 404) return null;
+                if (res.status === 410) return { __deleted: true } as unknown as Service;
+                if (!res.ok) throw new Error(`server_${res.status}`);
+                const json = await res.json();
+                try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
+            } finally {
+                clearTimeout(timeout);
+            }
         },
         enabled: !!publicId,
         staleTime: 10 * 60 * 1000,
