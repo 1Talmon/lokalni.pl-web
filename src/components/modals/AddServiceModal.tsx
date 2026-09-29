@@ -95,6 +95,10 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
     };
     const [formRadius, setFormRadius] = useState(20);
     const [formDuration, setFormDuration] = useState(60);
+    const PRESET_DURATIONS = [30, 45, 60, 90, 120, 150, 180];
+    const [isCustomDuration, setIsCustomDuration] = useState(false);
+    const [customH, setCustomH] = useState(0);
+    const [customM, setCustomM] = useState(15);
     const [previewMedia, setPreviewMedia] = useState<GalleryMedia[]>([]);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [uploadingType, setUploadingType] = useState<'image' | 'video' | null>(null);
@@ -224,7 +228,11 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
             }
             setIsRemote(!!editingService.isRemote || !editingService.city?.trim());
             setFormRadius(editingService.radius ?? 20);
-            setFormDuration(editingService.durationMinutes ?? 60);
+            const dur = editingService.durationMinutes ?? 60;
+            setFormDuration(dur);
+            const isCustom = ![30, 45, 60, 90, 120, 150, 180].includes(dur);
+            setIsCustomDuration(isCustom);
+            if (isCustom) { setCustomH(Math.floor(dur / 60)); setCustomM(dur % 60); }
             setFormType(editingService.type || 'offer');
             const imgs = editingService.images?.length ? editingService.images : editingService.image ? [editingService.image] : [];
             const vids = editingService.videos ?? [];
@@ -242,7 +250,7 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
             setPriceUnitValue(u && VALID_UNITS.includes(u) ? u : 'za usługę');
         } else {
             setFormLocation(''); setFormAddress(''); setFormAddressCoords(null);
-            setIsRemote(false); setFormRadius(20); setFormDuration(60);
+            setIsRemote(false); setFormRadius(20); setFormDuration(60); setIsCustomDuration(false); setCustomH(0); setCustomM(15);
             setPreviewMedia([]); setFormType('offer');
             setDescLength(0);
             setCategoryValue('home');
@@ -394,6 +402,9 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
         }
         if (!isRemote && !formLocation.trim()) {
             setLocationError('Podaj miasto lub zaznacz opcję „Usługa zdalna".');
+            return;
+        }
+        if (formType === 'offer' && isCustomDuration && customH * 60 + customM < 15) {
             return;
         }
 
@@ -680,22 +691,64 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                             <label className={LABEL}>Średni czas wykonania usługi</label>
                                             <p className="text-[11px] text-gray-400 mb-3">Na tej podstawie generowane są dostępne sloty w kalendarzu rezerwacji.</p>
                                             <div className="grid grid-cols-4 gap-2">
-                                                {[30, 45, 60, 90, 120, 150, 180, 240].map(min => (
+                                                {PRESET_DURATIONS.map(min => (
                                                     <button
                                                         key={min}
                                                         type="button"
-                                                        onClick={() => setFormDuration(min)}
+                                                        onClick={() => { setIsCustomDuration(false); setFormDuration(min); }}
                                                         className={`py-3 rounded-xl text-xs font-bold text-center transition-all active:scale-95 ${
-                                                            formDuration === min
+                                                            !isCustomDuration && formDuration === min
                                                                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                                                                 : 'bg-gray-50 text-gray-600 border border-gray-100 hover:border-indigo-200 hover:text-indigo-600'
                                                         }`}
                                                     >
-                                                        {min >= 60
-                                                            ? `${Math.floor(min / 60)}h${min % 60 > 0 ? `${min % 60}m` : ''}`
-                                                            : `${min}m`}
+                                                        {min >= 60 ? `${Math.floor(min / 60)}h${min % 60 > 0 ? `${min % 60}m` : ''}` : `${min}m`}
                                                     </button>
                                                 ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsCustomDuration(true)}
+                                                    className={`py-3 rounded-xl text-xs font-bold text-center transition-all active:scale-95 ${
+                                                        isCustomDuration
+                                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                                            : 'bg-gray-50 text-gray-600 border border-gray-100 hover:border-indigo-200 hover:text-indigo-600'
+                                                    }`}
+                                                >
+                                                    {isCustomDuration && formDuration > 0
+                                                        ? (customH > 0 && customM > 0 ? `${customH}h ${customM}m` : customH > 0 ? `${customH}h` : `${customM}m`)
+                                                        : 'Własny'}
+                                                </button>
+                                            </div>
+                                            <div className={`grid transition-all duration-200 ease-in-out ${isCustomDuration ? 'grid-rows-[1fr] mt-4' : 'grid-rows-[0fr]'}`}>
+                                                <div className="overflow-hidden">
+                                                    <div className="flex items-center gap-6">
+                                                        {/* Godziny */}
+                                                        <div className="flex items-center gap-3">
+                                                            <button type="button" onClick={() => { const h = Math.max(0, customH - 1); setCustomH(h); setFormDuration(Math.max(15, h * 60 + customM)); }} disabled={customH === 0} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm disabled:opacity-30 active:scale-95 transition-all">−</button>
+                                                            <input
+                                                                type="number" min={0} max={8} value={customH}
+                                                                onChange={e => { const h = Math.max(0, Math.min(8, parseInt(e.target.value, 10) || 0)); setCustomH(h); setFormDuration(Math.max(15, h * 60 + customM)); }}
+                                                                className="w-10 text-center text-sm font-semibold text-gray-900 bg-transparent border-0 focus:outline-none"
+                                                            />
+                                                            <button type="button" onClick={() => { const h = Math.min(8, customH + 1); setCustomH(h); setFormDuration(Math.max(15, h * 60 + customM)); }} disabled={customH === 8} className="w-9 h-9 rounded-xl bg-[#6366F1] text-white flex items-center justify-center font-bold text-sm disabled:opacity-30 active:scale-95 transition-all shadow-md">+</button>
+                                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">h</span>
+                                                        </div>
+                                                        {/* Minuty */}
+                                                        <div className="flex items-center gap-3">
+                                                            <button type="button" onClick={() => { const m = Math.max(0, customM - 5); setCustomM(m); setFormDuration(Math.max(15, customH * 60 + m)); }} disabled={customM === 0} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm disabled:opacity-30 active:scale-95 transition-all">−</button>
+                                                            <input
+                                                                type="number" min={0} max={59} value={customM}
+                                                                onChange={e => { const m = Math.max(0, Math.min(59, parseInt(e.target.value, 10) || 0)); setCustomM(m); setFormDuration(Math.max(15, customH * 60 + m)); }}
+                                                                className="w-10 text-center text-sm font-semibold text-gray-900 bg-transparent border-0 focus:outline-none"
+                                                            />
+                                                            <button type="button" onClick={() => { const m = Math.min(55, customM + 5); setCustomM(m); setFormDuration(Math.max(15, customH * 60 + m)); }} disabled={customM === 55} className="w-9 h-9 rounded-xl bg-[#6366F1] text-white flex items-center justify-center font-bold text-sm disabled:opacity-30 active:scale-95 transition-all shadow-md">+</button>
+                                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">min</span>
+                                                        </div>
+                                                    </div>
+                                                    {isCustomDuration && customH * 60 + customM < 15 && (
+                                                        <p className="text-xs text-rose-500 font-medium mt-2">Minimalny czas wykonania to 15 minut.</p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
