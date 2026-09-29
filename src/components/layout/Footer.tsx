@@ -91,11 +91,11 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
             <div className="max-w-7xl mx-auto mt-10 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-sm text-gray-400">Mamy też aplikację mobilną — zabierz MyLokalni ze sobą.</p>
                 <div className="flex gap-3 shrink-0">
-                    <a href="#" className="inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 rounded-xl px-4 py-2.5 w-40">
+                    <a href="https://testflight.apple.com/join/RTmCnEZg" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 rounded-xl px-4 py-2.5 w-40">
                         <AppleIcon />
                         <div className="text-left leading-tight">
-                            <div className="text-[9px] text-gray-400 uppercase tracking-widest">Pobierz w</div>
-                            <div className="text-sm font-bold text-white">App Store</div>
+                            <div className="text-[9px] text-gray-400 uppercase tracking-widest">Beta — iOS</div>
+                            <div className="text-sm font-bold text-white">TestFlight</div>
                         </div>
                     </a>
                     <a href="#" className="inline-flex items-center gap-2.5 bg-white/10 hover:bg-white/20 transition-colors border border-white/20 rounded-xl px-4 py-2.5 w-40">
