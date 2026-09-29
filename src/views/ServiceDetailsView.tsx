@@ -836,15 +836,17 @@ const ServiceDetailsView = ({
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col flex-1">
+                                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col flex-1 min-w-0">
                                                 {svcCat && (
                                                     <span className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-wider rounded-lg mb-2 self-start">
                                                         {svcCat.name}
                                                     </span>
                                                 )}
-                                                <h4 className="font-bold text-slate-900 text-[14px] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2 mb-auto pb-2">
-                                                    {svc.title}
-                                                </h4>
+                                                <div className="mb-auto pb-2 min-w-0">
+                                                    <h4 className="font-bold text-slate-900 text-[14px] leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
+                                                        {svc.title}
+                                                    </h4>
+                                                </div>
                                                 <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-auto">
                                                     <MapPin size={11} className="text-indigo-300 shrink-0" />
                                                     <span>{svc.city || 'Online'}</span>
