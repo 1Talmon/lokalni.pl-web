@@ -284,7 +284,7 @@ export const ChatModal = ({
         queryFn: () => chatService.getMessages(currentChatId!, 50),
         enabled: isOpen && !!currentChatId,
         refetchInterval: isOpen && !isWsConnected() ? 10000 : false,
-        staleTime: 3000,
+        staleTime: 30_000,
         retry: 1,
     });
 
@@ -300,7 +300,7 @@ export const ChatModal = ({
     } = useChatScroll({
         isOpen,
         chatId: currentChatId,
-        hasData: messagesData !== undefined || isError,
+        hasData: messagesData !== undefined,
         onScrolledToTop: () => {
             if (!hasMoreOlder || isLoadingOlder) return;
             const prevH = containerRef.current?.scrollHeight ?? 0;
@@ -1054,7 +1054,6 @@ export const ChatModal = ({
                             onTouchMove={onTouchMove}
                             className="h-full overflow-y-auto overflow-x-hidden px-3 pt-3"
                             style={{
-                                WebkitOverflowScrolling: 'touch',
                                 backgroundColor: '#F5F5F7',
                                 paddingBottom: '24px',
                                 opacity: messagesVisible ? 1 : 0,

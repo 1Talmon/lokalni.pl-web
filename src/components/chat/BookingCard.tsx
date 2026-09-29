@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import { Calendar, MapPin, MessageSquare, Banknote, CheckCircle, XCircle, X, Globe, Star, PartyPopper, Pencil, ExternalLink, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -69,7 +68,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
         return (
             <div className="w-[280px] rounded-2xl border border-slate-100 bg-slate-50 opacity-60 overflow-hidden">
                 <div className="relative h-16 overflow-hidden">
-                    <Image src={booking.serviceImage} alt="" fill className="object-cover grayscale" sizes="280px" />
+                    <img src={booking.serviceImage} alt="" className="absolute inset-0 w-full h-full object-cover grayscale" />
                     <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
                         <span className="text-[10px] font-black uppercase tracking-widest text-white/80 flex items-center gap-1.5">
                             <Calendar size={10} /> Zmieniono termin
@@ -92,7 +91,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                 className="relative h-28 cursor-pointer group overflow-hidden rounded-t-2xl"
                 onClick={() => { if (!booking.servicePublicId) return; router.push(`/service/${createServiceUrl(booking.serviceTitle, booking.servicePublicId)}`); }}
             >
-                <Image src={booking.serviceImage} alt={booking.serviceTitle} fill className="object-cover group-hover:brightness-90 transition-all" sizes="280px" />
+                <img src={booking.serviceImage} alt={booking.serviceTitle} className="absolute inset-0 w-full h-full object-cover group-hover:brightness-90 transition-all" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 {booking.servicePublicId && (
                     <div className="absolute top-2 right-2 bg-white/20 backdrop-blur-sm rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity">
