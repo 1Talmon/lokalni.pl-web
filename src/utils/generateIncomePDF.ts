@@ -31,8 +31,12 @@ async function loadFont(doc: jsPDF): Promise<void> {
       fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer()),
       fetch('/fonts/Roboto-Bold.ttf').then(r => r.arrayBuffer()),
     ])
-    const toBase64 = (buf: ArrayBuffer) =>
-      btoa(String.fromCharCode(...new Uint8Array(buf)))
+    const toBase64 = (buf: ArrayBuffer) => {
+      const bytes = new Uint8Array(buf)
+      let bin = ''
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+      return btoa(bin)
+    }
     doc.addFileToVFS('Roboto-Regular.ttf', toBase64(regular))
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
     doc.addFileToVFS('Roboto-Bold.ttf', toBase64(bold))
