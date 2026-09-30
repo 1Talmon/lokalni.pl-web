@@ -86,6 +86,27 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
     const chartData = useMemo(() => earnings?.chart?.data ?? [], [earnings?.chart?.data]);
     const allTransactions = earnings?.transactions ?? [];
 
+    const toSortDate = (d: string) => {
+        if (d.includes('-')) return d;
+        const [day, mo, yr] = d.split('.');
+        return `${yr}-${mo}-${day}`;
+    };
+
+    type MixedEntry =
+        | { kind: 'tx'; data: EarningsTransaction }
+        | { kind: 'manual'; data: ManualIncomeEntry };
+
+    const mergedEntries = useMemo<MixedEntry[]>(() => {
+        const txs = allTransactions.map(tx => ({ kind: 'tx' as const, data: tx }));
+        const manuals = (dgEnabled && dgData?.manualEntries)
+            ? dgData.manualEntries.map(e => ({ kind: 'manual' as const, data: e }))
+            : [];
+        return [...txs, ...manuals].sort((a, b) =>
+            toSortDate(b.data.date).localeCompare(toSortDate(a.data.date))
+        );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allTransactions, dgEnabled, dgData?.manualEntries]);
+
     const rangeLabels: Record<TimeRange, string> = { week: 'Tydzień', month: 'Miesiąc', year: 'Rok' };
 
     const chartPoints = useMemo(() => {
@@ -155,8 +176,8 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
         }
     };
 
-    const displayedTxs = allTransactions.slice(0, visibleLimit);
-    const hasMore = visibleLimit < allTransactions.length;
+    const displayedEntries = mergedEntries.slice(0, visibleLimit);
+    const hasMore = visibleLimit < mergedEntries.length;
 
     const dgPct = dgData?.currentMonthPercent ?? 0;
     const dgBarColor = dgData?.warningLevel === 'danger'
@@ -314,28 +335,6 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                     </div>
                 ) : null}
 
-                {/* RĘCZNE PRZYCHODY */}
-                {dgEnabled && (dgData?.manualEntries.length ?? 0) > 0 && (
-                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
-                            <h4 className="font-bold text-gray-900 text-sm">Przychody zewnętrzne</h4>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                {dgData?.manualEntries.length} wpis/ów
-                            </span>
-                        </div>
-                        <div className="divide-y divide-gray-50">
-                            {dgData?.manualEntries.map((entry) => (
-                                <ManualEntryRow
-                                    key={entry.id}
-                                    entry={entry}
-                                    onDelete={() => deleteManualMutation.mutate(entry.id)}
-                                    isDeleting={deleteManualMutation.isPending}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                     <StatCard title="Przychód" value={kpi ? fmtPLN(kpi.earnedPeriod) : '—'} icon={<TrendingUp size={16} />} isLoading={isLoading} />
                     <StatCard title="Oczekujące" value={kpi ? fmtPLN(kpi.pending) : '—'} icon={<CalendarDays size={16} />} isLoading={isLoading} />
@@ -406,7 +405,7 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                     <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
                         <h4 className="font-bold text-gray-900 text-sm">Ostatnie transakcje</h4>
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            Widoczne: {displayedTxs.length} / {allTransactions.length}
+                            Widoczne: {displayedEntries.length} / {mergedEntries.length}
                         </span>
                     </div>
 
@@ -423,7 +422,7 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                                 </div>
                             ))}
                         </div>
-                    ) : allTransactions.length === 0 ? (
+                    ) : mergedEntries.length === 0 ? (
                         <div className="py-12 text-center text-gray-400">
                             <CheckCircle2 size={32} className="mx-auto mb-2 opacity-30" />
                             <p className="text-[10px] font-black uppercase tracking-widest">Brak transakcji</p>
@@ -432,14 +431,21 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                     ) : (
                         <div className="divide-y divide-gray-50">
                             <AnimatePresence initial={false}>
-                                {displayedTxs.map((tx, index) => (
+                                {displayedEntries.map((entry, index) => (
                                     <motion.div
-                                        key={tx.id}
+                                        key={entry.kind === 'tx' ? `tx-${entry.data.id}` : `m-${entry.data.id}`}
                                         initial={index >= visibleLimit - pageSize ? { height: 0, opacity: 0 } : false}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                                     >
-                                        <TransactionRow tx={tx} onClick={() => setSelectedTx(tx)} />
+                                        {entry.kind === 'tx'
+                                            ? <TransactionRow tx={entry.data} onClick={() => setSelectedTx(entry.data)} />
+                                            : <ManualEntryRow
+                                                entry={entry.data}
+                                                onDelete={() => deleteManualMutation.mutate(entry.data.id)}
+                                                isDeleting={deleteManualMutation.isPending}
+                                              />
+                                        }
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
