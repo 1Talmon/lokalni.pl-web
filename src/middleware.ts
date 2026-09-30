@@ -20,11 +20,11 @@ const APP_SEGMENTS = new Set([
     'service', 'profile', 'og', 'api',
 ]);
 
-function buildCsp(nonce: string): string {
+function buildCsp(): string {
     const isDev = process.env.NODE_ENV === 'development';
     return [
         "default-src 'self'",
-        `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
+        `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
@@ -55,13 +55,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(`/service/${slug}`, request.url), 301);
     }
 
-    // Per-request nonce — btoa() dostępne w Edge Runtime / CF Workers
-    const nonce = btoa(crypto.randomUUID());
-    const csp = buildCsp(nonce);
-
-    // Propaguj nonce do Server Components przez request header
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-nonce', nonce);
+    const csp = buildCsp();
 
     const ua = request.headers.get('user-agent') ?? '';
     const isSocialBot = SOCIAL_BOT_RE.test(ua);
@@ -70,13 +64,13 @@ export function middleware(request: NextRequest) {
     // tags land in <head> synchronously (not streamed after (app)/ RSC payload).
     if (isSocialBot) {
         if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
-            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url), { request: { headers: requestHeaders } });
+            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
             res.headers.set('Content-Security-Policy', csp);
             return res;
         }
         // Landing slug pages: /hydraulik-warszawa, /sprzatanie, /warszawa etc.
         if (LANDING_SLUG_RE.test(pathname)) {
-            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url), { request: { headers: requestHeaders } });
+            const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
             res.headers.set('Content-Security-Policy', csp);
             return res;
         }
@@ -94,7 +88,7 @@ export function middleware(request: NextRequest) {
 
         if (isLandingSlug) {
             // Landing pages: ISR 1h, stale served for 24h, error fallback 7 days
-            const response = NextResponse.next({ request: { headers: requestHeaders } });
+            const response = NextResponse.next();
             response.headers.set(
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800',
@@ -105,7 +99,7 @@ export function middleware(request: NextRequest) {
 
         if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
             // Service/profile: ISR 1h, stale served 30min (fresher — user-generated content)
-            const response = NextResponse.next({ request: { headers: requestHeaders } });
+            const response = NextResponse.next();
             response.headers.set(
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=1800, stale-if-error=86400',
@@ -115,7 +109,7 @@ export function middleware(request: NextRequest) {
         }
     }
 
-    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    const response = NextResponse.next();
     response.headers.set('Content-Security-Policy', csp);
     return response;
 }
