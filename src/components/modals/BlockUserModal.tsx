@@ -27,15 +27,18 @@ export const BlockUserModal = ({ isOpen, userName, isLoading = false, onClose, o
         return () => window.removeEventListener('keydown', handleEsc, true);
     }, [isOpen, triggerClose]);
 
+    // Otwierany też nad ChatModal (który już blokuje scroll) — nie zdejmuj cudzej blokady przy zamknięciu.
+    // Ten sam wzorzec co RescheduleSheet / CreateBookingForClientModal.
     useEffect(() => {
-        if (isOpen) lockScroll();
-        else unlockScroll();
-        return () => { unlockScroll(); };
+        if (!isOpen) return;
+        const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
+        if (!alreadyLocked) lockScroll();
+        return () => { if (!alreadyLocked) unlockScroll(); };
     }, [isOpen]);
 
     return createPortal(
         isOpen ? (
-            <div className="fixed inset-0 z-[100010]">
+            <div className="fixed inset-0 z-[100002]">
                 {/* Backdrop — fades in real time with drag gesture */}
                 <motion.div
                     style={{ opacity: backdropOpacity }}
