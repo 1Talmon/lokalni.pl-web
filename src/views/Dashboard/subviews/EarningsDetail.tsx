@@ -18,7 +18,7 @@ import { UserAvatar } from '../../../components/ui/UserAvatar';
 import {
     getMyEarnings, getUnregisteredActivity, addManualIncome, deleteManualIncome,
     getIncomeReport,
-    type AnalyticsRange, type EarningsTransaction, type ManualIncomeEntry,
+    type AnalyticsRange, type EarningsTransaction, type ManualIncomeEntry, type UnregisteredActivityData,
 } from '../../../services/analyticsService';
 import type { UserProfile } from '../../../types';
 import { generateIncomePDF } from '../../../utils/generateIncomePDF';
@@ -67,9 +67,14 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
         enabled: dgEnabled,
     });
 
+    const dgQueryKey = ['unregistered-activity', CUR_YEAR, CUR_MONTH] as const;
+
     const addManualMutation = useMutation({
         mutationFn: addManualIncome,
-        onSuccess: () => {
+        onSuccess: (newEntry) => {
+            queryClient.setQueryData(dgQueryKey, (old: UnregisteredActivityData | undefined) =>
+                old ? { ...old, manualEntries: [newEntry, ...old.manualEntries] } : old
+            );
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
             setShowManualModal(false);
         },
@@ -77,7 +82,10 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
 
     const deleteManualMutation = useMutation({
         mutationFn: deleteManualIncome,
-        onSuccess: () => {
+        onSuccess: (_, id) => {
+            queryClient.setQueryData(dgQueryKey, (old: UnregisteredActivityData | undefined) =>
+                old ? { ...old, manualEntries: old.manualEntries.filter(e => e.id !== id) } : old
+            );
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
         },
         onError: () => {
