@@ -522,9 +522,9 @@ export const useAppLogic = () => {
             addToast("Usunięto ogłoszenie");
         },
         handleUpgradeToPremium: async () => {
-            // Endpoint /users/me/premium jest teraz wyłącznie dla adminów/webhooków.
-            // Premium jest aktywowane przez backend po potwierdzeniu płatności.
-            addToast('Przekierowanie do płatności wkrótce dostępne.', 'info');
+            // Wołane po aktywacji darmowego miesiąca w PremiumUpgradeModal (POST /users/me/premium/trial).
+            await queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+            addToast('MyLokalni Plus aktywne przez 30 dni!', 'success');
         },
         startChat,
         openReportModal,

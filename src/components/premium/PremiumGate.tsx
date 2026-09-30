@@ -27,7 +27,7 @@ const InlinePrompt = ({ featureName, onOpen }: { featureName?: string; onOpen: (
             {featureName ? `${featureName}` : 'Funkcja'} wymaga MyLokalni Plus
         </h3>
         <p className="text-sm text-gray-400 font-medium mb-5 max-w-[240px] leading-relaxed">
-            Odblokuj pełne możliwości platformy za 30 zł miesięcznie.
+            Odblokuj pełne możliwości platformy — pierwszy miesiąc za darmo.
         </p>
         <button
             onClick={onOpen}
@@ -77,7 +77,7 @@ export const PremiumGate = ({
                                     {featureName ? `${featureName} wymaga` : 'Wymaga'} MyLokalni Plus
                                 </p>
                                 <p className="text-sm text-gray-500 font-medium mt-1">
-                                    Odblokuj za 30 zł miesięcznie.
+                                    Pierwszy miesiąc za darmo.
                                 </p>
                             </div>
                             <button

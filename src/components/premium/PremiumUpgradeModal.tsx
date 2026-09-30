@@ -6,6 +6,8 @@ import { X, Check, Loader2, Sparkles, Calendar, Award, Image, Megaphone, Star } 
 import { useBottomSheet } from '../../hooks/useBottomSheet';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../../services/apiClient';
 
 interface PremiumUpgradeModalProps {
     isOpen: boolean;
@@ -24,6 +26,8 @@ const BENEFITS = [
 export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgradeModalProps) => {
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
 
     useEffect(() => {
@@ -44,14 +48,28 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
         return () => document.removeEventListener('keydown', onKey);
     }, [isOpen, triggerClose]);
 
-    const handlePay = async () => {
+    // Okres startowy: zamiast płatności darmowy miesiąc Plus (raz na konto, wygasa sam po 30 dniach).
+    const handleClaim = async () => {
         setLoading(true);
-        await new Promise(r => setTimeout(r, 1800));
-        setLoading(false);
-        setDone(true);
-        await new Promise(r => setTimeout(r, 1000));
-        onSuccess();
-        setDone(false);
+        setError(null);
+        try {
+            const res = await apiClient.post('/users/me/premium/trial', {});
+            if (!res.ok) {
+                setError(res.status === 409
+                    ? 'Darmowy miesiąc został już wykorzystany na tym koncie.'
+                    : 'Nie udało się aktywować Plus. Spróbuj ponownie.');
+                return;
+            }
+            await queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+            setDone(true);
+            await new Promise(r => setTimeout(r, 1000));
+            onSuccess();
+            setDone(false);
+        } catch {
+            setError('Brak połączenia. Spróbuj ponownie.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return createPortal(
@@ -107,24 +125,23 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                             ))}
                         </div>
 
-                        {/* Cena + CTA */}
+                        {/* Okres startowy + CTA */}
                         <div className="px-6 pb-8" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 2rem)' }}>
                             <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between mb-4">
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Subskrypcja miesięczna</p>
+                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Okres startowy</p>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl font-black text-white">30</span>
-                                        <span className="text-slate-400 font-bold">zł / mies.</span>
+                                        <span className="text-2xl font-black text-white">Miesiąc za darmo</span>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] text-slate-500 font-medium">Anuluj</p>
-                                    <p className="text-[10px] text-slate-500 font-medium">kiedy chcesz</p>
+                                    <p className="text-[10px] text-slate-500 font-medium">Bez karty</p>
+                                    <p className="text-[10px] text-slate-500 font-medium">bez zobowiązań</p>
                                 </div>
                             </div>
 
                             <button
-                                onClick={handlePay}
+                                onClick={handleClaim}
                                 disabled={loading || done}
                                 className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 shadow-xl shadow-amber-500/30 hover:from-amber-300 hover:to-amber-400 disabled:opacity-80"
                             >
@@ -133,12 +150,15 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                                 ) : loading ? (
                                     <><Loader2 size={20} className="animate-spin" /> Przetwarzanie...</>
                                 ) : (
-                                    <><Sparkles size={18} /> Aktywuj MyLokalni Plus</>
+                                    <><Sparkles size={18} /> Odbierz darmowy miesiąc</>
                                 )}
                             </button>
 
+                            {error && (
+                                <p className="text-center text-[12px] text-rose-400 mt-3 font-semibold">{error}</p>
+                            )}
                             <p className="text-center text-[11px] text-slate-600 mt-3 font-medium">
-                                Bezpieczna płatność · SSL · Bez zobowiązań
+                                Plus wygasa automatycznie po 30 dniach · bez opłat
                             </p>
                         </div>
                     </motion.div>
