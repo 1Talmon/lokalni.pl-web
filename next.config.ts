@@ -30,7 +30,10 @@ const SECURITY_HEADERS = [
 const NOINDEX_HEADER = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
 const PRIVATE_ROUTES = '/(dashboard|booking-form|support|chat|calendar|favorites|delete-account|delete-account-confirm|verify-email|review|invite|r|auth|zgoda-rodzica)/:path*';
 
-if (process.env.NODE_ENV === 'development') {
+// Emulator Cloudflare (miniflare/workerd) tylko na żądanie: CF_DEV_PLATFORM=1 pnpm dev.
+// Aplikacja nie używa bindingów CF (KV/D1/R2), a Next 15 wczytuje ten plik dwa razy w dev —
+// dwa równoległe workerd blokowały wspólną bazę SQLite (SQLITE_BUSY) i `next dev` się wywalał.
+if (process.env.NODE_ENV === 'development' && process.env.CF_DEV_PLATFORM === '1') {
     void setupDevPlatform();
 }
 
