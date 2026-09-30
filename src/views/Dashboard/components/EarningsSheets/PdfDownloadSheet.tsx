@@ -6,25 +6,42 @@ import { useBottomSheet } from '@/hooks/useBottomSheet';
 import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 import type { UserProfile } from '@/types';
+import type { PdfRange } from '@/utils/generateIncomePDF';
 
 const SELECT = 'w-full bg-gray-50 rounded-xl p-4 text-sm border-none focus:ring-2 focus:ring-indigo-100 outline-none transition-all ring-inset font-medium';
 const LABEL = 'block text-xs font-bold text-gray-500 mb-1.5';
 const MONTH_NAMES = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 const CUR_YEAR = new Date().getFullYear();
 const CUR_MONTH = new Date().getMonth() + 1;
+const QUARTER_NAMES = ['I', 'II', 'III', 'IV'];
+const pad = (n: number) => String(n).padStart(2, '0');
+const lastDay = (y: number, m: number) => new Date(y, m, 0).getDate();
+type Mode = 'month' | 'quarter' | 'year';
+const MODE_LABEL: Record<Mode, string> = { month: 'Miesiąc', quarter: 'Kwartał', year: 'Cały rok' };
+
+/** Zakres dat ewidencji dla wybranego trybu — od 2026 limit rozliczany jest kwartalnie. */
+function buildRange(mode: Mode, year: number, month: number, quarter: number): PdfRange {
+    if (mode === 'year') return { startDate: `${year}-01-01`, endDate: `${year}-12-31`, label: `Rok ${year}`, fileSuffix: `${year}` };
+    if (mode === 'quarter') {
+        const sm = (quarter - 1) * 3 + 1, em = sm + 2;
+        return { startDate: `${year}-${pad(sm)}-01`, endDate: `${year}-${pad(em)}-${pad(lastDay(year, em))}`, label: `${QUARTER_NAMES[quarter - 1]} kwartał ${year}`, fileSuffix: `${year}-Q${quarter}` };
+    }
+    return { startDate: `${year}-${pad(month)}-01`, endDate: `${year}-${pad(month)}-${pad(lastDay(year, month))}`, label: `${MONTH_NAMES[month - 1]} ${year}`, fileSuffix: `${year}-${pad(month)}` };
+}
 
 interface PdfDownloadSheetProps {
     user?: UserProfile | null;
     onClose: () => void;
-    onGenerate: (year: number, month: number | null) => void;
+    onGenerate: (range: PdfRange) => void;
     isGenerating: boolean;
 }
 
 export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: PdfDownloadSheetProps) => {
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose } = useBottomSheet(onClose, true);
-    const [mode, setMode] = useState<'month' | 'year'>('month');
+    const [mode, setMode] = useState<Mode>(CUR_YEAR >= 2026 ? 'quarter' : 'month');
     const [year, setYear] = useState(CUR_YEAR);
     const [month, setMonth] = useState(CUR_MONTH);
+    const [quarter, setQuarter] = useState(Math.floor((CUR_MONTH - 1) / 3) + 1);
 
     useEffect(() => {
         const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
@@ -39,7 +56,7 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
         };
     }, [triggerClose]);
 
-    const label = mode === 'year' ? `Rok ${year}` : `${MONTH_NAMES[month - 1]} ${year}`;
+    const range = buildRange(mode, year, month, quarter);
 
     return createPortal(
         <div className="fixed inset-0 z-[300]">
@@ -86,9 +103,9 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
                     <div className="px-6 pt-5 space-y-5" style={{
                         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)',
                     }}>
-                        {/* Tryb: miesiąc / rok */}
+                        {/* Tryb: miesiąc / kwartał / rok */}
                         <div className="flex bg-gray-100 p-1 rounded-2xl gap-1">
-                            {(['month', 'year'] as const).map(m => (
+                            {(['month', 'quarter', 'year'] as const).map(m => (
                                 <button
                                     key={m}
                                     type="button"
@@ -99,12 +116,22 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
                                             : 'text-gray-400 hover:text-gray-600'
                                     }`}
                                 >
-                                    {m === 'month' ? 'Miesiąc' : 'Cały rok'}
+                                    {MODE_LABEL[m]}
                                 </button>
                             ))}
                         </div>
 
-                        <div className={`grid gap-3 ${mode === 'month' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        <div className={`grid gap-3 ${mode === 'year' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            {mode === 'quarter' && (
+                                <div>
+                                    <label className={LABEL}>Kwartał</label>
+                                    <select value={quarter} onChange={e => setQuarter(Number(e.target.value))} className={SELECT}>
+                                        {QUARTER_NAMES.map((n, i) => (
+                                            <option key={i + 1} value={i + 1}>{n} kwartał</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             {mode === 'month' && (
                                 <div>
                                     <label className={LABEL}>Miesiąc</label>
@@ -141,12 +168,12 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
 
                         <button
                             type="button"
-                            onClick={() => onGenerate(year, mode === 'year' ? null : month)}
+                            onClick={() => onGenerate(range)}
                             disabled={isGenerating || !user?.addressStreet || !user?.addressCity}
                             className="w-full py-4 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             <FileDown size={16} />
-                            {isGenerating ? 'Generowanie…' : `Pobierz PDF — ${label}`}
+                            {isGenerating ? 'Generowanie…' : `Pobierz PDF — ${range.label}`}
                         </button>
                     </div>
                 </motion.div>

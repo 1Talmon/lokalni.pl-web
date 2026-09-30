@@ -317,7 +317,7 @@ export const SettingsSection = ({
                             <SettingsRow
                                 icon={FileText}
                                 title="Ewidencja przychodów"
-                                description="Śledzenie limitu miesięcznego (75% min. wynagrodzenia) oraz generowanie ewidencji do PIT-36."
+                                description="Śledzenie kwartalnego limitu przychodów (225% minimalnego wynagrodzenia) i ewidencja sprzedaży do PIT-36."
                                 action={
                                     <SettingsToggle
                                         enabled={userData?.unregisteredActivityEnabled === true}

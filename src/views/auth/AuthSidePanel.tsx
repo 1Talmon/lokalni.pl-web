@@ -14,7 +14,7 @@ export const AuthSidePanel = () => (
             </p>
         </div>
         <div className="flex gap-4 opacity-50 text-sm">
-            <span>© 2024 MyLokalni</span>
+            <span>© {new Date().getFullYear()} MyLokalni</span>
             <Link href="/polityka-prywatnosci" className="hover:opacity-100 hover:underline transition-opacity">Prywatność</Link>
             <Link href="/regulamin" className="hover:opacity-100 hover:underline transition-opacity">Regulamin</Link>
         </div>

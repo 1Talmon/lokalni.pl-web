@@ -9,6 +9,8 @@ import {
     TrendingUp, ArrowRight, CalendarDays, ChevronDown, Calendar,
     AlertTriangle, Plus, FileDown, Trash2,
 } from 'lucide-react';
+import { ManualIncomeSheet } from '../components/EarningsSheets/ManualIncomeSheet';
+import { PdfDownloadSheet } from '../components/EarningsSheets/PdfDownloadSheet';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer
@@ -21,9 +23,7 @@ import {
     type AnalyticsRange, type EarningsTransaction, type ManualIncomeEntry, type UnregisteredActivityData,
 } from '../../../services/analyticsService';
 import type { UserProfile } from '../../../types';
-import { generateIncomePDF } from '../../../utils/generateIncomePDF';
-import { ManualIncomeSheet } from '../components/EarningsSheets/ManualIncomeSheet';
-import { PdfDownloadSheet } from '../components/EarningsSheets/PdfDownloadSheet';
+import { generateIncomePDF, type PdfRange } from '../../../utils/generateIncomePDF';
 
 type TimeRange = AnalyticsRange;
 
@@ -188,17 +188,11 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
         setRange(r);
     };
 
-    const handleGeneratePdf = async (year: number, month: number | null) => {
+    const handleGeneratePdf = async (range: PdfRange) => {
         setIsPdfGenerating(true);
         try {
-            const startDate = month
-                ? `${year}-${String(month).padStart(2, '0')}-01`
-                : `${year}-01-01`;
-            const endDate = month
-                ? `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
-                : `${year}-12-31`;
-            const reportData = await getIncomeReport(startDate, endDate);
-            generateIncomePDF(reportData, reportData.userData, year, month);
+            const reportData = await getIncomeReport(range.startDate, range.endDate);
+            generateIncomePDF(reportData, reportData.userData, range);
             setShowPdfModal(false);
         } catch {
             addToast?.('Nie udało się wygenerować PDF. Spróbuj ponownie.', 'error');
@@ -227,7 +221,11 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
     const displayedEntries = mergedEntries.slice(0, visibleLimit);
     const hasMore = visibleLimit < mergedEntries.length;
 
-    const dgPct = dgData?.currentMonthPercent ?? 0;
+    // Od 2026 limit rozliczany kwartalnie — nowe pola API; stare (currentMonth*) jako fallback
+    const dgPct = dgData?.periodPercent ?? dgData?.currentMonthPercent ?? 0;
+    const dgIncome = dgData?.periodIncome ?? dgData?.currentMonthIncome ?? 0;
+    const dgLimit = dgData?.limitAmount ?? dgData?.monthlyLimit ?? 0;
+    const dgIsQuarter = dgData?.limitPeriod === 'quarter';
     const dgBarColor = dgData?.warningLevel === 'danger'
         ? 'bg-rose-500'
         : dgData?.warningLevel === 'warning'
@@ -308,7 +306,9 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-4">
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Działalność nierejestrowana</p>
-                                <p className="text-xs text-gray-500">Bieżący miesiąc — {MONTH_NAMES[CUR_MONTH - 1]} {CUR_YEAR}</p>
+                                <p className="text-xs text-gray-500">
+                                    {dgIsQuarter ? 'Bieżący kwartał' : 'Bieżący miesiąc'} — {dgData?.periodLabel ?? `${MONTH_NAMES[CUR_MONTH - 1]} ${CUR_YEAR}`}
+                                </p>
                             </div>
                             <div className="flex gap-2 shrink-0">
                                 <button
@@ -343,10 +343,10 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                                 <div className="flex justify-between items-end mb-2">
                                     <div>
                                         <span className="text-2xl font-black text-gray-900">
-                                            {fmtPLN(dgData?.currentMonthIncome ?? 0)}
+                                            {fmtPLN(dgIncome)}
                                         </span>
                                         <span className="text-xs text-gray-400 ml-1.5">
-                                            / {fmtPLN(dgData?.monthlyLimit ?? 0)}
+                                            / {fmtPLN(dgLimit)}
                                         </span>
                                     </div>
                                     <span className={`text-sm font-black ${
@@ -370,7 +370,9 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                                 {dgData?.warningLevel === 'danger' && (
                                     <div className="flex items-center gap-2 mt-3 text-rose-600">
                                         <AlertTriangle size={14} />
-                                        <span className="text-xs font-bold">Uwaga — zbliżasz się do limitu miesięcznego!</span>
+                                        <span className="text-xs font-bold">
+                                            Uwaga — zbliżasz się do limitu {dgIsQuarter ? 'kwartalnego' : 'miesięcznego'}! Po przekroczeniu masz 7 dni na rejestrację w CEIDG.
+                                        </span>
                                     </div>
                                 )}
 
@@ -529,7 +531,7 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                 <PdfDownloadSheet
                     user={user}
                     onClose={() => setShowPdfModal(false)}
-                    onGenerate={(year, month) => void handleGeneratePdf(year, month)}
+                    onGenerate={(range) => void handleGeneratePdf(range)}
                     isGenerating={isPdfGenerating}
                 />
             )}

@@ -117,8 +117,19 @@ export interface YearlyBreakdownItem {
   income: number
 }
 
+export type LimitPeriodType = 'month' | 'quarter'
+
 export interface UnregisteredActivityData {
   enabled: boolean
+  /** Od 2026 limit liczony kwartalnie (225% min. wynagrodzenia), wcześniej miesięcznie (75%). */
+  limitPeriod?: LimitPeriodType
+  limitAmount?: number
+  periodLabel?: string
+  periodStart?: string
+  periodEnd?: string
+  periodIncome?: number
+  periodPercent?: number
+  /** @deprecated — to samo co limitAmount (zgodność ze starszym API) */
   monthlyLimit: number
   currentMonthIncome: number
   currentMonthPercent: number
@@ -136,10 +147,28 @@ export interface IncomeReportRow {
   description: string
   buyerName: string | null
   amount: number
+  /** Wartość sprzedaży narastająco w obrębie okresu limitu */
+  cumulative?: number
   source: 'platform' | 'manual'
 }
 
+export interface IncomeReportPeriod {
+  label: string
+  period: LimitPeriodType
+  start: string
+  end: string
+  limit: number
+  income: number
+  percent: number
+}
+
 export interface IncomeReportData {
+  limitPeriod?: LimitPeriodType
+  limitAmount?: number
+  periods?: IncomeReportPeriod[]
+  /** Jedna lista posortowana po dacie sprzedaży (platforma + wpisy ręczne) */
+  rows?: IncomeReportRow[]
+  /** @deprecated */
   monthlyLimit: number
   totalAmount: number
   userData: { fullName: string; addressStreet: string; addressCity: string; addressPostal: string }
