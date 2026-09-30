@@ -207,6 +207,23 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
         }
     };
 
+    const manualEarnedPeriod = useMemo(() => {
+        if (!dgEnabled || !manualList?.length) return 0;
+        const cutoff = new Date();
+        if (range === 'week') cutoff.setDate(cutoff.getDate() - 7);
+        else if (range === 'month') cutoff.setDate(cutoff.getDate() - 30);
+        else cutoff.setFullYear(cutoff.getFullYear() - 1);
+        const cutoffStr = cutoff.toISOString().slice(0, 10);
+        return manualList
+            .filter(e => e.date.split('T')[0] >= cutoffStr)
+            .reduce((sum, e) => sum + e.amount, 0);
+    }, [dgEnabled, manualList, range]);
+
+    const manualTotalEarned = useMemo(() => {
+        if (!dgEnabled || !manualList?.length) return 0;
+        return manualList.reduce((sum, e) => sum + e.amount, 0);
+    }, [dgEnabled, manualList]);
+
     const displayedEntries = mergedEntries.slice(0, visibleLimit);
     const hasMore = visibleLimit < mergedEntries.length;
 
@@ -367,9 +384,9 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                 ) : null}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <StatCard title="Przychód" value={kpi ? fmtPLN(kpi.earnedPeriod) : '—'} icon={<TrendingUp size={16} />} isLoading={isLoading} />
+                    <StatCard title="Przychód" value={kpi ? fmtPLN(kpi.earnedPeriod + manualEarnedPeriod) : '—'} icon={<TrendingUp size={16} />} isLoading={isLoading} />
                     <StatCard title="Oczekujące" value={kpi ? fmtPLN(kpi.pending) : '—'} icon={<CalendarDays size={16} />} isLoading={isLoading} />
-                    <StatCard title="Łącznie zarobione" value={kpi ? fmtPLN(kpi.totalEarned) : '—'} icon={<Wallet size={16} />} isMain isLoading={isLoading} />
+                    <StatCard title="Łącznie zarobione" value={kpi ? fmtPLN(kpi.totalEarned + manualTotalEarned) : '—'} icon={<Wallet size={16} />} isMain isLoading={isLoading} subtitle={manualTotalEarned > 0 ? `w tym ${fmtPLN(manualTotalEarned)} zewnętrzne` : undefined} />
                     <StatCard title="Rezerwacje" value={kpi ? String(kpi.completedCount) : '—'} icon={<CheckCircle2 size={16} />} isLoading={isLoading} />
                 </div>
 
@@ -548,8 +565,8 @@ function EarningsTooltip({ active, payload }: { active?: boolean; payload?: Arra
     );
 }
 
-function StatCard({ title, value, icon, isMain, isLoading }: {
-    title: string; value: ReactNode; icon: ReactNode; isMain?: boolean; isLoading?: boolean;
+function StatCard({ title, value, icon, isMain, isLoading, subtitle }: {
+    title: string; value: ReactNode; icon: ReactNode; isMain?: boolean; isLoading?: boolean; subtitle?: string;
 }) {
     return (
         <div className={`relative p-4 md:p-6 rounded-[1.5rem] md:rounded-[1.75rem] border transition-all duration-300 flex md:flex-col items-center md:items-start gap-4 md:gap-0 ${
@@ -572,6 +589,9 @@ function StatCard({ title, value, icon, isMain, isLoading }: {
                         )}
                     </AnimatePresence>
                 </div>
+                {!isLoading && subtitle && (
+                    <p className={`text-[9px] font-bold mt-1 tabular-nums hidden md:block ${isMain ? 'text-white/60' : 'text-gray-400'}`}>{subtitle}</p>
+                )}
             </div>
         </div>
     );
