@@ -154,8 +154,13 @@ export const SettingsSection = ({
 
     return (
         <div className="space-y-6 text-left">
+            {/* Nagłówek — ten sam co w Rezerwacjach / Postach */}
+            <div>
+                <h3 className="text-2xl font-bold text-gray-900 leading-tight mb-1">Ustawienia</h3>
+                <p className="text-gray-500 font-medium text-sm">Zarządzaj profilem, bezpieczeństwem i prywatnością.</p>
+            </div>
+
             <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm overflow-visible">
-                <h3 className="text-xl font-bold mb-8 tracking-tight text-gray-900">Ustawienia konta</h3>
 
                 <div className="space-y-12">
 

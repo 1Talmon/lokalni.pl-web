@@ -873,7 +873,7 @@ export const UserProfileView = ({
                                                 </PremiumGate>
                                             )}
                                             {activeTab === 'settings' && (
-                                                <div className="pt-2">
+                                                <div>
                                                     <SettingsSection
                                                         isChangingPassword={isChangingPassword}
                                                         setIsChangingPassword={setIsChangingPassword}
