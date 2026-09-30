@@ -91,7 +91,7 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
     const allTransactions = earnings?.transactions ?? [];
 
     const toSortDate = (d: string) => {
-        if (d.includes('-')) return d;
+        if (d.includes('-')) return d.split('T')[0];
         const [day, mo, yr] = d.split('.');
         return `${yr}-${mo}-${day}`;
     };
@@ -263,7 +263,7 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
                             ? 'bg-amber-50 border-amber-200'
                             : 'bg-emerald-50 border-emerald-100'
                     }`}>
-                        <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-4">
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Działalność nierejestrowana</p>
                                 <p className="text-xs text-gray-500">Bieżący miesiąc — {MONTH_NAMES[CUR_MONTH - 1]} {CUR_YEAR}</p>
@@ -582,7 +582,8 @@ function ManualEntryRow({ entry, onDelete, isDeleting }: {
     onDelete: () => void;
     isDeleting: boolean;
 }) {
-    const [y, m, d] = entry.date.split('-');
+    const datePart = entry.date.split('T')[0];
+    const [y, m, d] = datePart.split('-');
     const dateLabel = `${d}.${m}.${y}`;
     return (
         <div className="p-5 md:p-6 flex items-center justify-between">
