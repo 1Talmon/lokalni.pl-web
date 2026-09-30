@@ -356,7 +356,7 @@ MUSZĄ być w `public/_headers`. `next.config.ts::headers()` nie działa na CF P
 - [x] `API /public/sitemap/search-pages` — GROUP BY category×city HAVING >= 2, Redis 6h
 - [x] `robots.ts` — Allow root, Disallow app routes
 - [x] Middleware 301 — legacy URL → /service/slug
-- [x] `public/_headers` — CSP, HSTS
+- [x] `src/middleware.ts` — CSP (bez nonce); `public/_headers` — HSTS, X-Frame-Options, X-Robots-Tag
 - [x] Meilisearch runtime sync — indexService/deleteFromIndex w routes
 - [x] Meilisearch startup cleanup — syncMeilisearch() w server.ts
 - [x] `[slug]/page.tsx` — index: true gdy >= 2 wyniki, notFound() gdy 0

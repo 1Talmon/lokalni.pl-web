@@ -81,7 +81,7 @@ Zmiana logiki biznesowej w shared widoku = zmiana też w drugim projekcie (osobn
 ## Cross-cutting concerns
 
 - **Rate limiting**: `@fastify/rate-limit` na API (per IP)
-- **CSP + security headers**: `public/_headers` (lokalni-web), nginx (lokalni projekt web), `@fastify/helmet` (API)
+- **CSP + security headers**: CSP w `src/middleware.ts` + reszta w `public/_headers` (lokalni-web; bez nonce — patrz CLAUDE.md), nginx (lokalni projekt web), `@fastify/helmet` (API)
 - **CORS**: `@fastify/cors` na API — whitelist domen frontendów
 - **Sentry**: `@sentry/react` (frontendy) + `@sentry/node` (API) — separate DSN-y
 - **Logger**: `src/utils/logger.ts` we frontendach (silent info/debug w prod), Fastify built-in w API

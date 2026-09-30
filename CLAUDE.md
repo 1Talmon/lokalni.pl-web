@@ -180,15 +180,27 @@ Kluczowe. `tsconfig.json:paths` + `next.config.ts:webpack.resolve.alias` mapują
 - **Root metadata** w `src/app/layout.tsx` (metadataBase, OG, Twitter, keywords, canonical `/`) + JSON-LD `Organization` + `WebSite` z `SearchAction`.
 - **`/service/[slug]`, `/profile/[uid]`**: `runtime: 'edge'`, `generateMetadata` + JSON-LD `LocalBusiness`. **Muszą wołać `notFound()`** gdy fetch API zwróci null (inaczej Google zaindeksuje puste strony z generic tytułem).
 - **`/[slug]` (landing)**: `dynamicParams = false`, `generateStaticParams` **musi używać `LANDING_SLUGS`** (`src/lib/seo-data.ts`) — Set z 924 valid slugów (48 keywords + 30 cities + 576 keyword-topcity + 270 category-extracity). Jeśli używać samego `ALL_KEYWORDS + ALL_CITIES` (78), 846 URLi z `sitemap-locations.xml` da 404.
-- **`middleware.ts`**: 301 redirect legacy `/{title-PublicId}` (mixed-case) → `/service/{slug}` + 404 na `/_next/data/*` (stara Pages Router pułapka Googlebot cache).
+- **`src/middleware.ts`**: 301 redirect legacy `/{title-PublicId}` (mixed-case) → `/service/{slug}` + 404 na `/_next/data/*` (stara Pages Router pułapka Googlebot cache) + rewrite social botów na `/og/*` + `Cache-Control` ISR dla landingów / service / profile + **nagłówek CSP na każdej odpowiedzi** (patrz niżej).
 
-### Security headers — `public/_headers`, NIE `next.config.ts`
+### Security headers — `src/middleware.ts` (CSP) + `public/_headers` (reszta), NIE `next.config.ts`
 
-**Krytyczne:** `next.config.ts::headers()` **nie jest respektowane** przez `@cloudflare/next-on-pages`. Pages nie ma warstwy Next Server która by je serwowała. Wszystkie headery security (CSP, HSTS, X-Robots-Tag) **muszą** być w `public/_headers` — CF Pages honoruje go natywnie i kopiuje do `.vercel/output/static/_headers` przy build.
+**Krytyczne:** `next.config.ts::headers()` **nie jest respektowane** przez `@cloudflare/next-on-pages`. Pages nie ma warstwy Next Server która by je serwowała. `next.config.ts::headers()` zostaje tylko dla `next dev`.
 
-`next.config.ts::headers()` zostaje dla `next dev` / lokalnego preview — ale produkcja czyta tylko `_headers`.
+| Nagłówek | Źródło na produkcji |
+|---|---|
+| `Content-Security-Policy` | `src/middleware.ts` → `buildCsp()` — ustawiany na każdej odpowiedzi |
+| HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy | `public/_headers` (`/*`) |
+| `X-Robots-Tag: noindex` dla prywatnych routes, `Cache-Control` sitemap / static | `public/_headers` |
 
-CSP zawiera `'unsafe-inline'` w `script-src` bo Next inline'uje bootstrap script. Google Maps callback (`window.initMap`) też przez inline. Nie usuwać `'unsafe-inline'` bez przetestowania.
+**Aktualny CSP (stan 2026-09-30, zweryfikowany na `mylokalni.pl`):**
+```
+script-src 'self' 'unsafe-inline' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com
+```
++ `default-src 'self'`, `style-src 'self' 'unsafe-inline' fonts.googleapis.com`, `img-src 'self' data: blob: https:`, `connect-src` API + wss, `frame-src` Google, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`.
+
+**🚫 NIE dodawaj nonce (ani hashy) do `script-src`.** Zepsuło produkcję **dwa razy** (2026-09-09 → fix `6c0f903`, 2026-09-30 → revert `ecdce5c`) — biała strona, wszystkie skrypty zablokowane. Powód: obecność nonce/hash w `script-src` sprawia, że przeglądarka **ignoruje `'unsafe-inline'`**, a inline scripts Next.js (bootstrap + RSC payload) nie dostają nonce — strony są statyczne/ISR na CF Pages, więc Next nie wstrzykuje nonce do HTML. `'unsafe-inline'` jest świadomym kompromisem (audyt SEC-3 — zaakceptowane ryzyko). Ochrona przed XSS = brak niebezpiecznych sinków w kodzie. `dangerouslySetInnerHTML` jest używany tylko dla JSON-LD (`<script type="application/ld+json">`) — ⚠️ `JSON.stringify` nie escapuje `<`, więc JSON-LD z treścią od userów (`service/[slug]`, `profile/[uid]`, `og/*`, `[slug]`) powinien przechodzić przez `.replace(/</g, '\u003c')` (otwarty punkt, patrz `current-state.md`).
+
+Każda zmiana CSP → sprawdź w przeglądarce na `dev.lokalni-pl-web.pages.dev` (konsola bez błędów CSP) **przed** promocją na `main` — `tsc` i `build:cf` tego nie wyłapią.
 
 ### Auth & token
 
@@ -218,6 +230,7 @@ Global singleton na `wss://api.mylokalni.pl`. Auto-connect na login, disconnect 
 - **Suspense w `(public)/layout.tsx` jest obowiązkowy.** Widoki `VerifyEmailView`, `DeleteAccountConfirmView` używają `useSearchParams()` który wymaga Suspense boundary przy static generation (Next 15).
 - **`build:cf` != `build`.** `next build` samo nie wygeneruje `.vercel/output/static/`. Zawsze uruchom `build:cf` żeby zweryfikować CF-specific behavior (`_headers`, edge runtime, static pages count).
 - **`packageManager: pnpm@10.15.0`** wpływa też na CI. Zmiana tej wartości wpłynie na deployment.
+- **CSP nonce = biała strona.** Patrz sekcja Security headers — nie dodawaj `'nonce-…'` / `'sha256-…'` do `script-src`.
 - **HSTS w response** — CF nadpisuje `max-age=0`. Fix tylko w CF Dashboard → SSL/TLS → Edge Certificates → HSTS. `_headers` też deklaruje HSTS, ale CF wygrywa.
 - **Top-level strony poza `(app)/` nie dostają Navbar ani Footer** — `AppShell` (z `Navbar` + `Footer`) jest tylko w `(app)/layout.tsx`. Nowa top-level strona SEO która ma być publiczna (jak `/service/[slug]/`, `/profile/[uid]/`) musi **ręcznie dodać `<Navbar>` i `<Footer>`** w swoim Client-cie, warunkowo `!Capacitor.isNativePlatform()`. Wzorzec: `ServiceDetailsClient.tsx` i `PublicProfileClient.tsx`.
 
@@ -360,7 +373,7 @@ Multi-phase audit migracji Vite → Next.js: `00-plan.md`, `01-feature-parity.md
 - Sprawdź `diff -q` między projektami przed edycją żeby wiedzieć jakie różnice już istnieją (np. importy React Router vs Next router).
 
 **Konfiguracja deploy (headers, CSP, cache):**
-- `lokalni-web`: `public/_headers` (CF Pages honoruje natywnie)
+- `lokalni-web`: CSP w `src/middleware.ts`, reszta headerów w `public/_headers` (CF Pages honoruje natywnie)
 - `lokalni projekt` (web deprecated): `src/nginx.conf`
 - API: `@fastify/helmet` + CORS config w `src/server.ts`
 

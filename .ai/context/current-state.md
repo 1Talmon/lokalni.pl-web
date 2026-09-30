@@ -35,6 +35,24 @@ ad6d4c7 chore(seo): wyłącz sitemap profili — endpoint API niezaimplementowan
 
 ## Historia sesji
 
+### 2026-09-30 — revert nonce CSP (produkcja nie ładowała się) + sync docs
+
+**Problem:** Commit `7890b6e fix(security): nonce-based CSP` (wykonanie SEC-3 z `AUDIT_REPORT_DEEP.md`) dał białą stronę na `mylokalni.pl` — konsola: *"'unsafe-inline' is ignored if either a hash or nonce value is present"*. Ten sam błąd co 2026-09-09 (fix `6c0f903`).
+
+**Root cause:** nonce w `script-src` wyłącza `'unsafe-inline'`, a inline/chunk scripts Next.js nie dostają nonce (strony statyczne/ISR na CF Pages — Next nie wstrzykuje nonce do HTML).
+
+**Fix:** `ecdce5c revert(csp)` — `script-src 'self' 'unsafe-inline' …` przywrócony w `src/middleware.ts` (+ kopia CSP w `next.config.ts` dla `next dev`). Zweryfikowane curl-em na `mylokalni.pl` i w przeglądarce ✅.
+
+**Decyzja:** SEC-3 (`unsafe-inline`) = zaakceptowane ryzyko. Nie wracać do nonce/hashy — opisane w CLAUDE.md → Security headers + Pitfalls + `review-code` skill.
+
+**Deploy gotcha:** push `dev` i `main` wskazujących na ten sam commit → CF Pages zbudował tylko `dev`; produkcja wymagała ręcznego „Retry deployment” w CF Dashboard. Przy hotfixie sprawdzaj curl-em nagłówki na `mylokalni.pl`, nie tylko status GitHub checka.
+
+**Stan audytu `AUDIT_REPORT_DEEP.md` (2026-09-09, plik lokalny, nieśledzony — repo publiczne):** zrobione m.in. SEC-1 (brak `setItem('user_profile')`), SEC-2 (dev URL z CSP), ARCH-1 (`useAppLogic` 842 → 573 linii), FE-1 (widoki ≤ 934 linii), DEBT-3 (fixtures). SEC-3 — zaakceptowane (patrz wyżej).
+
+**Workflow:** commity z 2026-09-09 → 09-30 (~32) szły bezpośrednio na `main`; `dev` zrównany z `main` fast-forwardem przy tym fixie. Od teraz znów dev-first.
+
+---
+
 ### 2026-09-05 (sesja 3) — fix: scrollLock spurious restore przy nawigacji z dashboard subviews
 
 **Problem:** Po wejściu w Zarobki / Opinie / Wyświetlenia, otwarciu prawego sidebara, zamknięciu go i przejściu do innej strony — powrót na Dashboard nie scrollował do góry.
@@ -148,6 +166,11 @@ curl /hydraulik-warszawa     → 200 ✅
 
 ## Otwarte punkty
 
+### Security (z sesji 2026-09-30)
+
+- **JSON-LD escaping** — `JSON.stringify(schema)` w `dangerouslySetInnerHTML` nie escapuje `<`. Tytuł/opis usługi lub profilu zawierający `</script>` wyjdzie z tagu JSON-LD i (przy `'unsafe-inline'`) wykona się jako skrypt. Do poprawy: helper `safeJsonLd = (o) => JSON.stringify(o).replace(/</g, '\u003c')` w `service/[slug]`, `profile/[uid]`, `og/service`, `og/profile`, `[slug]`, root `layout.tsx`.
+- Pozostałe z `AUDIT_REPORT_DEEP.md`: DEBT-7 (komentarz `ENTERPRISE LEVEL REFACTOR` w `src/types/index.ts`), FE-3 (`useBookings` polling 30 s niezależnie od WebSocket).
+
 ### Wymaga akcji usera (nie z terminala)
 
 - **HSTS max-age=0** — CF nadpisuje `_headers`. Włączyć w CF Dashboard → mylokalni.pl → SSL/TLS → Edge Certificates → HSTS → Enable (`max-age=31536000`, `includeSubDomains`, `preload`)
@@ -203,12 +226,10 @@ Wyniki analiz zapisujemy do `/Users/cypriantalmon/Desktop/lokalni-audit/`:
 - `05-code-quality.md` — pending
 - `06-perf.md` — pending
 
-## Stan git (snapshot post-sesja)
+## Stan git (snapshot 2026-09-30)
 
-- **`lokalni-web`** — main = `8182d97` (produkcja), dev = `0e71621` (11 commitów ahead of main, wszystko doc+config+dev-first)
-- **`lokalni projekt`** — main = dev = `d111e98` (equal), teraz local dev = `ca14556` (3 commity cleanup, pushed)
-- **`Lokalni Admin`** — main = `223db6d` (deep-link feature live)
-- **`Lokalni API`, `Lokalni Admin API`** — clean, nie tknięte
+- **`lokalni-web`** — `main` = `dev` = `ecdce5c` (revert nonce CSP), oba pushed, produkcja zweryfikowana. Nieśledzony lokalnie: `AUDIT_REPORT_DEEP.md` (nie commitować — repo publiczne).
+- Pozostałe repo — nie tknięte w tej sesji.
 
 ## Kluczowe pliki tej sesji (dla przyszłego Claude)
 

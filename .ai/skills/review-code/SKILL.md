@@ -38,7 +38,9 @@ Preferuj **przed** Grep/Read:
 
 Jeśli zmiana dotyka:
 
-**`next.config.ts`**: sprawdź czy używa `headers()` — **nie działa** na CF Pages. Wszelkie CSP/security headers muszą iść do `public/_headers`.
+**`next.config.ts`**: sprawdź czy używa `headers()` — **nie działa** na CF Pages. CSP idzie do `src/middleware.ts` (`buildCsp()`), pozostałe security headers do `public/_headers`.
+
+**`src/middleware.ts` / CSP**: 🚫 blokuj każdy diff dodający `'nonce-…'` lub `'sha256-…'` do `script-src` — wyłącza `'unsafe-inline'` i blokuje skrypty Next.js (biała strona na produkcji, 2× w historii: `6c0f903`, `ecdce5c`). Zmiana CSP wymaga ręcznego sprawdzenia konsoli na preview.
 
 **`src/app/*/page.tsx`** z `runtime: 'edge'`: fetch API musi być non-blocking, nie używać `fs` / `path`.
 
