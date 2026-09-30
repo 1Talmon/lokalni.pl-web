@@ -236,7 +236,17 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                         </div>
 
                         {dgLoading ? (
-                            <div className="h-12 bg-white/60 rounded-xl animate-pulse" />
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-end">
+                                    <div className="h-8 w-28 bg-white/60 rounded-lg animate-pulse" />
+                                    <div className="h-4 w-10 bg-white/60 rounded-lg animate-pulse" />
+                                </div>
+                                <div className="h-2.5 bg-white/60 rounded-full animate-pulse" />
+                                <div className="flex justify-between pt-3 mt-1 border-t border-white/50">
+                                    <div className="h-3 w-24 bg-white/60 rounded animate-pulse" />
+                                    <div className="h-3 w-16 bg-white/60 rounded animate-pulse" />
+                                </div>
+                            </div>
                         ) : (
                             <>
                                 <div className="flex justify-between items-end mb-2">

@@ -117,9 +117,17 @@ export function generateIncomePDF(
   doc.text(`Suma przychodów: ${Number(data.totalAmount).toFixed(2)} zł`, 190, finalY + 8, { align: 'right' })
   doc.setFont(fontName, 'normal')
   doc.setFontSize(9)
-  doc.text(`Miesięczny limit DG (75% min. wynagrodzenia): ${Number(data.monthlyLimit).toFixed(2)} zł`, 190, finalY + 14, { align: 'right' })
-  const pct = data.monthlyLimit > 0 ? ((data.totalAmount / data.monthlyLimit) * 100).toFixed(1) : '0.0'
-  doc.text(`Wykorzystano: ${pct}%`, 190, finalY + 20, { align: 'right' })
+  if (month) {
+    doc.text(`Miesięczny limit DG (75% min. wynagrodzenia): ${Number(data.monthlyLimit).toFixed(2)} zł`, 190, finalY + 14, { align: 'right' })
+    const pct = data.monthlyLimit > 0 ? ((data.totalAmount / data.monthlyLimit) * 100).toFixed(1) : '0.0'
+    doc.text(`Wykorzystano: ${pct}% miesięcznego limitu`, 190, finalY + 20, { align: 'right' })
+  } else {
+    const yearlyLimit = data.monthlyLimit * 12
+    doc.text(`Roczny limit DG (12 × 75% min. wynagrodzenia): ${Number(yearlyLimit).toFixed(2)} zł`, 190, finalY + 14, { align: 'right' })
+    const pct = yearlyLimit > 0 ? ((data.totalAmount / yearlyLimit) * 100).toFixed(1) : '0.0'
+    doc.text(`Wykorzystano: ${pct}% rocznego limitu`, 190, finalY + 20, { align: 'right' })
+    doc.text('Dochód do wykazania w rocznym zeznaniu PIT-36.', 190, finalY + 26, { align: 'right' })
+  }
 
   if (data.manualEntries.length > 0) {
     doc.setFontSize(8)
