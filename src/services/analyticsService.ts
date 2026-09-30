@@ -103,6 +103,76 @@ export async function getMyAnalytics(range: AnalyticsRange = 'month'): Promise<A
   return res.json()
 }
 
+export interface ManualIncomeEntry {
+  id: number
+  date: string
+  description: string
+  amount: number
+  buyerName: string | null
+  createdAt: string
+}
+
+export interface YearlyBreakdownItem {
+  month: number
+  income: number
+}
+
+export interface UnregisteredActivityData {
+  enabled: boolean
+  monthlyLimit: number
+  currentMonthIncome: number
+  currentMonthPercent: number
+  ytdIncome: number
+  warningLevel: 'ok' | 'warning' | 'danger'
+  userData: { fullName: string; addressStreet: string; addressCity: string; addressPostal: string }
+  transactions: EarningsTransaction[]
+  manualEntries: ManualIncomeEntry[]
+  yearlyBreakdown: YearlyBreakdownItem[]
+}
+
+export interface IncomeReportRow {
+  lp?: number
+  date: string
+  description: string
+  buyerName: string | null
+  amount: number
+  source: 'platform' | 'manual'
+}
+
+export interface IncomeReportData {
+  monthlyLimit: number
+  totalAmount: number
+  userData: { fullName: string; addressStreet: string; addressCity: string; addressPostal: string }
+  transactions: IncomeReportRow[]
+  manualEntries: IncomeReportRow[]
+}
+
+export async function getUnregisteredActivity(year?: number, month?: number): Promise<UnregisteredActivityData> {
+  const qs = new URLSearchParams()
+  if (year) qs.set('year', String(year))
+  if (month) qs.set('month', String(month))
+  const res = await apiClient(`/users/me/unregistered-activity?${qs.toString()}`)
+  if (!res.ok) throw new Error('Failed to fetch unregistered activity')
+  return res.json()
+}
+
+export async function addManualIncome(entry: { date: string; description: string; amount: number; buyerName?: string }): Promise<ManualIncomeEntry> {
+  const res = await apiClient.post('/users/me/manual-income', entry as unknown as Record<string, unknown>)
+  if (!res.ok) throw new Error('Failed to add manual income')
+  return res.json()
+}
+
+export async function deleteManualIncome(id: number): Promise<void> {
+  const res = await apiClient.delete(`/users/me/manual-income/${id}`)
+  if (!res.ok) throw new Error('Failed to delete manual income entry')
+}
+
+export async function getIncomeReport(startDate: string, endDate: string): Promise<IncomeReportData> {
+  const res = await apiClient(`/users/me/income-report?startDate=${startDate}&endDate=${endDate}`)
+  if (!res.ok) throw new Error('Failed to fetch income report')
+  return res.json()
+}
+
 export async function getMyReviews(params?: {
   sort?: 'newest' | 'highest' | 'lowest'
   page?: number

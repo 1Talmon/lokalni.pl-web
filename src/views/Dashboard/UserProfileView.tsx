@@ -860,7 +860,7 @@ export const UserProfileView = ({
                                             {activeTab === 'dashboard' && (
                                                 <>
                                                     {detailView === 'none' && <DashboardHome servicesCount={myServices.length} onNavigate={handleTabChange} onOpenDetail={handleOpenDetail} user={user} addToast={addToast} />}
-                                                    {detailView === 'earnings' && <EarningsDetail onBack={handleBackToDashboard} />}
+                                                    {detailView === 'earnings' && <EarningsDetail onBack={handleBackToDashboard} user={user} />}
                                                     {detailView === 'reviews' && <ReviewsDetail onBack={handleBackToDashboard} />}
                                                     {detailView === 'analytics' && <AnalyticsDetail onBack={handleBackToDashboard} />}
                                                 </>

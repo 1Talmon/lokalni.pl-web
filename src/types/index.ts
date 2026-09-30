@@ -31,6 +31,10 @@ export interface UserProfile {
   nazwisko?: string
   confidential?: boolean
   ustawionehaslo?: boolean
+  unregisteredActivityEnabled?: boolean
+  addressStreet?: string
+  addressCity?: string
+  addressPostal?: string
   /** @deprecated use bio */
   opis?: string
   /** @deprecated use bio */

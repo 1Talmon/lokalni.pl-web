@@ -35,6 +35,14 @@ interface RawUserPayload {
     tiktok?: string | null;
     website?: string | null;
     zdjecieTla?: string | null;
+    unregistered_activity_enabled?: boolean;
+    unregisteredActivityEnabled?: boolean;
+    address_street?: string;
+    addressStreet?: string;
+    address_city?: string;
+    addressCity?: string;
+    address_postal?: string;
+    addressPostal?: string;
 }
 
 interface RawAuthPayload extends RawUserPayload {
@@ -314,6 +322,10 @@ export const authService = {
             tiktok: userData.tiktok ?? null,
             website: userData.website ?? null,
             zdjecieTla: userData.zdjecieTla ?? null,
+            unregisteredActivityEnabled: userData.unregistered_activity_enabled ?? userData.unregisteredActivityEnabled ?? false,
+            addressStreet: userData.address_street ?? userData.addressStreet ?? '',
+            addressCity: userData.address_city ?? userData.addressCity ?? '',
+            addressPostal: userData.address_postal ?? userData.addressPostal ?? '',
         };
 
         localStorage.setItem('is_logged_in', 'true');

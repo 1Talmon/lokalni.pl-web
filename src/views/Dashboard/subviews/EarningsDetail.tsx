@@ -3,10 +3,11 @@ import { lockScroll, unlockScroll } from '../../../utils/scrollLock';
 import { useState, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeBack } from '../../../hooks/useSwipeBack';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ArrowLeft, CheckCircle2, Wallet,
-    TrendingUp, ArrowRight, CalendarDays, ChevronDown, Calendar
+    TrendingUp, ArrowRight, CalendarDays, ChevronDown, Calendar,
+    AlertTriangle, Plus, FileDown, X, Trash2,
 } from 'lucide-react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -14,7 +15,13 @@ import {
 } from 'recharts';
 import { TransactionSidebar } from './TransactionSidebar';
 import { UserAvatar } from '../../../components/ui/UserAvatar';
-import { getMyEarnings, type AnalyticsRange, type EarningsTransaction } from '../../../services/analyticsService';
+import {
+    getMyEarnings, getUnregisteredActivity, addManualIncome, deleteManualIncome,
+    getIncomeReport,
+    type AnalyticsRange, type EarningsTransaction, type ManualIncomeEntry,
+} from '../../../services/analyticsService';
+import type { UserProfile } from '../../../types';
+import { generateIncomePDF } from '../../../utils/generateIncomePDF';
 
 type TimeRange = AnalyticsRange;
 
@@ -26,17 +33,55 @@ const fmtPLNShort = (n: number) => {
     return n.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
 };
 
-export const EarningsDetail = ({ onBack }: { onBack: () => void }) => {
+const NOW = new Date();
+const CUR_YEAR = NOW.getFullYear();
+const CUR_MONTH = NOW.getMonth() + 1;
+
+export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: UserProfile | null }) => {
     const [range, setRange] = useState<TimeRange>('month');
     const [visibleLimit, setVisibleLimit] = useState(5);
     const [pageSize, setPageSize] = useState(5);
     const [selectedTx, setSelectedTx] = useState<EarningsTransaction | null>(null);
-    useSwipeBack(!selectedTx, onBack);
+
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [showPdfModal, setShowPdfModal] = useState(false);
+    const [pdfYear, setPdfYear] = useState(CUR_YEAR);
+    const [pdfMonth, setPdfMonth] = useState(CUR_MONTH);
+    const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+    const [manualForm, setManualForm] = useState({ date: '', description: '', amount: '', buyerName: '' });
+
+    const queryClient = useQueryClient();
+    useSwipeBack(!selectedTx && !showManualModal && !showPdfModal, onBack);
 
     const { data: earnings, isLoading } = useQuery({
         queryKey: ['my-earnings', range],
         queryFn: () => getMyEarnings(range),
         staleTime: 60_000,
+    });
+
+    const dgEnabled = user?.unregisteredActivityEnabled === true;
+
+    const { data: dgData, isLoading: dgLoading } = useQuery({
+        queryKey: ['unregistered-activity', CUR_YEAR, CUR_MONTH],
+        queryFn: () => getUnregisteredActivity(CUR_YEAR, CUR_MONTH),
+        staleTime: 60_000,
+        enabled: dgEnabled,
+    });
+
+    const addManualMutation = useMutation({
+        mutationFn: addManualIncome,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+            setShowManualModal(false);
+            setManualForm({ date: '', description: '', amount: '', buyerName: '' });
+        },
+    });
+
+    const deleteManualMutation = useMutation({
+        mutationFn: deleteManualIncome,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+        },
     });
 
     const kpi = earnings?.kpi;
@@ -95,8 +140,41 @@ export const EarningsDetail = ({ onBack }: { onBack: () => void }) => {
         setRange(r);
     };
 
+    const handleGeneratePdf = async () => {
+        setIsPdfGenerating(true);
+        try {
+            const lastDay = new Date(pdfYear, pdfMonth, 0).getDate();
+            const startDate = `${pdfYear}-${String(pdfMonth).padStart(2, '0')}-01`;
+            const endDate = `${pdfYear}-${String(pdfMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            const reportData = await getIncomeReport(startDate, endDate);
+            generateIncomePDF(reportData, reportData.userData, pdfYear, pdfMonth);
+            setShowPdfModal(false);
+        } finally {
+            setIsPdfGenerating(false);
+        }
+    };
+
+    const handleAddManual = (e: React.FormEvent) => {
+        e.preventDefault();
+        addManualMutation.mutate({
+            date: manualForm.date,
+            description: manualForm.description,
+            amount: parseFloat(manualForm.amount),
+            buyerName: manualForm.buyerName || undefined,
+        });
+    };
+
     const displayedTxs = allTransactions.slice(0, visibleLimit);
     const hasMore = visibleLimit < allTransactions.length;
+
+    const dgPct = dgData?.currentMonthPercent ?? 0;
+    const dgBarColor = dgData?.warningLevel === 'danger'
+        ? 'bg-rose-500'
+        : dgData?.warningLevel === 'warning'
+        ? 'bg-amber-500'
+        : 'bg-emerald-500';
+
+    const MONTH_NAMES = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 
     return (
         <div className="relative">
@@ -135,6 +213,105 @@ export const EarningsDetail = ({ onBack }: { onBack: () => void }) => {
                         ))}
                     </div>
                 </div>
+
+                {/* DG BANNER */}
+                {dgEnabled && (
+                    <div className={`rounded-[2rem] border p-5 md:p-6 ${
+                        dgData?.warningLevel === 'danger'
+                            ? 'bg-rose-50 border-rose-200'
+                            : dgData?.warningLevel === 'warning'
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-emerald-50 border-emerald-100'
+                    }`}>
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Działalność nierejestrowana</p>
+                                <p className="text-xs text-gray-500">Bieżący miesiąc — {MONTH_NAMES[CUR_MONTH - 1]} {CUR_YEAR}</p>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                <button
+                                    onClick={() => setShowManualModal(true)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-gray-600 hover:border-indigo-200 hover:text-[#6366F1] transition-all"
+                                >
+                                    <Plus size={12} /> Dodaj przychód
+                                </button>
+                                <button
+                                    onClick={() => setShowPdfModal(true)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366F1] rounded-xl text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-700 transition-all"
+                                >
+                                    <FileDown size={12} /> PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        {dgLoading ? (
+                            <div className="h-12 bg-white/60 rounded-xl animate-pulse" />
+                        ) : (
+                            <>
+                                <div className="flex justify-between items-end mb-2">
+                                    <div>
+                                        <span className="text-2xl font-black text-gray-900">
+                                            {fmtPLN(dgData?.currentMonthIncome ?? 0)}
+                                        </span>
+                                        <span className="text-xs text-gray-400 ml-1.5">
+                                            / {fmtPLN(dgData?.monthlyLimit ?? 0)}
+                                        </span>
+                                    </div>
+                                    <span className={`text-sm font-black ${
+                                        dgData?.warningLevel === 'danger' ? 'text-rose-600' :
+                                        dgData?.warningLevel === 'warning' ? 'text-amber-600' :
+                                        'text-emerald-600'
+                                    }`}>
+                                        {dgPct.toFixed(1)}%
+                                    </span>
+                                </div>
+
+                                <div className="h-2.5 bg-white/80 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className={`h-full rounded-full ${dgBarColor}`}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(100, dgPct)}%` }}
+                                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                                    />
+                                </div>
+
+                                {dgData?.warningLevel === 'danger' && (
+                                    <div className="flex items-center gap-2 mt-3 text-rose-600">
+                                        <AlertTriangle size={14} />
+                                        <span className="text-xs font-bold">Uwaga — zbliżasz się do limitu miesięcznego!</span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/50">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Rok {CUR_YEAR} łącznie</span>
+                                    <span className="text-sm font-black text-gray-700">{fmtPLN(dgData?.ytdIncome ?? 0)}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* RĘCZNE PRZYCHODY */}
+                {dgEnabled && (dgData?.manualEntries.length ?? 0) > 0 && (
+                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                            <h4 className="font-bold text-gray-900 text-sm">Przychody zewnętrzne</h4>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                {dgData?.manualEntries.length} wpis/ów
+                            </span>
+                        </div>
+                        <div className="divide-y divide-gray-50">
+                            {dgData?.manualEntries.map((entry) => (
+                                <ManualEntryRow
+                                    key={entry.id}
+                                    entry={entry}
+                                    onDelete={() => deleteManualMutation.mutate(entry.id)}
+                                    isDeleting={deleteManualMutation.isPending}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                     <StatCard title="Przychód" value={kpi ? fmtPLN(kpi.earnedPeriod) : '—'} icon={<TrendingUp size={16} />} isLoading={isLoading} />
@@ -261,6 +438,172 @@ export const EarningsDetail = ({ onBack }: { onBack: () => void }) => {
                     <TransactionSidebar tx={selectedTx} onClose={() => setSelectedTx(null)} />
                 )}
             </AnimatePresence>
+
+            {/* MODAL: Dodaj przychód ręcznie */}
+            <AnimatePresence>
+                {showManualModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-4 sm:pb-0"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowManualModal(false); }}
+                    >
+                        <motion.div
+                            initial={{ y: 60, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 60, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-black text-gray-900">Dodaj przychód zewnętrzny</h3>
+                                <button onClick={() => setShowManualModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleAddManual} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Data</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={manualForm.date}
+                                        onChange={(e) => setManualForm(f => ({ ...f, date: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Opis usługi / zlecenia</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="np. Sprzątanie mieszkania"
+                                        value={manualForm.description}
+                                        onChange={(e) => setManualForm(f => ({ ...f, description: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Kwota (zł)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0.01"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        value={manualForm.amount}
+                                        onChange={(e) => setManualForm(f => ({ ...f, amount: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Nabywca (opcjonalnie)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="np. Jan Kowalski"
+                                        value={manualForm.buyerName}
+                                        onChange={(e) => setManualForm(f => ({ ...f, buyerName: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={addManualMutation.isPending}
+                                    className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50"
+                                >
+                                    {addManualMutation.isPending ? 'Dodawanie…' : 'Dodaj przychód'}
+                                </button>
+                                {addManualMutation.isError && (
+                                    <p className="text-xs text-rose-500 text-center">Wystąpił błąd. Spróbuj ponownie.</p>
+                                )}
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* MODAL: Pobierz ewidencję PDF */}
+            <AnimatePresence>
+                {showPdfModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-4 sm:pb-0"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowPdfModal(false); }}
+                    >
+                        <motion.div
+                            initial={{ y: 60, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 60, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-black text-gray-900">Pobierz ewidencję przychodów</h3>
+                                <button onClick={() => setShowPdfModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <p className="text-xs text-gray-500 mb-5">
+                                Dokument zawiera przychody z platformy oraz ręcznie dodane wpisy.
+                                Pole PESEL pozostawione jest puste — uzupełnij ręcznie po wydruku.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-3 mb-5">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Miesiąc</label>
+                                    <select
+                                        value={pdfMonth}
+                                        onChange={(e) => setPdfMonth(Number(e.target.value))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300"
+                                    >
+                                        {MONTH_NAMES.map((m, i) => (
+                                            <option key={i + 1} value={i + 1}>{m}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Rok</label>
+                                    <select
+                                        value={pdfYear}
+                                        onChange={(e) => setPdfYear(Number(e.target.value))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300"
+                                    >
+                                        {[CUR_YEAR, CUR_YEAR - 1].map((y) => (
+                                            <option key={y} value={y}>{y}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {user && (
+                                <div className="bg-gray-50 rounded-xl p-4 mb-5 text-xs text-gray-500">
+                                    <p className="font-bold text-gray-700 mb-1">
+                                        {[user.imie, user.nazwisko].filter(Boolean).join(' ') || user.name || '—'}
+                                    </p>
+                                    {(user.addressStreet || user.addressCity) ? (
+                                        <p>{[user.addressStreet, user.addressPostal, user.addressCity].filter(Boolean).join(', ')}</p>
+                                    ) : (
+                                        <p className="text-amber-600">Brak adresu — uzupełnij w Ustawieniach</p>
+                                    )}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => void handleGeneratePdf()}
+                                disabled={isPdfGenerating}
+                                className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <FileDown size={16} />
+                                {isPdfGenerating ? 'Generowanie…' : `Pobierz PDF — ${MONTH_NAMES[pdfMonth - 1]} ${pdfYear}`}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -342,6 +685,39 @@ function TransactionRow({ tx, onClick }: { tx: EarningsTransaction; onClick: () 
                 <div className="p-2 bg-gray-50 rounded-full text-gray-300 group-hover:text-[#6366F1] group-hover:bg-indigo-50 transition-all">
                     <ArrowRight size={14} />
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function ManualEntryRow({ entry, onDelete, isDeleting }: {
+    entry: ManualIncomeEntry;
+    onDelete: () => void;
+    isDeleting: boolean;
+}) {
+    const [y, m, d] = entry.date.split('-');
+    const dateLabel = `${d}.${m}.${y}`;
+    return (
+        <div className="p-5 md:p-6 flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+                <p className="font-black text-gray-900 text-xs md:text-sm truncate">{entry.description}</p>
+                <div className="flex items-center gap-2 mt-0.5 md:mt-1">
+                    <span className="text-[9px] md:text-[10px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-tighter">Zewnętrzny</span>
+                    <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{dateLabel}</span>
+                    {entry.buyerName && (
+                        <span className="text-[9px] md:text-[10px] text-gray-400 truncate">{entry.buyerName}</span>
+                    )}
+                </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0 ml-3">
+                <p className="font-black text-gray-900 text-sm tabular-nums">+{Number(entry.amount).toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł</p>
+                <button
+                    onClick={onDelete}
+                    disabled={isDeleting}
+                    className="p-2 bg-gray-50 rounded-full text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-50"
+                >
+                    <Trash2 size={14} />
+                </button>
             </div>
         </div>
     );

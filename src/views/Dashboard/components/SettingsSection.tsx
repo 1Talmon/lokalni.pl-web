@@ -1,10 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import type { UserProfile, ToastType } from '../../../types';
-import { LifeBuoy } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { LifeBuoy, ToggleLeft, ToggleRight, X } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PremiumGate } from '../../../components/premium/PremiumGate';
 import { apiClient } from '../../../services/apiClient';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // IMPORTY SUB-KOMPONENTÓW Z NOWEGO FOLDERU
 import { PasswordSection } from './Settings/PasswordSection';
@@ -71,6 +72,62 @@ export const SettingsSection = ({
 
     const [mounted, setMounted] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDgSetupModal, setShowDgSetupModal] = useState(false);
+    const [dgAddressForm, setDgAddressForm] = useState({
+        addressStreet: userData?.addressStreet || '',
+        addressCity: userData?.addressCity || '',
+        addressPostal: userData?.addressPostal || '',
+    });
+
+    const queryClient = useQueryClient();
+
+    const dgToggleMutation = useMutation({
+        mutationFn: async (enabled: boolean) => {
+            const res = await apiClient.patch('/users/me', { unregisteredActivityEnabled: enabled });
+            if (!res.ok) throw new Error('Błąd zapisu');
+            return res.json();
+        },
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+            void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+        },
+    });
+
+    const dgAddressMutation = useMutation({
+        mutationFn: async (data: { addressStreet: string; addressCity: string; addressPostal: string }) => {
+            const res = await apiClient.patch('/users/me', data);
+            if (!res.ok) throw new Error('Błąd zapisu');
+            return res.json();
+        },
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+            setShowDgSetupModal(false);
+        },
+    });
+
+    const handleDgToggle = () => {
+        const currentlyEnabled = userData?.unregisteredActivityEnabled === true;
+        if (!currentlyEnabled) {
+            setDgAddressForm({
+                addressStreet: userData?.addressStreet || '',
+                addressCity: userData?.addressCity || '',
+                addressPostal: userData?.addressPostal || '',
+            });
+            setShowDgSetupModal(true);
+        } else {
+            dgToggleMutation.mutate(false);
+        }
+    };
+
+    const handleDgSetupSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        dgAddressMutation.mutate({
+            addressStreet: dgAddressForm.addressStreet,
+            addressCity: dgAddressForm.addressCity,
+            addressPostal: dgAddressForm.addressPostal,
+        });
+        dgToggleMutation.mutate(true);
+    };
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -250,6 +307,54 @@ export const SettingsSection = ({
                         )}
                     </div>
 
+                    {/* GRUPA 4b: DZIAŁALNOŚĆ NIEREJESTROWANA */}
+                    <div>
+                        <SectionHeader title="Działalność nierejestrowana" />
+                        <div className="pt-2">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-gray-900">Ewidencja przychodów DG</h4>
+                                    <p className="text-xs text-gray-400 mt-0.5">Śledzenie limitu miesięcznego (75% min. wynagrodzenia) oraz generowanie ewidencji do PIT-36.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleDgToggle}
+                                    disabled={dgToggleMutation.isPending}
+                                    className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all disabled:opacity-50 font-bold text-sm"
+                                    style={userData?.unregisteredActivityEnabled
+                                        ? { background: '#ecfdf5', borderColor: '#6ee7b7', color: '#059669' }
+                                        : { background: '#f9fafb', borderColor: '#e5e7eb', color: '#6b7280' }}
+                                >
+                                    {userData?.unregisteredActivityEnabled
+                                        ? <><ToggleRight size={18} /> Włączona</>
+                                        : <><ToggleLeft size={18} /> Wyłączona</>
+                                    }
+                                </button>
+                            </div>
+                            {userData?.unregisteredActivityEnabled && (
+                                <div className="mt-4 p-4 bg-gray-50 rounded-2xl text-xs text-gray-500 space-y-1">
+                                    <p className="font-bold text-gray-700 mb-1">Dane na dokumencie PDF:</p>
+                                    <p>{[userData.imie, userData.nazwisko].filter(Boolean).join(' ') || userData.name || '—'}</p>
+                                    <p>{[userData.addressStreet, userData.addressPostal, userData.addressCity].filter(Boolean).join(', ') || <span className="text-amber-600">Brak adresu</span>}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDgAddressForm({
+                                                addressStreet: userData.addressStreet || '',
+                                                addressCity: userData.addressCity || '',
+                                                addressPostal: userData.addressPostal || '',
+                                            });
+                                            setShowDgSetupModal(true);
+                                        }}
+                                        className="text-[#6366F1] font-bold hover:underline mt-1"
+                                    >
+                                        Zmień adres
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* GRUPA 5: STREFA ZAGROŻENIA */}
                     <div>
                         <SectionHeader title="Strefa Zagrożenia" />
@@ -285,6 +390,76 @@ export const SettingsSection = ({
                     />
                 </>
             )}
+
+            {/* MODAL: Setup DG — adres do PDF */}
+            <AnimatePresence>
+                {showDgSetupModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-4 sm:pb-0"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowDgSetupModal(false); }}
+                    >
+                        <motion.div
+                            initial={{ y: 60, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 60, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-black text-gray-900">Dane do ewidencji</h3>
+                                <button onClick={() => setShowDgSetupModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-5">Adres pojawi się na dokumencie PDF ewidencji przychodów. Możesz go zmienić w dowolnym momencie.</p>
+                            <form onSubmit={handleDgSetupSave} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Ulica i numer</label>
+                                    <input
+                                        type="text"
+                                        placeholder="np. ul. Kwiatowa 5"
+                                        value={dgAddressForm.addressStreet}
+                                        onChange={(e) => setDgAddressForm(f => ({ ...f, addressStreet: e.target.value }))}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Kod pocztowy</label>
+                                        <input
+                                            type="text"
+                                            placeholder="00-000"
+                                            value={dgAddressForm.addressPostal}
+                                            onChange={(e) => setDgAddressForm(f => ({ ...f, addressPostal: e.target.value }))}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Miasto</label>
+                                        <input
+                                            type="text"
+                                            placeholder="np. Warszawa"
+                                            value={dgAddressForm.addressCity}
+                                            onChange={(e) => setDgAddressForm(f => ({ ...f, addressCity: e.target.value }))}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={dgAddressMutation.isPending || dgToggleMutation.isPending}
+                                    className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50"
+                                >
+                                    {dgAddressMutation.isPending ? 'Zapisywanie…' : 'Zapisz i włącz ewidencję'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <style>{`
                 @keyframes shimmer {

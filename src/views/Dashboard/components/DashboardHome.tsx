@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, Star, TrendingUp, Sparkles, PlusCircle, Lock, Unlock, ChevronRight, Copy } from 'lucide-react';
 import { authService } from '../../../services/authService';
 import { AuthModal } from '../../../components/modals/AuthModal';
-import { getMyAnalytics, getMyEarnings } from '../../../services/analyticsService';
+import { getMyAnalytics, getMyEarnings, getUnregisteredActivity } from '../../../services/analyticsService';
 
 export const DashboardHome = ({
                                   servicesCount,
@@ -45,6 +45,14 @@ export const DashboardHome = ({
         queryKey: ['my-earnings', 'month'],
         queryFn: () => getMyEarnings('month'),
         staleTime: 1000 * 60 * 5,
+    });
+
+    const now = new Date();
+    const { data: dgData } = useQuery({
+        queryKey: ['unregistered-activity', now.getFullYear(), now.getMonth() + 1],
+        queryFn: () => getUnregisteredActivity(now.getFullYear(), now.getMonth() + 1),
+        staleTime: 1000 * 60 * 5,
+        enabled: userData?.unregisteredActivityEnabled === true,
     });
 
     const ratingValue = (() => {
@@ -197,6 +205,28 @@ export const DashboardHome = ({
                         isBlur={false}
                         showLock={!isEarningsUnlocked() && userData?.ustawionehaslo !== false}
                         isLoading={earningsLoading}
+                        extra={userData?.unregisteredActivityEnabled && dgData ? (
+                            <div className="mt-2">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">DG limit</span>
+                                    <span className={`text-[9px] font-black ${
+                                        dgData.warningLevel === 'danger' ? 'text-rose-500' :
+                                        dgData.warningLevel === 'warning' ? 'text-amber-500' :
+                                        'text-emerald-500'
+                                    }`}>{Math.round(dgData.currentMonthPercent)}%</span>
+                                </div>
+                                <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all ${
+                                            dgData.warningLevel === 'danger' ? 'bg-rose-500' :
+                                            dgData.warningLevel === 'warning' ? 'bg-amber-500' :
+                                            'bg-emerald-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, dgData.currentMonthPercent)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ) : undefined}
                     />
                 </div>
             </div>
@@ -262,9 +292,9 @@ export const DashboardHome = ({
     );
 };
 
-function StatCard({ icon, color, value, label, isBlur, showLock, isLoading }: {
+function StatCard({ icon, color, value, label, isBlur, showLock, isLoading, extra }: {
     icon: ReactNode; color: string; value: ReactNode; label: string;
-    isBlur?: boolean; showLock?: boolean; isLoading?: boolean;
+    isBlur?: boolean; showLock?: boolean; isLoading?: boolean; extra?: ReactNode;
 }) {
     return (
         <motion.div
@@ -287,6 +317,7 @@ function StatCard({ icon, color, value, label, isBlur, showLock, isLoading }: {
                     </div>
                 )}
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</div>
+                {extra}
             </div>
             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <ChevronRight size={14} className="text-indigo-300" />
