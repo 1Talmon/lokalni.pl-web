@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { NOTO_SANS_B64 } from './notoSansB64'
+import { POPPINS_REGULAR_B64, POPPINS_BOLD_B64 } from './pdfFonts'
 import type { IncomeReportData } from '../services/analyticsService'
 
 export interface PdfUserData {
@@ -27,9 +27,10 @@ function formatDatePL(dateStr: string): string {
 }
 
 function loadFont(doc: jsPDF): void {
-  doc.addFileToVFS('NotoSans-Regular.ttf', NOTO_SANS_B64)
-  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
-  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'bold')
+  doc.addFileToVFS('Poppins-Regular.ttf', POPPINS_REGULAR_B64)
+  doc.addFont('Poppins-Regular.ttf', 'Poppins', 'normal')
+  doc.addFileToVFS('Poppins-Bold.ttf', POPPINS_BOLD_B64)
+  doc.addFont('Poppins-Bold.ttf', 'Poppins', 'bold')
 }
 
 export function generateIncomePDF(
@@ -41,7 +42,7 @@ export function generateIncomePDF(
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   loadFont(doc)
-  const fontName = 'NotoSans'
+  const fontName = 'Poppins'
 
   doc.setFont(fontName, 'bold')
   doc.setFontSize(14)
