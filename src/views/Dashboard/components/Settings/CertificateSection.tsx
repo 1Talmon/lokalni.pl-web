@@ -5,6 +5,8 @@ import { Award, Plus, Loader2, ShieldCheck, FileText, Trash2, Maximize2, Clock, 
 import { createPortal } from 'react-dom';
 import { CertificatePreviewModal } from '../../../../components/modals/CertificatePreviewModal';
 import { apiClient } from '../../../../services/apiClient';
+import { SettingsRow } from './SettingsRow';
+import { settingsActionClass } from './settingsStyles';
 
 export interface CertEntry {
     id: string;
@@ -352,20 +354,17 @@ export const CertificateSection = ({
     return (
         <div className="pt-2">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div>
-                    <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600"><Award size={18} /></div>
-                        Certyfikaty i kompetencje
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1 ml-10">Lista Twoich uprawnień i ukończonych szkoleń.</p>
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="group relative overflow-hidden px-6 py-3 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100"
-                >
-                    <div className="flex items-center gap-2 relative z-10"><Plus size={16} strokeWidth={3} /><span>Dodaj certyfikat</span></div>
-                </button>
+            <div className="mb-6">
+                <SettingsRow
+                    icon={Award}
+                    title="Certyfikaty i kompetencje"
+                    description="Lista Twoich uprawnień i ukończonych szkoleń."
+                    action={
+                        <button type="button" onClick={() => setIsModalOpen(true)} className={settingsActionClass()}>
+                            <Plus size={14} strokeWidth={3} /> Dodaj
+                        </button>
+                    }
+                />
             </div>
 
             {/* Lista / Pusty stan */}

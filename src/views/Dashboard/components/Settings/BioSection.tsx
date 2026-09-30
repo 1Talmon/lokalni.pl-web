@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Plus, Loader2, Save, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '../../../../services/apiClient';
+import { SettingsRow } from './SettingsRow';
+import { settingsActionClass } from './settingsStyles';
 
 interface BioSectionProps {
     currentBio?: string;
@@ -12,6 +14,7 @@ interface BioSectionProps {
 export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [bioText, setBioText] = useState(currentBio);
+    const [savedBio, setSavedBio] = useState(currentBio);
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -19,7 +22,10 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
 
     useEffect(() => {
         setBioText(currentBio);
+        setSavedBio(currentBio);
     }, [currentBio]);
+
+    const isDirty = bioText.trim() !== savedBio.trim();
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -28,6 +34,7 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
             const res = await apiClient.patch('/users/me', { bio: bioText });
             if (!res.ok) throw new Error('Błąd zapisu');
             setIsSaved(true);
+            setSavedBio(bioText);
             setIsFocused(false);
             onSaved?.(bioText);
             setTimeout(() => setIsSaved(false), 2000);
@@ -47,31 +54,8 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
 
     return (
         <div className="pt-2">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div>
-                    <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                            <User size={18} />
-                        </div>
-                        Biografia
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1 ml-10">Daj ludziom się poznać, napisz coś o sobie.</p>
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="group relative overflow-hidden px-6 py-3 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100 disabled:opacity-70"
-                    >
-                        <div className="flex items-center gap-2 relative z-10">
-                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : isSaved ? <CheckCircle2 size={16} /> : <Save size={16} />}
-                            <span>{isSaving ? "Zapisywanie..." : isSaved ? "Zapisano" : "Zapisz biografię"}</span>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] transition-transform" />
-                    </button>
-                    {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-                </div>
+            <div className="mb-6">
+                <SettingsRow icon={User} title="Biografia" description="Daj ludziom się poznać, napisz coś o sobie." />
             </div>
 
             <div className="relative w-full min-h-[180px]">
@@ -121,6 +105,20 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
                         </span>
                     </div>
                 </div>
+            </div>
+
+            {/* Zapis pod polem — aktywny dopiero po zmianie tekstu */}
+            <div className="flex items-center justify-end gap-3 mt-3">
+                {error && <p className="text-xs text-red-500 font-medium mr-auto">{error}</p>}
+                <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isSaving || (!isDirty && !isSaved)}
+                    className={settingsActionClass()}
+                >
+                    {isSaving ? <Loader2 size={14} className="animate-spin" /> : isSaved ? <CheckCircle2 size={14} /> : <Save size={14} />}
+                    {isSaving ? 'Zapisywanie…' : isSaved ? 'Zapisano' : 'Zapisz'}
+                </button>
             </div>
         </div>
     );

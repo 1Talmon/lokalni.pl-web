@@ -6,6 +6,7 @@ import {
     ArrowRight, Check, AlertCircle, Loader2
 } from 'lucide-react';
 import { apiClient } from '../../../../services/apiClient';
+import { SettingsRow } from './SettingsRow';
 
 interface SocialLinks {
     fb: string;
@@ -88,9 +89,8 @@ export const SocialSection = ({ initialLinks = {}, addToast }: SocialSectionProp
 
     return (
         <div className="pt-2">
-            <div className="flex items-center gap-2 mb-6 text-gray-900">
-                <LinkIcon size={18} className="text-indigo-500" />
-                <h4 className="font-bold">Media społecznościowe</h4>
+            <div className="mb-6">
+                <SettingsRow icon={LinkIcon} title="Media społecznościowe" description="Linki widoczne na Twoim profilu publicznym." />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import type { UserProfile, ToastType } from '../../../types';
-import { LifeBuoy, ToggleLeft, ToggleRight } from 'lucide-react';
+import { LifeBuoy, FileText, Ban, Trash2, ChevronDown } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PremiumGate } from '../../../components/premium/PremiumGate';
 import { apiClient } from '../../../services/apiClient';
@@ -12,6 +12,8 @@ import { PhoneSection } from './Settings/PhoneSection';
 import { SocialSection } from './Settings/SocialSection';
 import { CertificateSection, type CertEntry } from './Settings/CertificateSection';
 import { BlockedUsersSection } from './Settings/BlockedUsersSection';
+import { SettingsRow, SettingsToggle } from './Settings/SettingsRow';
+import { settingsActionClass } from './Settings/settingsStyles';
 import { BioSection } from './Settings/BioSection';
 import { BiometricSection } from './Settings/BiometricSection';
 import { TwoFASection } from './Settings/TwoFASection';
@@ -125,6 +127,12 @@ export const SettingsSection = ({
         staleTime: 60_000,
     });
     const tickets: TicketItem[] = ticketsData?.items ?? [];
+    // Na liście tylko sprawy w toku — rozwiązane/zamknięte schowane pod „Pokaż zakończone”
+    const isTicketDone = (t: TicketItem) => t.status === 'resolved' || t.status === 'closed';
+    const openTickets = tickets.filter(t => !isTicketDone(t));
+    const doneTickets = tickets.filter(isTicketDone);
+    const [showDoneTickets, setShowDoneTickets] = useState(false);
+    const visibleTickets = showDoneTickets ? [...openTickets, ...doneTickets] : openTickets;
 
     const SectionHeader = ({ title, dot }: { title: string, dot?: boolean }) => (
         <div className="flex items-center gap-4 mb-6">
@@ -224,26 +232,24 @@ export const SettingsSection = ({
                     {/* GRUPA 4: POMOC */}
                     <div>
                         <SectionHeader title="Pomoc" />
-                        <div className="pt-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
-                                <h4 className="font-bold text-gray-900">Centrum wsparcia</h4>
-                                <p className="text-xs text-gray-400">Zgłoś problem, spór lub pytanie do naszego teamu.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={onOpenSupport}
-                                className="w-full md:w-auto flex items-center justify-center gap-2 font-bold text-xs px-6 py-2.5 border border-indigo-100 rounded-xl text-[#6366F1] hover:bg-indigo-50 transition-all text-center"
-                            >
-                                <LifeBuoy size={15} />
-                                Zgłoś problem
-                            </button>
-                        </div>
+                        <SettingsRow
+                            icon={LifeBuoy}
+                            title="Centrum wsparcia"
+                            description="Zgłoś problem, spór lub pytanie do naszego zespołu."
+                            action={
+                                <button type="button" onClick={onOpenSupport} className={settingsActionClass()}>
+                                    Zgłoś
+                                </button>
+                            }
+                        />
 
                         {tickets.length > 0 && (
                             <div className="mt-5">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.12em] mb-3">Moje zgłoszenia</p>
+                                {openTickets.length > 0 && (
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.12em] mb-3">Otwarte zgłoszenia</p>
+                                )}
                                 <div className="space-y-1">
-                                    {tickets.map((t) => {
+                                    {visibleTickets.map((t) => {
                                         const STATUS_DOT: Record<string, string> = {
                                             open:        'bg-indigo-400',
                                             in_progress: 'bg-amber-400',
@@ -285,6 +291,16 @@ export const SettingsSection = ({
                                         );
                                     })}
                                 </div>
+                                {doneTickets.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDoneTickets(v => !v)}
+                                        className="mt-2 flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        <ChevronDown size={14} className={`transition-transform ${showDoneTickets ? 'rotate-180' : ''}`} />
+                                        {showDoneTickets ? 'Ukryj zakończone' : `Pokaż zakończone (${doneTickets.length})`}
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -292,27 +308,20 @@ export const SettingsSection = ({
                     {/* GRUPA 4b: DZIAŁALNOŚĆ NIEREJESTROWANA */}
                     <div>
                         <SectionHeader title="Działalność nierejestrowana" />
-                        <div className="pt-2">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900">Ewidencja przychodów DG</h4>
-                                    <p className="text-xs text-gray-400 mt-0.5">Śledzenie limitu miesięcznego (75% min. wynagrodzenia) oraz generowanie ewidencji do PIT-36.</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleDgToggle}
-                                    disabled={dgMutation.isPending}
-                                    className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all disabled:opacity-50 font-bold text-sm"
-                                    style={userData?.unregisteredActivityEnabled
-                                        ? { background: '#ecfdf5', borderColor: '#6ee7b7', color: '#059669' }
-                                        : { background: '#f9fafb', borderColor: '#e5e7eb', color: '#6b7280' }}
-                                >
-                                    {userData?.unregisteredActivityEnabled
-                                        ? <><ToggleRight size={18} /> Włączona</>
-                                        : <><ToggleLeft size={18} /> Wyłączona</>
-                                    }
-                                </button>
-                            </div>
+                        <div>
+                            <SettingsRow
+                                icon={FileText}
+                                title="Ewidencja przychodów"
+                                description="Śledzenie limitu miesięcznego (75% min. wynagrodzenia) oraz generowanie ewidencji do PIT-36."
+                                action={
+                                    <SettingsToggle
+                                        enabled={userData?.unregisteredActivityEnabled === true}
+                                        onToggle={handleDgToggle}
+                                        disabled={dgMutation.isPending}
+                                        label="Ewidencja przychodów"
+                                    />
+                                }
+                            />
                             {userData?.unregisteredActivityEnabled && (
                                 <div className="mt-4 p-4 bg-gray-50 rounded-2xl text-xs text-gray-500 space-y-1">
                                     <p className="font-bold text-gray-700 mb-1">Dane na dokumencie PDF:</p>
@@ -339,26 +348,27 @@ export const SettingsSection = ({
 
                     {/* ZABLOKOWANI UŻYTKOWNICY */}
                     <div>
-                        <SectionHeader title="Zablokowani użytkownicy" />
-                        <BlockedUsersSection addToast={addToast} />
+                        <SectionHeader title="Prywatność" />
+                        <SettingsRow icon={Ban} title="Zablokowani użytkownicy" description="Te osoby nie mogą do Ciebie pisać ani wysyłać próśb o rezerwację." />
+                        <div className="mt-4">
+                            <BlockedUsersSection addToast={addToast} />
+                        </div>
                     </div>
 
                     {/* GRUPA 5: STREFA ZAGROŻENIA */}
                     <div>
                         <SectionHeader title="Strefa Zagrożenia" />
-                        <div className="pt-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
-                                <h4 className="font-bold text-gray-900">Usuwanie konta</h4>
-                                <p className="text-xs text-gray-400">Trwałe usunięcie wszystkich danych profilu.</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteModal(true)}
-                                className="w-full md:w-auto text-rose-500 font-bold text-xs px-6 py-2.5 border border-rose-100 rounded-xl hover:bg-rose-50 transition-all text-center"
-                            >
-                                Usuń konto
-                            </button>
-                        </div>
+                        <SettingsRow
+                            icon={Trash2}
+                            tone="danger"
+                            title="Usuwanie konta"
+                            description="Trwałe usunięcie wszystkich danych profilu."
+                            action={
+                                <button type="button" onClick={() => setShowDeleteModal(true)} className={settingsActionClass('danger')}>
+                                    Usuń konto
+                                </button>
+                            }
+                        />
                     </div>
 
                 </div>

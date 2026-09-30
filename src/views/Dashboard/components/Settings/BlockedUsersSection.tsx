@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { ToastType } from '../../../../types';
-import { Ban } from 'lucide-react';
 import { UserAvatar } from '../../../../components/ui/UserAvatar';
 import { useBlockedUsers } from '../../../../hooks/useBlockedUsers';
 
@@ -25,15 +24,14 @@ export const BlockedUsersSection = ({ addToast }: { addToast?: (msg: string, typ
 
     if (blockedUsers.length === 0) {
         return (
-            <div className="pt-2 flex items-center gap-3 text-gray-400">
-                <Ban size={16} className="shrink-0" />
-                <p className="text-xs">Nie masz zablokowanych użytkowników. Zablokować kogoś możesz w czacie lub na jego profilu.</p>
-            </div>
+            <p className="text-xs text-gray-400 px-3 py-3 rounded-2xl bg-gray-50">
+                Nie masz zablokowanych użytkowników. Zablokować kogoś możesz w czacie lub na jego profilu.
+            </p>
         );
     }
 
     return (
-        <ul className="pt-2 flex flex-col gap-2">
+        <ul className="flex flex-col gap-2">
             {blockedUsers.map(u => (
                 <li key={u.uid} className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50">
                     <UserAvatar src={u.avatar} name={u.name} size={36} className="rounded-full shrink-0" />
