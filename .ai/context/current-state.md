@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-09 07:56 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-09-29 14:28 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `main`
 - Uncommitted files: **1**
-- Ahead of origin: **1** commits
+- Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-07d42d3 refactor(capacitor): kompletne usunięcie Capacitor z lokalni-web
-b862bc1 fix(ux): scroll po URL identyczny z przyciskiem — odpala przy isLoadingApp=false, nie czeka na serwisy
-46a204a fix(ux): shell ukryty przed pierwszą klatką + scroll do wyników po załadowaniu
-3a26430 fix(ux): slug routes — smooth scroll do wyników zamiast flash
-cfd8133 refactor(ux): wyszukiwanie in-app bez nawigacji — state update zamiast router.push
-43b32ef fix(ux): city z nagłówka serwisu + płynna nawigacja slug bez mignięcia
-07a069e fix(seo): 3 poprawki — H1 'w miasto', city w tytule serwisu, scroll po wyszukaniu
-e51771c fix(seo): poprawne filtry API — category ID zamiast query text + SSR shell poza isLoadingApp guard
-5255506 feat(seo): prawdziwe SSR — SlugStaticShell serwuje widoczne HTML przed JS
-7b7659b refactor(seo): jedna warstwa — [slug] przeniesiony do (app), brak osobnych HTML stron
+c664e0c feat(footer): link TestFlight iOS w stopce — beta pobierz aplikację
+ae7b879 feat(ui): własny czas wykonania usługi — stepper h/min w formularzu dodawania
+e82432b fix(perf): timeout 15s na fetch usługi — zapobiega wiecznym spinner gdy API zawiesza
+a4bad3e fix(ui): napraw ucinanie ostatniej linii tytułu w karuzeli podobnych usług na iOS
+2792f18 fix(ui): whitespace-nowrap na nagłówku sekcji podobne w okolicy
+d2a58ea fix(profile): race condition przy szybkiej nawigacji ServiceDetails→Profile
+0188d15 fix(chat): autoscroll na iOS + błąd next/image w BookingCard
+ad6d4c7 chore(seo): wyłącz sitemap profili — endpoint API niezaimplementowany
+16745b9 fix(seo): 404 dla wszystkich slug stron bez wyników zamiast 200+noindex
+763cffc fix(ui): naprawa layoutu bloku opinii na mobile w PublicProfileView
 ```
 
 <!-- AI_AUTO_END -->
