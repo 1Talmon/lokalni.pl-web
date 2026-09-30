@@ -167,6 +167,12 @@ export async function deleteManualIncome(id: number): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete manual income entry')
 }
 
+export async function getManualIncomeList(): Promise<ManualIncomeEntry[]> {
+  const res = await apiClient('/users/me/manual-income')
+  if (!res.ok) throw new Error('Failed to fetch manual income list')
+  return res.json()
+}
+
 export async function getIncomeReport(startDate: string, endDate: string): Promise<IncomeReportData> {
   const res = await apiClient(`/users/me/income-report?startDate=${startDate}&endDate=${endDate}`)
   if (!res.ok) throw new Error('Failed to fetch income report')

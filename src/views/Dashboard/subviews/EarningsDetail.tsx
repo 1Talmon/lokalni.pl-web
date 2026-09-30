@@ -17,7 +17,7 @@ import { TransactionSidebar } from './TransactionSidebar';
 import { UserAvatar } from '../../../components/ui/UserAvatar';
 import {
     getMyEarnings, getUnregisteredActivity, addManualIncome, deleteManualIncome,
-    getIncomeReport,
+    getManualIncomeList, getIncomeReport,
     type AnalyticsRange, type EarningsTransaction, type ManualIncomeEntry, type UnregisteredActivityData,
 } from '../../../services/analyticsService';
 import type { UserProfile } from '../../../types';
@@ -68,14 +68,26 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
     });
 
     const dgQueryKey = ['unregistered-activity', CUR_YEAR, CUR_MONTH] as const;
+    const manualListKey = ['manual-income-list'] as const;
+
+    const { data: manualList } = useQuery({
+        queryKey: manualListKey,
+        queryFn: getManualIncomeList,
+        staleTime: 60_000,
+        enabled: dgEnabled,
+    });
 
     const addManualMutation = useMutation({
         mutationFn: addManualIncome,
         onSuccess: (newEntry) => {
+            queryClient.setQueryData(manualListKey, (old: ManualIncomeEntry[] | undefined) =>
+                old ? [newEntry, ...old] : [newEntry]
+            );
             queryClient.setQueryData(dgQueryKey, (old: UnregisteredActivityData | undefined) =>
                 old ? { ...old, manualEntries: [newEntry, ...old.manualEntries] } : old
             );
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+            void queryClient.invalidateQueries({ queryKey: manualListKey });
             setShowManualModal(false);
         },
     });
@@ -83,14 +95,19 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
     const deleteManualMutation = useMutation({
         mutationFn: deleteManualIncome,
         onSuccess: (_, id) => {
+            queryClient.setQueryData(manualListKey, (old: ManualIncomeEntry[] | undefined) =>
+                old ? old.filter(e => e.id !== id) : old
+            );
             queryClient.setQueryData(dgQueryKey, (old: UnregisteredActivityData | undefined) =>
                 old ? { ...old, manualEntries: old.manualEntries.filter(e => e.id !== id) } : old
             );
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+            void queryClient.invalidateQueries({ queryKey: manualListKey });
         },
         onError: () => {
             addToast?.('Nie udało się usunąć wpisu. Spróbuj ponownie.', 'error');
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+            void queryClient.invalidateQueries({ queryKey: manualListKey });
         },
     });
 
@@ -110,14 +127,14 @@ export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void;
 
     const mergedEntries = useMemo<MixedEntry[]>(() => {
         const txs = allTransactions.map(tx => ({ kind: 'tx' as const, data: tx }));
-        const manuals = (dgEnabled && dgData?.manualEntries)
-            ? dgData.manualEntries.map(e => ({ kind: 'manual' as const, data: e }))
+        const manuals = (dgEnabled && manualList)
+            ? manualList.map(e => ({ kind: 'manual' as const, data: e }))
             : [];
         return [...txs, ...manuals].sort((a, b) =>
             toSortDate(b.data.date).localeCompare(toSortDate(a.data.date))
         );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allTransactions, dgEnabled, dgData?.manualEntries]);
+    }, [allTransactions, dgEnabled, manualList]);
 
     const rangeLabels: Record<TimeRange, string> = { week: 'Tydzień', month: 'Miesiąc', year: 'Rok' };
 
