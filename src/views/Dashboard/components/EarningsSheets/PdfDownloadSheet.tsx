@@ -142,7 +142,7 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
                         <button
                             type="button"
                             onClick={() => onGenerate(year, mode === 'year' ? null : month)}
-                            disabled={isGenerating}
+                            disabled={isGenerating || !user?.addressStreet || !user?.addressCity}
                             className="w-full py-4 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             <FileDown size={16} />

@@ -39,7 +39,7 @@ const NOW = new Date();
 const CUR_YEAR = NOW.getFullYear();
 const CUR_MONTH = NOW.getMonth() + 1;
 
-export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: UserProfile | null }) => {
+export const EarningsDetail = ({ onBack, user, addToast }: { onBack: () => void; user?: UserProfile | null; addToast?: (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => void }) => {
     const [range, setRange] = useState<TimeRange>('month');
     const [visibleLimit, setVisibleLimit] = useState(5);
     const [pageSize, setPageSize] = useState(5);
@@ -78,6 +78,10 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
     const deleteManualMutation = useMutation({
         mutationFn: deleteManualIncome,
         onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
+        },
+        onError: () => {
+            addToast?.('Nie udało się usunąć wpisu. Spróbuj ponownie.', 'error');
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
         },
     });
@@ -171,6 +175,8 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
             const reportData = await getIncomeReport(startDate, endDate);
             generateIncomePDF(reportData, reportData.userData, year, month);
             setShowPdfModal(false);
+        } catch {
+            addToast?.('Nie udało się wygenerować PDF. Spróbuj ponownie.', 'error');
         } finally {
             setIsPdfGenerating(false);
         }

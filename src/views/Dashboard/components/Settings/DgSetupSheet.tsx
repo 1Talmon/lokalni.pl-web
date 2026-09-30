@@ -6,8 +6,41 @@ import { useBottomSheet } from '@/hooks/useBottomSheet';
 import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 
-const INPUT = 'w-full bg-gray-50 rounded-xl p-4 text-sm border-none focus:ring-2 focus:ring-indigo-100 outline-none transition-all ring-inset font-medium placeholder:text-gray-400';
 const LABEL = 'block text-xs font-bold text-gray-500 mb-1.5';
+const POSTAL_RE = /^\d{2}-\d{3}$/;
+
+function inputCls(hasError: boolean) {
+    return `w-full bg-gray-50 rounded-xl p-4 text-sm border-none outline-none transition-all ring-inset font-medium placeholder:text-gray-400 ${
+        hasError
+            ? 'ring-2 ring-rose-300 focus:ring-2 focus:ring-rose-300'
+            : 'focus:ring-2 focus:ring-indigo-100'
+    }`;
+}
+
+function validate(form: { addressStreet: string; addressPostal: string; addressCity: string }) {
+    const e: Partial<Record<keyof typeof form, string>> = {};
+
+    const street = form.addressStreet.trim();
+    if (!street) e.addressStreet = 'Ulica i numer są wymagane.';
+    else if (street.length < 3) e.addressStreet = 'Minimum 3 znaki.';
+    else if (street.length > 150) e.addressStreet = 'Maksymalnie 150 znaków.';
+
+    const postal = form.addressPostal.trim();
+    if (!postal) e.addressPostal = 'Kod pocztowy jest wymagany.';
+    else if (!POSTAL_RE.test(postal)) e.addressPostal = 'Format: XX-XXX (np. 00-950).';
+
+    const city = form.addressCity.trim();
+    if (!city) e.addressCity = 'Miasto jest wymagane.';
+    else if (city.length < 2) e.addressCity = 'Minimum 2 znaki.';
+    else if (city.length > 100) e.addressCity = 'Maksymalnie 100 znaków.';
+
+    return e;
+}
+
+function formatPostal(raw: string): string {
+    const digits = raw.replace(/\D/g, '').slice(0, 5);
+    return digits.length > 2 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : digits;
+}
 
 interface DgSetupSheetProps {
     initialData: { addressStreet: string; addressCity: string; addressPostal: string };
@@ -19,6 +52,8 @@ interface DgSetupSheetProps {
 export const DgSetupSheet = ({ initialData, onClose, onSave, isSaving }: DgSetupSheetProps) => {
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose } = useBottomSheet(onClose, true);
     const [form, setForm] = useState(initialData);
+    const [touched, setTouched] = useState<Partial<Record<keyof typeof form, boolean>>>({});
+    const errors = validate(form);
 
     useEffect(() => {
         const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
@@ -33,9 +68,21 @@ export const DgSetupSheet = ({ initialData, onClose, onSave, isSaving }: DgSetup
         };
     }, [triggerClose]);
 
+    const touch = (field: keyof typeof form) =>
+        setTouched(t => ({ ...t, [field]: true }));
+
+    const showErr = (field: keyof typeof form) => !!(touched[field] && errors[field]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ ...form, unregisteredActivityEnabled: true });
+        setTouched({ addressStreet: true, addressPostal: true, addressCity: true });
+        if (Object.keys(validate(form)).length > 0) return;
+        onSave({
+            addressStreet: form.addressStreet.trim(),
+            addressPostal: form.addressPostal.trim(),
+            addressCity: form.addressCity.trim(),
+            unregisteredActivityEnabled: true,
+        });
     };
 
     return createPortal(
@@ -80,7 +127,7 @@ export const DgSetupSheet = ({ initialData, onClose, onSave, isSaving }: DgSetup
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="px-6 pt-5 pb-6 space-y-4" style={{
+                    <form onSubmit={handleSubmit} className="px-6 pt-5 space-y-4" style={{
                         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)',
                     }}>
                         <div>
@@ -88,10 +135,13 @@ export const DgSetupSheet = ({ initialData, onClose, onSave, isSaving }: DgSetup
                             <input
                                 type="text"
                                 placeholder="np. ul. Kwiatowa 5"
+                                maxLength={150}
                                 value={form.addressStreet}
                                 onChange={e => setForm(f => ({ ...f, addressStreet: e.target.value }))}
-                                className={INPUT}
+                                onBlur={() => touch('addressStreet')}
+                                className={inputCls(showErr('addressStreet'))}
                             />
+                            {showErr('addressStreet') && <p className="text-xs text-rose-500 mt-1.5">{errors.addressStreet}</p>}
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -100,20 +150,26 @@ export const DgSetupSheet = ({ initialData, onClose, onSave, isSaving }: DgSetup
                                 <input
                                     type="text"
                                     placeholder="00-000"
+                                    maxLength={6}
                                     value={form.addressPostal}
-                                    onChange={e => setForm(f => ({ ...f, addressPostal: e.target.value }))}
-                                    className={INPUT}
+                                    onChange={e => setForm(f => ({ ...f, addressPostal: formatPostal(e.target.value) }))}
+                                    onBlur={() => touch('addressPostal')}
+                                    className={inputCls(showErr('addressPostal'))}
                                 />
+                                {showErr('addressPostal') && <p className="text-xs text-rose-500 mt-1.5">{errors.addressPostal}</p>}
                             </div>
                             <div>
                                 <label className={LABEL}>Miasto</label>
                                 <input
                                     type="text"
                                     placeholder="np. Warszawa"
+                                    maxLength={100}
                                     value={form.addressCity}
                                     onChange={e => setForm(f => ({ ...f, addressCity: e.target.value }))}
-                                    className={INPUT}
+                                    onBlur={() => touch('addressCity')}
+                                    className={inputCls(showErr('addressCity'))}
                                 />
+                                {showErr('addressCity') && <p className="text-xs text-rose-500 mt-1.5">{errors.addressCity}</p>}
                             </div>
                         </div>
 
