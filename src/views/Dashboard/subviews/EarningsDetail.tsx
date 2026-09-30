@@ -148,7 +148,7 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                 ? `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
                 : `${year}-12-31`;
             const reportData = await getIncomeReport(startDate, endDate);
-            await generateIncomePDF(reportData, reportData.userData, year, month);
+            generateIncomePDF(reportData, reportData.userData, year, month);
             setShowPdfModal(false);
         } finally {
             setIsPdfGenerating(false);

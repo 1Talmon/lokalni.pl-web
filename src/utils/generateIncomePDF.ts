@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { NOTO_SANS_B64 } from './notoSansB64'
 import type { IncomeReportData } from '../services/analyticsService'
 
 export interface PdfUserData {
@@ -25,32 +26,22 @@ function formatDatePL(dateStr: string): string {
   return `${d}.${m}.${y}`
 }
 
-async function loadFont(doc: jsPDF): Promise<void> {
-  try {
-    const buf = await fetch('/fonts/NotoSans-Regular.ttf').then(r => r.arrayBuffer())
-    const bytes = new Uint8Array(buf)
-    let bin = ''
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-    const b64 = btoa(bin)
-    doc.addFileToVFS('NotoSans-Regular.ttf', b64)
-    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
-    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'bold')
-  } catch {
-    // fallback — helvetica (bez polskich znaków)
-  }
+function loadFont(doc: jsPDF): void {
+  doc.addFileToVFS('NotoSans-Regular.ttf', NOTO_SANS_B64)
+  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
+  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'bold')
 }
 
-export async function generateIncomePDF(
+export function generateIncomePDF(
   data: IncomeReportData,
   userData: PdfUserData,
   year: number,
   month: number | null,
-): Promise<void> {
+): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  await loadFont(doc)
-  const hasNotoSans = doc.getFontList()['NotoSans'] !== undefined
-  const fontName = hasNotoSans ? 'NotoSans' : 'helvetica'
+  loadFont(doc)
+  const fontName = 'NotoSans'
 
   doc.setFont(fontName, 'bold')
   doc.setFontSize(14)
