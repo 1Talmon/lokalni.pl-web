@@ -27,20 +27,14 @@ function formatDatePL(dateStr: string): string {
 
 async function loadFont(doc: jsPDF): Promise<void> {
   try {
-    const [regular, bold] = await Promise.all([
-      fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer()),
-      fetch('/fonts/Roboto-Bold.ttf').then(r => r.arrayBuffer()),
-    ])
-    const toBase64 = (buf: ArrayBuffer) => {
-      const bytes = new Uint8Array(buf)
-      let bin = ''
-      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-      return btoa(bin)
-    }
-    doc.addFileToVFS('Roboto-Regular.ttf', toBase64(regular))
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
-    doc.addFileToVFS('Roboto-Bold.ttf', toBase64(bold))
-    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold')
+    const buf = await fetch('/fonts/NotoSans-Regular.ttf').then(r => r.arrayBuffer())
+    const bytes = new Uint8Array(buf)
+    let bin = ''
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+    const b64 = btoa(bin)
+    doc.addFileToVFS('NotoSans-Regular.ttf', b64)
+    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
+    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'bold')
   } catch {
     // fallback — helvetica (bez polskich znaków)
   }
@@ -55,8 +49,8 @@ export async function generateIncomePDF(
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   await loadFont(doc)
-  const hasRoboto = doc.getFontList()['Roboto'] !== undefined
-  const fontName = hasRoboto ? 'Roboto' : 'helvetica'
+  const hasNotoSans = doc.getFontList()['NotoSans'] !== undefined
+  const fontName = hasNotoSans ? 'NotoSans' : 'helvetica'
 
   doc.setFont(fontName, 'bold')
   doc.setFontSize(14)
