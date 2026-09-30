@@ -106,7 +106,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     const [tempToken, setTempToken] = useState('');
     const [twoFaMethod, setTwoFaMethod] = useState<'totp' | 'email'>('email');
     const [socialDobToken, setSocialDobToken] = useState('');
-    const [referralCode, setReferralCode] = useState(() => localStorage.getItem('referral_code') || '');
+    const [referralCode, setReferralCode] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('referral_code') || '' : '');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [parentalEmail, setParentalEmail] = useState('');
     const [dateOfBirthError, setDateOfBirthError] = useState('');
