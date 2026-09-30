@@ -27,6 +27,7 @@ import { logger } from '../../utils/logger';
 import { startVideoUpload, getVideoUploadState, clearVideoUploadState, type VideoUploadState } from '../../services/videoUploadStore';
 import { dataUrlToFile } from '../../utils/imageUtils';
 import { useBlockedUsers } from '../../hooks/useBlockedUsers';
+import { BlockUserModal } from './BlockUserModal';
 
 // ─── Typy ─────────────────────────────────────────────────────────────────────
 
@@ -272,15 +273,26 @@ export const ChatModal = ({
     const sessionName = activeSession?.otherPartyName || service?.provider?.name || 'Użytkownik';
     const { block: blockUser } = useBlockedUsers(isOpen);
     const [blockError, setBlockError] = useState<string | null>(null);
-    const handleBlock = useCallback(async () => {
-        if (!providerUid) return;
+    const [blockModalOpen, setBlockModalOpen] = useState(false);
+    const [isBlocking, setIsBlocking] = useState(false);
+    const handleBlock = useCallback(() => {
         setBlockError(null);
+        setBlockModalOpen(true);
+    }, []);
+    const confirmBlock = useCallback(async () => {
+        if (!providerUid) return;
+        setIsBlocking(true);
         try {
-            if (await blockUser(providerUid, sessionName)) onClose();
+            await blockUser(providerUid);
+            setBlockModalOpen(false);
+            onClose();
         } catch (e) {
+            setBlockModalOpen(false);
             setBlockError((e as Error).message);
+        } finally {
+            setIsBlocking(false);
         }
-    }, [providerUid, sessionName, blockUser, onClose]);
+    }, [providerUid, blockUser, onClose]);
     const sessionAvatar = normalizeMediaUrl(activeSession?.otherPartyAvatar) || null;
     const sessionTitle = activeSession?.serviceTitle || service?.title || '';
 
@@ -1653,6 +1665,14 @@ export const ChatModal = ({
                     onClose={() => setShowCreateBooking(false)}
                 />
             )}
+
+            <BlockUserModal
+                isOpen={blockModalOpen}
+                userName={sessionName}
+                isLoading={isBlocking}
+                onClose={() => setBlockModalOpen(false)}
+                onConfirm={confirmBlock}
+            />
         </>
     );
 };

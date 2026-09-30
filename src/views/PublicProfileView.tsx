@@ -32,6 +32,7 @@ import { UserAvatar } from '../components/ui/UserAvatar';
 import { useWsEvent } from '../hooks/useWebSocket';
 import { useSwipeBack } from '../hooks/useSwipeBack';
 import { useBlockedUsers } from '../hooks/useBlockedUsers';
+import { BlockUserModal } from '../components/modals/BlockUserModal';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
 import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 
@@ -98,6 +99,8 @@ const PublicProfileView = ({
     const [liveOnline, setLiveOnline] = useState<boolean | null>(null);
     const [liveLastSeen, setLiveLastSeen] = useState<string | null>(null);
     const { isBlocked, block: blockUser, unblock: unblockUser } = useBlockedUsers(isLoggedIn && !isOwner);
+    const [blockModalOpen, setBlockModalOpen] = useState(false);
+    const [isBlocking, setIsBlocking] = useState(false);
     const [reportConfig, setReportConfig] = useState<{
         isOpen: boolean;
         type: 'service' | 'profile' | 'review' | null;
@@ -869,13 +872,10 @@ const PublicProfileView = ({
                     {isLoggedIn && !isOwner && provider.uid && (
                         <button
                             onClick={async () => {
+                                if (!isBlocked(provider.uid)) { setBlockModalOpen(true); return; }
                                 try {
-                                    if (isBlocked(provider.uid)) {
-                                        await unblockUser(provider.uid);
-                                        actions.addToast?.(`Odblokowano: ${fullName}`, 'success');
-                                    } else if (await blockUser(provider.uid, fullName)) {
-                                        actions.addToast?.(`Zablokowano: ${fullName}`, 'success');
-                                    }
+                                    await unblockUser(provider.uid);
+                                    actions.addToast?.(`Odblokowano: ${fullName}`, 'success');
                                 } catch (e) {
                                     actions.addToast?.((e as Error).message, 'error');
                                 }
@@ -887,6 +887,25 @@ const PublicProfileView = ({
                     )}
                 </div>
             </div>
+
+            <BlockUserModal
+                isOpen={blockModalOpen}
+                userName={fullName}
+                isLoading={isBlocking}
+                onClose={() => setBlockModalOpen(false)}
+                onConfirm={async () => {
+                    setIsBlocking(true);
+                    try {
+                        await blockUser(provider.uid);
+                        setBlockModalOpen(false);
+                        actions.addToast?.(`Zablokowano: ${fullName}`, 'success');
+                    } catch (e) {
+                        actions.addToast?.((e as Error).message, 'error');
+                    } finally {
+                        setIsBlocking(false);
+                    }
+                }}
+            />
 
             <NewsFeedModal
                 isOpen={newsFeedOpen}

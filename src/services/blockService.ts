@@ -23,9 +23,3 @@ export const blockService = {
         if (!res.ok) throw new Error('Nie udało się odblokować użytkownika.');
     },
 };
-
-/** Potwierdzenie blokady (web). */
-export async function confirmBlockUser(name: string): Promise<boolean> {
-    const message = `${name} nie będzie mógł do Ciebie pisać ani wysyłać próśb o rezerwację. Rozmowa zniknie z Twojej listy. Możesz to cofnąć w Ustawieniach.`;
-    return window.confirm(`Zablokować ${name}?\n\n${message}`);
-}

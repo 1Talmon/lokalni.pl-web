@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { blockService, confirmBlockUser } from '../services/blockService';
+import { blockService } from '../services/blockService';
 
 /** Lista zablokowanych przeze mnie użytkowników + akcje blokuj/odblokuj. */
 export function useBlockedUsers(enabled: boolean) {
@@ -21,12 +21,10 @@ export function useBlockedUsers(enabled: boolean) {
 
     const isBlocked = useCallback((uid?: string | null) => !!uid && blockedUsers.some(u => u.uid === uid), [blockedUsers]);
 
-    /** Pyta o potwierdzenie i blokuje. Zwraca true, jeśli użytkownik został zablokowany. */
-    const block = useCallback(async (uid: string, name: string) => {
-        if (!(await confirmBlockUser(name))) return false;
+    /** Blokuje bez pytania — potwierdzenie pokazuje BlockUserModal. */
+    const block = useCallback(async (uid: string) => {
         await blockService.block(uid);
         await refresh();
-        return true;
     }, [refresh]);
 
     const unblock = useCallback(async (uid: string) => {
