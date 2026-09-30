@@ -537,7 +537,7 @@ function StatCard({ title, value, icon, isMain, isLoading }: {
                                 {value}
                             </motion.p>
                         ) : (
-                            <div className={`w-24 h-5 animate-pulse rounded-md ${isMain ? 'bg-white/20' : 'bg-gray-100'}`} />
+                            <div className={`w-20 h-5 animate-pulse rounded-md ${isMain ? 'bg-white/20' : 'bg-gray-100'}`} />
                         )}
                     </AnimatePresence>
                 </div>
