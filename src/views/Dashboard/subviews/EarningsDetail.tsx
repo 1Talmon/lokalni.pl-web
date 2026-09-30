@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ArrowLeft, CheckCircle2, Wallet,
     TrendingUp, ArrowRight, CalendarDays, ChevronDown, Calendar,
-    AlertTriangle, Plus, FileDown, X, Trash2,
+    AlertTriangle, Plus, FileDown, Trash2,
 } from 'lucide-react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -22,6 +22,8 @@ import {
 } from '../../../services/analyticsService';
 import type { UserProfile } from '../../../types';
 import { generateIncomePDF } from '../../../utils/generateIncomePDF';
+import { ManualIncomeSheet } from '../components/EarningsSheets/ManualIncomeSheet';
+import { PdfDownloadSheet } from '../components/EarningsSheets/PdfDownloadSheet';
 
 type TimeRange = AnalyticsRange;
 
@@ -45,10 +47,7 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
 
     const [showManualModal, setShowManualModal] = useState(false);
     const [showPdfModal, setShowPdfModal] = useState(false);
-    const [pdfYear, setPdfYear] = useState(CUR_YEAR);
-    const [pdfMonth, setPdfMonth] = useState(CUR_MONTH);
     const [isPdfGenerating, setIsPdfGenerating] = useState(false);
-    const [manualForm, setManualForm] = useState({ date: '', description: '', amount: '', buyerName: '' });
 
     const queryClient = useQueryClient();
     useSwipeBack(!selectedTx && !showManualModal && !showPdfModal, onBack);
@@ -73,7 +72,6 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['unregistered-activity'] });
             setShowManualModal(false);
-            setManualForm({ date: '', description: '', amount: '', buyerName: '' });
         },
     });
 
@@ -140,28 +138,21 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
         setRange(r);
     };
 
-    const handleGeneratePdf = async () => {
+    const handleGeneratePdf = async (year: number, month: number | null) => {
         setIsPdfGenerating(true);
         try {
-            const lastDay = new Date(pdfYear, pdfMonth, 0).getDate();
-            const startDate = `${pdfYear}-${String(pdfMonth).padStart(2, '0')}-01`;
-            const endDate = `${pdfYear}-${String(pdfMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            const startDate = month
+                ? `${year}-${String(month).padStart(2, '0')}-01`
+                : `${year}-01-01`;
+            const endDate = month
+                ? `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
+                : `${year}-12-31`;
             const reportData = await getIncomeReport(startDate, endDate);
-            generateIncomePDF(reportData, reportData.userData, pdfYear, pdfMonth);
+            generateIncomePDF(reportData, reportData.userData, year, month);
             setShowPdfModal(false);
         } finally {
             setIsPdfGenerating(false);
         }
-    };
-
-    const handleAddManual = (e: React.FormEvent) => {
-        e.preventDefault();
-        addManualMutation.mutate({
-            date: manualForm.date,
-            description: manualForm.description,
-            amount: parseFloat(manualForm.amount),
-            buyerName: manualForm.buyerName || undefined,
-        });
     };
 
     const displayedTxs = allTransactions.slice(0, visibleLimit);
@@ -439,171 +430,23 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                 )}
             </AnimatePresence>
 
-            {/* MODAL: Dodaj przychód ręcznie */}
-            <AnimatePresence>
-                {showManualModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-4 sm:pb-0"
-                        onClick={(e) => { if (e.target === e.currentTarget) setShowManualModal(false); }}
-                    >
-                        <motion.div
-                            initial={{ y: 60, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 60, opacity: 0 }}
-                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl"
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-black text-gray-900">Dodaj przychód zewnętrzny</h3>
-                                <button onClick={() => setShowManualModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                                    <X size={16} />
-                                </button>
-                            </div>
-                            <form onSubmit={handleAddManual} className="space-y-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Data</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={manualForm.date}
-                                        onChange={(e) => setManualForm(f => ({ ...f, date: e.target.value }))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Opis usługi / zlecenia</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="np. Sprzątanie mieszkania"
-                                        value={manualForm.description}
-                                        onChange={(e) => setManualForm(f => ({ ...f, description: e.target.value }))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Kwota (zł)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0.01"
-                                        step="0.01"
-                                        placeholder="0.00"
-                                        value={manualForm.amount}
-                                        onChange={(e) => setManualForm(f => ({ ...f, amount: e.target.value }))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Nabywca (opcjonalnie)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="np. Jan Kowalski"
-                                        value={manualForm.buyerName}
-                                        onChange={(e) => setManualForm(f => ({ ...f, buyerName: e.target.value }))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={addManualMutation.isPending}
-                                    className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50"
-                                >
-                                    {addManualMutation.isPending ? 'Dodawanie…' : 'Dodaj przychód'}
-                                </button>
-                                {addManualMutation.isError && (
-                                    <p className="text-xs text-rose-500 text-center">Wystąpił błąd. Spróbuj ponownie.</p>
-                                )}
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {showManualModal && (
+                <ManualIncomeSheet
+                    onClose={() => setShowManualModal(false)}
+                    onSave={entry => addManualMutation.mutate(entry)}
+                    isSaving={addManualMutation.isPending}
+                    isError={addManualMutation.isError}
+                />
+            )}
 
-            {/* MODAL: Pobierz ewidencję PDF */}
-            <AnimatePresence>
-                {showPdfModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-4 sm:pb-0"
-                        onClick={(e) => { if (e.target === e.currentTarget) setShowPdfModal(false); }}
-                    >
-                        <motion.div
-                            initial={{ y: 60, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 60, opacity: 0 }}
-                            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                            className="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl"
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-black text-gray-900">Pobierz ewidencję przychodów</h3>
-                                <button onClick={() => setShowPdfModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                                    <X size={16} />
-                                </button>
-                            </div>
-
-                            <p className="text-xs text-gray-500 mb-5">
-                                Dokument zawiera przychody z platformy oraz ręcznie dodane wpisy.
-                                Pole PESEL pozostawione jest puste — uzupełnij ręcznie po wydruku.
-                            </p>
-
-                            <div className="grid grid-cols-2 gap-3 mb-5">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Miesiąc</label>
-                                    <select
-                                        value={pdfMonth}
-                                        onChange={(e) => setPdfMonth(Number(e.target.value))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300"
-                                    >
-                                        {MONTH_NAMES.map((m, i) => (
-                                            <option key={i + 1} value={i + 1}>{m}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Rok</label>
-                                    <select
-                                        value={pdfYear}
-                                        onChange={(e) => setPdfYear(Number(e.target.value))}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300"
-                                    >
-                                        {[CUR_YEAR, CUR_YEAR - 1].map((y) => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {user && (
-                                <div className="bg-gray-50 rounded-xl p-4 mb-5 text-xs text-gray-500">
-                                    <p className="font-bold text-gray-700 mb-1">
-                                        {[user.imie, user.nazwisko].filter(Boolean).join(' ') || user.name || '—'}
-                                    </p>
-                                    {(user.addressStreet || user.addressCity) ? (
-                                        <p>{[user.addressStreet, user.addressPostal, user.addressCity].filter(Boolean).join(', ')}</p>
-                                    ) : (
-                                        <p className="text-amber-600">Brak adresu — uzupełnij w Ustawieniach</p>
-                                    )}
-                                </div>
-                            )}
-
-                            <button
-                                onClick={() => void handleGeneratePdf()}
-                                disabled={isPdfGenerating}
-                                className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                <FileDown size={16} />
-                                {isPdfGenerating ? 'Generowanie…' : `Pobierz PDF — ${MONTH_NAMES[pdfMonth - 1]} ${pdfYear}`}
-                            </button>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {showPdfModal && (
+                <PdfDownloadSheet
+                    user={user}
+                    onClose={() => setShowPdfModal(false)}
+                    onGenerate={(year, month) => void handleGeneratePdf(year, month)}
+                    isGenerating={isPdfGenerating}
+                />
+            )}
         </div>
     );
 };

@@ -23,7 +23,7 @@ export function generateIncomePDF(
   data: IncomeReportData,
   userData: PdfUserData,
   year: number,
-  month: number,
+  month: number | null,
 ): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
@@ -53,7 +53,7 @@ export function generateIncomePDF(
   row('Imię i Nazwisko:', fullName, 40)
   row('Adres:', address, 47)
   row('PESEL:', '_______________  (uzupełnić ręcznie po wydruku)', 54)
-  row('Okres:', `${MONTH_NAMES[month - 1]} ${year}`, 61)
+  row('Okres:', month ? `${MONTH_NAMES[month - 1]} ${year}` : `Rok ${year}`, 61)
 
   doc.line(20, 65, 190, 65)
 
@@ -120,6 +120,8 @@ export function generateIncomePDF(
   doc.setTextColor(0, 0, 0)
   doc.text('Podpis: ___________', 190, footerY + 14, { align: 'right' })
 
-  const filename = `ewidencja-${year}-${String(month).padStart(2, '0')}.pdf`
+  const filename = month
+    ? `ewidencja-${year}-${String(month).padStart(2, '0')}.pdf`
+    : `ewidencja-${year}.pdf`
   doc.save(filename)
 }
