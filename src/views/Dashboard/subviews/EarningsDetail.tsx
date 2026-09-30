@@ -206,7 +206,29 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                 </div>
 
                 {/* DG BANNER */}
-                {dgEnabled && (
+                {user === undefined ? (
+                    <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-5 md:p-6">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="space-y-1.5">
+                                <div className="h-2.5 w-40 bg-emerald-100 rounded animate-pulse" />
+                                <div className="h-3 w-32 bg-emerald-100 rounded animate-pulse" />
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                <div className="h-7 w-28 bg-emerald-100 rounded-xl animate-pulse" />
+                                <div className="h-7 w-14 bg-emerald-100 rounded-xl animate-pulse" />
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-end mb-2">
+                            <div className="h-8 w-28 bg-emerald-100 rounded-lg animate-pulse" />
+                            <div className="h-5 w-10 bg-emerald-100 rounded-lg animate-pulse" />
+                        </div>
+                        <div className="h-2.5 bg-emerald-100 rounded-full animate-pulse" />
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-emerald-100">
+                            <div className="h-2.5 w-24 bg-emerald-100 rounded animate-pulse" />
+                            <div className="h-5 w-20 bg-emerald-100 rounded animate-pulse" />
+                        </div>
+                    </div>
+                ) : dgEnabled ? (
                     <div className={`rounded-[2rem] border p-5 md:p-6 ${
                         dgData?.warningLevel === 'danger'
                             ? 'bg-rose-50 border-rose-200'
@@ -236,17 +258,17 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                         </div>
 
                         {dgLoading ? (
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-end">
+                            <>
+                                <div className="flex justify-between items-end mb-2">
                                     <div className="h-8 w-28 bg-white/60 rounded-lg animate-pulse" />
-                                    <div className="h-4 w-10 bg-white/60 rounded-lg animate-pulse" />
+                                    <div className="h-5 w-10 bg-white/60 rounded-lg animate-pulse" />
                                 </div>
                                 <div className="h-2.5 bg-white/60 rounded-full animate-pulse" />
-                                <div className="flex justify-between pt-3 mt-1 border-t border-white/50">
-                                    <div className="h-3 w-24 bg-white/60 rounded animate-pulse" />
-                                    <div className="h-3 w-16 bg-white/60 rounded animate-pulse" />
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/50">
+                                    <div className="h-2.5 w-24 bg-white/60 rounded animate-pulse" />
+                                    <div className="h-5 w-20 bg-white/60 rounded animate-pulse" />
                                 </div>
-                            </div>
+                            </>
                         ) : (
                             <>
                                 <div className="flex justify-between items-end mb-2">
@@ -290,7 +312,7 @@ export const EarningsDetail = ({ onBack, user }: { onBack: () => void; user?: Us
                             </>
                         )}
                     </div>
-                )}
+                ) : null}
 
                 {/* RĘCZNE PRZYCHODY */}
                 {dgEnabled && (dgData?.manualEntries.length ?? 0) > 0 && (
