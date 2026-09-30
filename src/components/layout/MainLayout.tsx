@@ -87,7 +87,11 @@ export const MainLayout = ({
         return () => window.removeEventListener('popstate', onPop);
     }, []);
 
-    const NO_GLOBAL_BACK = useMemo(() => new Set([...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard']), []);
+    // Info pages render their own sticky header with <BackButton /> — skip the global mobile pill to avoid a double back button.
+    const NO_GLOBAL_BACK = useMemo(() => new Set([
+        ...SWIPE_TABS, '/auth', '/reset-password', '/verify-email', '/delete-account', '/delete-account-confirm', '/dashboard',
+        '/faq', '/o-nas', '/jak-to-dziala', '/regulamin', '/polityka-prywatnosci', '/zasady-bezpieczenstwa',
+    ]), []);
     const showGlobalBack = !NO_GLOBAL_BACK.has(pathname)
         && !isSlugRoute
         && !pathname.startsWith('/service/')
