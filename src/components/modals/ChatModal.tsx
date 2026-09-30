@@ -9,7 +9,7 @@ import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, X, ImageIcon, ArrowUp, FileText, ChevronRight, ChevronDown, Trash2, MoreVertical, Film, Images, Play, CalendarPlus } from 'lucide-react';
+import { ArrowLeft, X, ImageIcon, ArrowUp, FileText, ChevronRight, ChevronDown, Trash2, MoreVertical, Film, Images, Play, CalendarPlus, Ban } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation'
 import { navPush } from '../../utils/navState';
 import { Service } from '../../types';
@@ -26,6 +26,7 @@ import { normalizeMediaUrl } from '../../utils/normalizeUrl';
 import { logger } from '../../utils/logger';
 import { startVideoUpload, getVideoUploadState, clearVideoUploadState, type VideoUploadState } from '../../services/videoUploadStore';
 import { dataUrlToFile } from '../../utils/imageUtils';
+import { useBlockedUsers } from '../../hooks/useBlockedUsers';
 
 // ─── Typy ─────────────────────────────────────────────────────────────────────
 
@@ -269,6 +270,17 @@ export const ChatModal = ({
     const isRequest = (activeSession?.serviceType ?? service?.type) === 'request';
     const serviceSlug = service ? createServiceUrl(service.title, service.publicId ?? '') : null;
     const sessionName = activeSession?.otherPartyName || service?.provider?.name || 'Użytkownik';
+    const { block: blockUser } = useBlockedUsers(isOpen);
+    const [blockError, setBlockError] = useState<string | null>(null);
+    const handleBlock = useCallback(async () => {
+        if (!providerUid) return;
+        setBlockError(null);
+        try {
+            if (await blockUser(providerUid, sessionName)) onClose();
+        } catch (e) {
+            setBlockError((e as Error).message);
+        }
+    }, [providerUid, sessionName, blockUser, onClose]);
     const sessionAvatar = normalizeMediaUrl(activeSession?.otherPartyAvatar) || null;
     const sessionTitle = activeSession?.serviceTitle || service?.title || '';
 
@@ -996,6 +1008,17 @@ export const ChatModal = ({
                                 </button>
                             )}
 
+                            {/* Zablokuj rozmówcę (App Store 1.2) */}
+                            {providerUid && (
+                                <button
+                                    onClick={handleBlock}
+                                    aria-label="Zablokuj użytkownika"
+                                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 transition-colors shrink-0"
+                                >
+                                    <Ban size={18} />
+                                </button>
+                            )}
+
                             {/* Close on desktop */}
                             <button
                                 onClick={onClose}
@@ -1004,6 +1027,10 @@ export const ChatModal = ({
                                 <X size={17} />
                             </button>
                         </div>
+
+                        {blockError && (
+                            <p className="px-4 pb-2 text-[12px] font-semibold text-rose-500">{blockError}</p>
+                        )}
 
                         {/* Service bar */}
                         {sessionTitle && (() => {

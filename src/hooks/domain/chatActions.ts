@@ -66,7 +66,8 @@ export async function sendMessage(
         await chatService.sendMessage(sessionId, text || undefined, imageUrl || undefined);
         queryClient.invalidateQueries({ queryKey: ['chats'] });
         queryClient.invalidateQueries({ queryKey: ['chat-messages', sessionId] });
-    } catch {
-        addToast('Błąd wysyłania wiadomości', 'error');
+    } catch (err: unknown) {
+        // np. 403 USER_BLOCKED — komunikat z API
+        addToast((err as Error).message || 'Błąd wysyłania wiadomości', 'error');
     }
 }

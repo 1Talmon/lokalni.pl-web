@@ -11,6 +11,7 @@ import { PasswordSection } from './Settings/PasswordSection';
 import { PhoneSection } from './Settings/PhoneSection';
 import { SocialSection } from './Settings/SocialSection';
 import { CertificateSection, type CertEntry } from './Settings/CertificateSection';
+import { BlockedUsersSection } from './Settings/BlockedUsersSection';
 import { BioSection } from './Settings/BioSection';
 import { BiometricSection } from './Settings/BiometricSection';
 import { TwoFASection } from './Settings/TwoFASection';
@@ -334,6 +335,12 @@ export const SettingsSection = ({
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* ZABLOKOWANI UŻYTKOWNICY */}
+                    <div>
+                        <SectionHeader title="Zablokowani użytkownicy" />
+                        <BlockedUsersSection addToast={addToast} />
                     </div>
 
                     {/* GRUPA 5: STREFA ZAGROŻENIA */}

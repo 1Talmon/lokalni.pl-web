@@ -9,7 +9,7 @@ import { polishPlural } from '../utils/helpers';
 import { apiClient } from '../services/apiClient';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import {
-    Star, Flag,
+    Star, Flag, Ban,
     Send, ChevronRight, FileCheck,
     CheckCircle, ThumbsUp, Globe, Trash2,
     Briefcase,
@@ -31,6 +31,7 @@ import { ReviewForm } from '../components/reviews/ReviewForm';
 import { UserAvatar } from '../components/ui/UserAvatar';
 import { useWsEvent } from '../hooks/useWebSocket';
 import { useSwipeBack } from '../hooks/useSwipeBack';
+import { useBlockedUsers } from '../hooks/useBlockedUsers';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
 import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 
@@ -96,6 +97,7 @@ const PublicProfileView = ({
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [liveOnline, setLiveOnline] = useState<boolean | null>(null);
     const [liveLastSeen, setLiveLastSeen] = useState<string | null>(null);
+    const { isBlocked, block: blockUser, unblock: unblockUser } = useBlockedUsers(isLoggedIn && !isOwner);
     const [reportConfig, setReportConfig] = useState<{
         isOpen: boolean;
         type: 'service' | 'profile' | 'review' | null;
@@ -856,14 +858,33 @@ const PublicProfileView = ({
                     )}
                 </div>
 
-                {/* Zgłoś profil */}
-                <div className="mt-10 text-center">
+                {/* Zgłoś / zablokuj profil */}
+                <div className="mt-10 flex items-center justify-center gap-6">
                     <button
                         onClick={() => setReportConfig({ isOpen: true, type: 'profile', targetId: provider.uid })}
-                        className="text-slate-400 hover:text-rose-400 text-[10px] font-bold uppercase tracking-[0.2em] py-3 transition-colors flex items-center justify-center gap-1.5 mx-auto"
+                        className="text-slate-400 hover:text-rose-400 text-[10px] font-bold uppercase tracking-[0.2em] py-3 transition-colors flex items-center justify-center gap-1.5"
                     >
                         <Flag size={11} /> Zgłoś profil
                     </button>
+                    {isLoggedIn && !isOwner && provider.uid && (
+                        <button
+                            onClick={async () => {
+                                try {
+                                    if (isBlocked(provider.uid)) {
+                                        await unblockUser(provider.uid);
+                                        actions.addToast?.(`Odblokowano: ${fullName}`, 'success');
+                                    } else if (await blockUser(provider.uid, fullName)) {
+                                        actions.addToast?.(`Zablokowano: ${fullName}`, 'success');
+                                    }
+                                } catch (e) {
+                                    actions.addToast?.((e as Error).message, 'error');
+                                }
+                            }}
+                            className="text-slate-400 hover:text-rose-400 text-[10px] font-bold uppercase tracking-[0.2em] py-3 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                            <Ban size={11} /> {isBlocked(provider.uid) ? 'Odblokuj' : 'Zablokuj'}
+                        </button>
+                    )}
                 </div>
             </div>
 
