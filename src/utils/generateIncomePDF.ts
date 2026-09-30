@@ -15,23 +15,50 @@ const MONTH_NAMES = [
 ]
 
 function formatDatePL(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-')
+  if (!dateStr) return '—'
+  // API zwraca już sformatowane daty DD.MM.YYYY
+  if (dateStr.includes('.')) return dateStr
+  // Fallback dla YYYY-MM-DD lub ISO timestamp
+  const datePart = dateStr.split('T')[0]
+  const [y, m, d] = datePart.split('-')
+  if (!y || !m || !d) return dateStr
   return `${d}.${m}.${y}`
 }
 
-export function generateIncomePDF(
+async function loadFont(doc: jsPDF): Promise<void> {
+  try {
+    const [regular, bold] = await Promise.all([
+      fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer()),
+      fetch('/fonts/Roboto-Bold.ttf').then(r => r.arrayBuffer()),
+    ])
+    const toBase64 = (buf: ArrayBuffer) =>
+      btoa(String.fromCharCode(...new Uint8Array(buf)))
+    doc.addFileToVFS('Roboto-Regular.ttf', toBase64(regular))
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
+    doc.addFileToVFS('Roboto-Bold.ttf', toBase64(bold))
+    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold')
+  } catch {
+    // fallback — helvetica (bez polskich znaków)
+  }
+}
+
+export async function generateIncomePDF(
   data: IncomeReportData,
   userData: PdfUserData,
   year: number,
   month: number | null,
-): void {
+): Promise<void> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  doc.setFont('helvetica', 'bold')
+  await loadFont(doc)
+  const hasRoboto = doc.getFontList()['Roboto'] !== undefined
+  const fontName = hasRoboto ? 'Roboto' : 'helvetica'
+
+  doc.setFont(fontName, 'bold')
   doc.setFontSize(14)
   doc.text('EWIDENCJA PRZYCHODÓW', 105, 20, { align: 'center' })
 
-  doc.setFont('helvetica', 'normal')
+  doc.setFont(fontName, 'normal')
   doc.setFontSize(9)
   doc.text('Działalność nierejestrowana (art. 20 ust. 1ba ustawy o PIT)', 105, 27, { align: 'center' })
 
@@ -40,9 +67,9 @@ export function generateIncomePDF(
 
   const row = (label: string, value: string, y: number) => {
     doc.setFontSize(10)
-    doc.setFont('helvetica', 'bold')
+    doc.setFont(fontName, 'bold')
     doc.text(label, 20, y)
-    doc.setFont('helvetica', 'normal')
+    doc.setFont(fontName, 'normal')
     doc.text(value, 65, y)
   }
 
@@ -77,7 +104,7 @@ export function generateIncomePDF(
     startY: 68,
     head: [['Lp.', 'Data', 'Opis', 'Nabywca', 'Kwota']],
     body: [...platformRows, ...manualRows],
-    styles: { fontSize: 9, cellPadding: 3 },
+    styles: { fontSize: 9, cellPadding: 3, font: fontName },
     headStyles: { fillColor: [99, 102, 241] as [number, number, number], fontStyle: 'bold', textColor: 255 },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
@@ -95,10 +122,10 @@ export function generateIncomePDF(
   doc.setDrawColor(200, 200, 200)
   doc.line(20, finalY, 190, finalY)
 
-  doc.setFont('helvetica', 'bold')
+  doc.setFont(fontName, 'bold')
   doc.setFontSize(10)
   doc.text(`Suma przychodów: ${Number(data.totalAmount).toFixed(2)} zł`, 190, finalY + 8, { align: 'right' })
-  doc.setFont('helvetica', 'normal')
+  doc.setFont(fontName, 'normal')
   doc.setFontSize(9)
   doc.text(`Miesięczny limit DG (75% min. wynagrodzenia): ${Number(data.monthlyLimit).toFixed(2)} zł`, 190, finalY + 14, { align: 'right' })
   const pct = data.monthlyLimit > 0 ? ((data.totalAmount / data.monthlyLimit) * 100).toFixed(1) : '0.0'
@@ -106,13 +133,13 @@ export function generateIncomePDF(
 
   if (data.manualEntries.length > 0) {
     doc.setFontSize(8)
-    doc.setFont('helvetica', 'italic')
+    doc.setFont(fontName, 'normal')
     doc.text('* przychód spoza platformy MyLokalni.pl', 20, finalY + 20)
   }
 
   const footerY = finalY + 32
   doc.setFontSize(8)
-  doc.setFont('helvetica', 'normal')
+  doc.setFont(fontName, 'normal')
   doc.setTextColor(150, 150, 150)
   const today = new Date().toLocaleDateString('pl-PL')
   doc.text(`Dokument wygenerowany przez aplikację MyLokalni.pl · ${today}`, 105, footerY, { align: 'center' })
