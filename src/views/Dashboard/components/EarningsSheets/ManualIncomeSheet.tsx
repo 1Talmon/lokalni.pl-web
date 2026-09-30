@@ -6,8 +6,8 @@ import { useBottomSheet } from '@/hooks/useBottomSheet';
 import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 
-const INPUT = 'w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300';
-const LABEL = 'block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5';
+const INPUT = 'w-full bg-gray-50 rounded-xl p-4 text-sm border-none focus:ring-2 focus:ring-indigo-100 outline-none transition-all ring-inset font-medium placeholder:text-gray-400';
+const LABEL = 'block text-xs font-bold text-gray-500 mb-1.5';
 
 interface ManualIncomeSheetProps {
     onClose: () => void;
@@ -132,7 +132,7 @@ export const ManualIncomeSheet = ({ onClose, onSave, isSaving, isError }: Manual
                         <button
                             type="submit"
                             disabled={isSaving}
-                            className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50 active:scale-[0.98]"
+                            className="w-full py-4 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100 disabled:opacity-70 flex items-center justify-center"
                         >
                             {isSaving ? 'Dodawanie…' : 'Dodaj przychód'}
                         </button>

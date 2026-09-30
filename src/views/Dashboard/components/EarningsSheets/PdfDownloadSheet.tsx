@@ -7,8 +7,8 @@ import { BottomSheetHandle } from '@/components/ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
 import type { UserProfile } from '@/types';
 
-const SELECT = 'w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all';
-const LABEL = 'block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5';
+const SELECT = 'w-full bg-gray-50 rounded-xl p-4 text-sm border-none focus:ring-2 focus:ring-indigo-100 outline-none transition-all ring-inset font-medium';
+const LABEL = 'block text-xs font-bold text-gray-500 mb-1.5';
 const MONTH_NAMES = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 const CUR_YEAR = new Date().getFullYear();
 const CUR_MONTH = new Date().getMonth() + 1;
@@ -143,7 +143,7 @@ export const PdfDownloadSheet = ({ user, onClose, onGenerate, isGenerating }: Pd
                             type="button"
                             onClick={() => onGenerate(year, mode === 'year' ? null : month)}
                             disabled={isGenerating}
-                            className="w-full py-3.5 bg-[#6366F1] text-white rounded-xl font-black text-sm tracking-wide hover:bg-indigo-700 transition-all disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-[#6366F1] text-white rounded-2xl text-[13px] font-bold transition-all hover:bg-[#4F46E5] active:scale-95 shadow-xl shadow-indigo-100 disabled:opacity-70 flex items-center justify-center gap-2"
                         >
                             <FileDown size={16} />
                             {isGenerating ? 'Generowanie…' : `Pobierz PDF — ${label}`}
