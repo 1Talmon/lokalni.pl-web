@@ -6,10 +6,10 @@
  * art. 5 ust. 1 Prawa przedsiębiorców) — no company name, NIP, REGON or CEIDG entry.
  */
 export const OPERATOR = {
-    fullName: '[IMIĘ I NAZWISKO]',
+    fullName: 'Cyprian Talmon',
     /** Adres zamieszkania — wymagany przez art. 5 ust. 2 UŚUDE i art. 12 ust. 1 pkt 3 ustawy o prawach konsumenta. */
-    street: '[ULICA I NUMER]',
-    postalCity: '[KOD POCZTOWY I MIEJSCOWOŚĆ]',
+    street: 'ul. Władysława Głocka 3',
+    postalCity: '83-400 Kościerzyna',
     email: 'mylokalni@gmail.com',
     /** Optional — leave null to omit. */
     phone: '+48 577 481 340' as string | null,
