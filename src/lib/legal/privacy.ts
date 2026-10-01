@@ -184,7 +184,7 @@ export const PRIVACY: LegalDocumentData = {
             id: 'bezpieczenstwo',
             title: 'Bezpieczeństwo danych',
             blocks: [
-                { type: 'p', text: 'Stosujemy środki techniczne i organizacyjne odpowiednie do ryzyka, w tym: szyfrowanie połączeń (HTTPS/TLS), przechowywanie haseł wyłącznie w postaci skrótu, krótkotrwałe tokeny dostępu, opcjonalną weryfikację dwuetapową, przechowywanie skanów Certyfikatów i plików z Czatu w prywatnym magazynie z dostępem przez czasowe, podpisane linki, ograniczanie liczby prób logowania, kopie zapasowe oraz ograniczony dostęp do danych. O naruszeniu ochrony danych, które może powodować ryzyko dla Twoich praw, zawiadomimy Prezesa UODO w ciągu 72 godzin, a jeżeli ryzyko jest wysokie – także Ciebie.' },
+                { type: 'p', text: 'Stosujemy środki techniczne i organizacyjne odpowiednie do ryzyka, w tym: szyfrowanie połączeń (HTTPS/TLS), przechowywanie haseł wyłącznie w postaci skrótu, krótkotrwałe tokeny dostępu, opcjonalną weryfikację dwuetapową, przechowywanie skanów Certyfikatów i plików z Czatu w prywatnym magazynie z dostępem przez czasowe, podpisane linki, ograniczanie liczby prób logowania, kopie zapasowe oraz ograniczony dostęp do danych. Do panelu administracyjnego ma dostęp wyłącznie Administrator; wgląd w treść rozmów na Czacie jest technicznie możliwy tylko w związku ze zgłoszeniem dotyczącym uczestnika rozmowy albo z udokumentowanego powodu (np. żądanie organu), a każdy taki wgląd, podgląd profilu i eksport danych jest rejestrowany. O naruszeniu ochrony danych, które może powodować ryzyko dla Twoich praw, zawiadomimy Prezesa UODO w ciągu 72 godzin, a jeżeli ryzyko jest wysokie – także Ciebie.' },
             ],
         },
         {
