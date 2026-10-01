@@ -276,6 +276,7 @@ const PublicProfileView = ({
         type: 'cert' as const,
         name: c.name,
         image: c.url || '',
+        fileType: c.fileType === 'pdf' || c.fileType === 'image' ? c.fileType : null,
     }));
 
     const handleReportSubmit = async (reason: string) => {

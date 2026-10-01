@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Plus, Loader2, FileText, Trash2, Clock, X, ImagePlus, Pencil, AlertCircle } from 'lucide-react';
+import { Award, Plus, Loader2, FileText, Trash2, X, ImagePlus, Pencil, AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { CertificatePreviewModal } from '../../../../components/modals/CertificatePreviewModal';
 import { apiClient } from '../../../../services/apiClient';
@@ -120,6 +120,7 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
     const isEdit = !!cert;
     const [name, setName] = useState(cert?.name ?? '');
     const [fileUrl, setFileUrl] = useState<string | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [fileType, setFileType] = useState<'image' | 'pdf' | null>(null);
     const [fileName, setFileName] = useState('');
     const [isUploading, setIsUploading] = useState(false);
@@ -151,9 +152,10 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
             const fd = new FormData();
             fd.append('file', file);
             const res = await apiClient.postFormData('/upload/document', fd);
-            const json = await res.json().catch(() => ({})) as { url?: string; error?: string; message?: string };
+            const json = await res.json().catch(() => ({})) as { url?: string; previewUrl?: string; error?: string; message?: string };
             if (!res.ok || !json.url) throw new Error(json.error ?? json.message ?? 'Nie udało się przesłać pliku.');
             setFileUrl(json.url);
+            setPreviewUrl(json.previewUrl ?? json.url);
             setFileType(file.type === 'application/pdf' ? 'pdf' : 'image');
             setFileName(file.name);
         } catch (err: unknown) {
@@ -163,7 +165,7 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
         }
     };
 
-    const clearFile = () => { setFileUrl(null); setFileType(null); setFileName(''); setError(null); };
+    const clearFile = () => { setFileUrl(null); setPreviewUrl(null); setFileType(null); setFileName(''); setError(null); };
 
     return (
         <SheetShell
@@ -209,9 +211,6 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
                                     enterKeyHint="done"
                                     className="w-full bg-gray-50 rounded-xl p-4 text-sm border-none outline-none transition-all ring-inset font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-100"
                                 />
-                                {isEdit && cert.status === 'verified' && !unchanged && trimmed && (
-                                    <p className="text-xs text-amber-600 mt-1.5">Po zmianie nazwy certyfikat wróci do weryfikacji.</p>
-                                )}
                             </div>
 
                             {!isEdit && (
@@ -222,7 +221,7 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
                                     {fileUrl ? (
                                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                                             {fileType === 'image'
-                                                ? <img src={fileUrl} className="w-12 h-12 rounded-lg object-cover shrink-0" alt="" />
+                                                ? <img src={previewUrl ?? fileUrl} className="w-12 h-12 rounded-lg object-cover shrink-0" alt="" />
                                                 : <div className="w-12 h-12 rounded-lg bg-rose-50 flex items-center justify-center shrink-0"><FileText size={20} className="text-rose-400" /></div>
                                             }
                                             <div className="flex-1 min-w-0">
@@ -252,7 +251,7 @@ const CertificateFormSheet = ({ cert, onSubmit, onClose }: CertificateFormSheetP
                                     )}
                                     <input ref={fileInputRef} type="file" hidden accept={ALLOWED_MIME.join(',')} onChange={handleFile} />
                                     <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-                                        Dokument pomaga nam zweryfikować certyfikat. Na profilu pojawi się dopiero po weryfikacji.
+                                        Certyfikat od razu pojawi się na Twoim profilu publicznym — klienci zobaczą też dołączony plik.
                                     </p>
                                 </div>
                             )}
@@ -296,9 +295,7 @@ const DeleteCertificateSheet = ({ cert, onConfirm, onClose }: {
                             Usuwasz: <span className="font-bold text-gray-900 break-words">{cert.name}</span>
                         </p>
                         <p className="text-xs text-gray-400 mt-3">
-                            {cert.status === 'verified'
-                                ? 'Certyfikat zniknie z Twojego profilu publicznego. Tej operacji nie można cofnąć.'
-                                : 'Tej operacji nie można cofnąć.'}
+                            Certyfikat zniknie z Twojego profilu publicznego. Tej operacji nie można cofnąć.
                         </p>
                         {error && (
                             <div className="flex items-start gap-2 p-3 mt-4 bg-rose-50 rounded-xl text-rose-600">
@@ -354,8 +351,7 @@ export const CertificateSection = ({
 
     const handleRename = async (cert: CertEntry, name: string) => {
         if (onUpdateName) await onUpdateName(cert.id, name);
-        // API resets verification on rename — mirror it until the refetch lands.
-        setCertificates(prev => prev.map(c => c.id === cert.id ? { ...c, name, status: c.name === name ? c.status : 'pending' } : c));
+        setCertificates(prev => prev.map(c => c.id === cert.id ? { ...c, name } : c));
     };
 
     const handleDelete = async (cert: CertEntry) => {
@@ -368,7 +364,6 @@ export const CertificateSection = ({
         else setEditingCert(cert);
     };
 
-    const hasPending = certificates.some(c => c.status === 'pending');
     const showSkeleton = isLoading && certificates.length === 0;
 
     return (
@@ -429,7 +424,7 @@ export const CertificateSection = ({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                                    className={`min-h-[76px] flex items-center gap-1 pl-4 pr-2 py-3 rounded-[1.5rem] border transition-all duration-300 ${cert.status === 'verified' ? 'bg-white border-indigo-100 shadow-lg shadow-indigo-50/50' : 'bg-gray-50/50 border-gray-100 hover:border-gray-200'}`}
+                                    className={`min-h-[76px] flex items-center gap-1 pl-4 pr-2 py-3 rounded-[1.5rem] border bg-white border-indigo-100 shadow-lg shadow-indigo-50/50 transition-all duration-300`}
                                 >
                                     <button
                                         type="button"
@@ -446,12 +441,9 @@ export const CertificateSection = ({
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[13px] font-bold text-gray-700 line-clamp-2 break-words leading-snug">{cert.name}</p>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <div className={`w-1.5 h-1.5 rounded-full ${cert.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                                                <span className={`text-[10px] font-bold uppercase tracking-wider ${cert.status === 'verified' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                                    {cert.status === 'verified' ? 'Zweryfikowany' : 'W weryfikacji'}
-                                                </span>
-                                            </div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mt-0.5">
+                                                {cert.fileType === 'pdf' ? 'Dokument PDF' : cert.fileType === 'image' ? 'Skan dokumentu' : 'Bez pliku'}
+                                            </p>
                                         </div>
                                     </button>
                                     <div className="flex items-center shrink-0">
@@ -476,12 +468,6 @@ export const CertificateSection = ({
                             ))}
                         </AnimatePresence>
                     </div>
-                    {hasPending && (
-                        <p className="flex items-start gap-1.5 text-[11px] text-gray-400 mt-3 px-1 leading-relaxed">
-                            <Clock size={12} className="shrink-0 mt-0.5" />
-                            Certyfikaty w weryfikacji widzisz tylko Ty — na profilu publicznym pojawią się po zatwierdzeniu.
-                        </p>
-                    )}
                 </>
             )}
 

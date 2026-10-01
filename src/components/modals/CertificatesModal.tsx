@@ -1,18 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBottomSheet } from '../../hooks/useBottomSheet';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { X, Award, CheckCircle, ShieldCheck, ArrowLeft, FileCheck } from 'lucide-react';
+import { X, Award, CheckCircle, ShieldCheck, ArrowLeft, FileCheck, FileText, ExternalLink } from 'lucide-react';
 
 export type CertItem = {
     id: number;
     type: 'cert';
     name: string;
     image: string;
+    fileType: 'image' | 'pdf' | null;
 };
 
 export type CompItem = {
@@ -24,6 +24,9 @@ export type CompItem = {
 };
 
 export type CertOrComp = CertItem | CompItem;
+
+const certLabel = (c: CertItem) =>
+    c.fileType === 'pdf' ? 'Dokument PDF' : c.fileType === 'image' ? 'Skan dokumentu' : 'Certyfikat';
 
 const LEVEL_BADGE: Record<string, { bg: string; text: string }> = {
     "Ekspert":             { bg: "bg-indigo-500/25", text: "text-indigo-300" },
@@ -151,17 +154,19 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                                         className="group rounded-2xl overflow-hidden bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 active:scale-[0.97] transition-all text-left"
                                                     >
                                                         <div className="relative aspect-[4/3] overflow-hidden bg-slate-700">
-                                                            {item.image
-                                                                ? <Image src={item.image} fill className="object-cover group-hover:scale-105 transition-transform duration-300" alt={item.name} sizes="200px" />
-                                                                : <div className="w-full h-full flex items-center justify-center"><Award size={28} className="text-amber-500/30" /></div>
+                                                            {item.image && item.fileType === 'image'
+                                                                ? <img src={item.image} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={item.name} />
+                                                                : <div className="w-full h-full flex items-center justify-center">
+                                                                    {item.fileType === 'pdf' ? <FileText size={28} className="text-rose-400/60" /> : <Award size={28} className="text-amber-500/30" />}
+                                                                  </div>
                                                             }
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                                         </div>
                                                         <div className="px-3 py-2.5">
                                                             <p className="text-[12px] font-bold text-white leading-tight truncate">{item.name}</p>
                                                             <div className="flex items-center gap-1 mt-1">
-                                                                <ShieldCheck size={9} className="text-indigo-400 shrink-0" />
-                                                                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Zweryfikowany</span>
+                                                                <FileCheck size={9} className="text-slate-400 shrink-0" />
+                                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{certLabel(item)}</span>
                                                             </div>
                                                         </div>
                                                     </motion.button>
@@ -213,9 +218,16 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                 >
                                     {selected.type === 'cert' ? (
                                         <div>
-                                            {selected.image
+                                            {selected.image && selected.fileType === 'image'
                                                 ? <img src={selected.image} alt={selected.name} className="w-full object-contain max-h-[55vh] bg-slate-950" />
-                                                : <div className="flex items-center justify-center h-48 bg-slate-800"><Award size={52} className="text-amber-500/20" /></div>
+                                                : selected.image && selected.fileType === 'pdf'
+                                                    ? <div className="flex flex-col items-center justify-center gap-4 h-48 bg-slate-800">
+                                                        <FileText size={44} className="text-rose-400/70" strokeWidth={1.5} />
+                                                        <a href={selected.image} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold transition-colors">
+                                                            Otwórz dokument PDF <ExternalLink size={14} />
+                                                        </a>
+                                                      </div>
+                                                    : <div className="flex items-center justify-center h-48 bg-slate-800"><Award size={52} className="text-amber-500/20" /></div>
                                             }
                                             <div className="px-5 py-4 flex items-center gap-3 border-t border-slate-800" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 1rem)' }}>
                                                 <div className="w-10 h-10 rounded-2xl bg-amber-500/15 flex items-center justify-center shrink-0">
@@ -224,8 +236,8 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[15px] font-black text-white leading-tight truncate">{selected.name}</p>
                                                     <div className="flex items-center gap-1.5 mt-1">
-                                                        <ShieldCheck size={11} className="text-indigo-400" />
-                                                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Zweryfikowany dokument</span>
+                                                        <FileCheck size={11} className="text-slate-400" />
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{certLabel(selected)}</span>
                                                     </div>
                                                 </div>
                                             </div>

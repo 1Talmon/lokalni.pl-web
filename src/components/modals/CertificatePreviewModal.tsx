@@ -59,12 +59,6 @@ export const CertificatePreviewModal = ({ cert, onClose }: CertificatePreviewMod
                         <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between gap-3 shrink-0">
                             <div className="min-w-0">
                                 <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 break-words">{cert.name}</h3>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${cert.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${cert.status === 'verified' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                        {cert.status === 'verified' ? 'Zweryfikowany' : 'W weryfikacji'}
-                                    </span>
-                                </div>
                             </div>
                             <button
                                 type="button"
