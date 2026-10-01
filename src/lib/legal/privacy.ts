@@ -84,6 +84,7 @@ export const PRIVACY: LegalDocumentData = {
                         ['Google LLC / Google Ireland Ltd (Firebase Cloud Messaging)', 'dostarczanie powiadomień push', 'UE i USA'],
                         ['Functional Software, Inc. (Sentry)', 'wykrywanie i diagnozowanie błędów aplikacji', 'UE (Niemcy)'],
                         ['Google LLC (Google Maps Platform)', 'podpowiadanie adresów i miejscowości, mapy', 'UE i USA'],
+                        ['Grafana Labs', 'monitorowanie działania serwerów i logi techniczne (mogą zawierać adres IP)', 'Wielka Brytania – państwo z decyzją Komisji Europejskiej stwierdzającą odpowiedni stopień ochrony'],
                     ],
                 },
                 { type: 'p', text: '3. **Niezależnym administratorom**: Google, Meta Platforms i Apple – gdy logujesz się przez ich usługi (przetwarzają dane według własnych polityk prywatności); Apple i Google – jako operatorzy sklepów z aplikacjami i usług powiadomień systemowych (APNs, FCM); dostawcom poczty e-mail i hostingu Twoich rozmówców.' },
