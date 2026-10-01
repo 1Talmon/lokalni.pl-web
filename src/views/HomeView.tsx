@@ -21,7 +21,7 @@ const SORT_OPTS: { value: SortBy; label: string }[] = [
     { value: 'rating',    label: 'Polecane'   },
     { value: 'distance',  label: 'Odległość'  },
     { value: 'price-low', label: 'Cena'       },
-    { value: 'verified',  label: 'Sprawdzeni' },
+    { value: 'verified',  label: 'Plus najpierw' },
 ];
 const SortDropdown = ({ value, onChange }: { value: SortBy; onChange: (v: SortBy) => void }) => {
     const [open, setOpen] = useState(false);

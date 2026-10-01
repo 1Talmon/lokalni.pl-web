@@ -106,7 +106,7 @@ const FaqView = () => {
                                     </div>
                                 </div>
                                 <a
-                                    href="mailto:kontakt@lokalni.pl"
+                                    href="mailto:mylokalni@gmail.com"
                                     className="bg-gray-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors active:scale-95 inline-block"
                                 >
                                     Skontaktuj się

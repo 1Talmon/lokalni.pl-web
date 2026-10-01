@@ -125,9 +125,9 @@ export default function AboutPage() {
                                         <MapPin size={16} className="text-[#6366F1] shrink-0" />
                                         <span className="text-gray-700">ul. Prosta 1<br />00-000 Warszawa</span>
                                     </div>
-                                    <a href="mailto:kontakt@lokalni.pl" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
+                                    <a href="mailto:mylokalni@gmail.com" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
                                         <Mail size={16} className="text-[#6366F1] shrink-0" />
-                                        <span className="text-gray-700">kontakt@lokalni.pl</span>
+                                        <span className="text-gray-700">mylokalni@gmail.com</span>
                                     </a>
                                     <a href="tel:+48577481340" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
                                         <Phone size={16} className="text-[#6366F1] shrink-0" />
@@ -140,7 +140,7 @@ export default function AboutPage() {
                                 <h4 className="font-bold text-indigo-900 mb-2">Chcesz dowiedzieć się więcej?</h4>
                                 <p className="text-indigo-700 text-sm mb-6">Nasz zespół chętnie odpowie na Twoje pytania.</p>
                                 <a
-                                    href="mailto:kontakt@lokalni.pl"
+                                    href="mailto:mylokalni@gmail.com"
                                     className="inline-flex items-center gap-2 bg-[#6366F1] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4F46E5] transition-colors active:scale-95"
                                 >
                                     <Mail size={18} />

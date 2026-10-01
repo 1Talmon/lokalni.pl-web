@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone } from 'lucide-react';
+import { OPERATOR } from '@/lib/legal/operator';
 
 const AppleIcon = () => (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -68,21 +69,19 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                     <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-widest">Kontakt</h4>
                     <ul className="space-y-3 text-sm">
                         <li>
-                            <a href="mailto:kontakt@lokalni.pl" className="flex items-center gap-3 hover:text-white transition-colors">
-                                <Mail size={16} className="text-[#6366F1]"/>
-                                kontakt@lokalni.pl
+                            <a href={`mailto:${OPERATOR.email}`} className="flex items-center gap-3 hover:text-white transition-colors break-all">
+                                <Mail size={16} className="text-[#6366F1] shrink-0"/>
+                                {OPERATOR.email}
                             </a>
                         </li>
-                        <li>
-                            <a href="tel:+48577481340" className="flex items-center gap-3 hover:text-white transition-colors">
-                                <Phone size={16} className="text-[#6366F1]"/>
-                                +48 577 481 340
-                            </a>
-                        </li>
-                        <li className="flex items-center gap-3">
-                            <MapPin size={16} className="text-[#6366F1]"/>
-                            ul. Prosta 1, Warszawa
-                        </li>
+                        {OPERATOR.phone && (
+                            <li>
+                                <a href={`tel:${OPERATOR.phone.replace(/\s/g, '')}`} className="flex items-center gap-3 hover:text-white transition-colors">
+                                    <Phone size={16} className="text-[#6366F1] shrink-0"/>
+                                    {OPERATOR.phone}
+                                </a>
+                            </li>
+                        )}
                     </ul>
                 </div>
             </div>
@@ -110,13 +109,13 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
 
             {/* DOŁEK: COPYRIGHT */}
             <div className="max-w-7xl mx-auto mt-6 pt-6 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs opacity-50">
-                <div>© {new Date().getFullYear()} [PEŁNA NAZWA FIRMY] | NIP: [000-000-00-00] | Wszystkie prawa zastrzeżone.</div>
+                <div>© {new Date().getFullYear()} {OPERATOR.serviceName} · {OPERATOR.fullName}</div>
                 <div className="flex gap-6">
                     <button
                         onClick={handleResetCookies}
                         className="hover:text-white transition-colors hover:underline"
                     >
-                        Ustawienia cookies
+                        Pliki cookies
                     </button>
                     <span>Usługi na wyciągnięcie ręki.</span>
                 </div>

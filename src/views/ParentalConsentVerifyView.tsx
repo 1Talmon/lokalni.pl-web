@@ -40,7 +40,7 @@ const ParentalConsentVerifyView = () => {
                                     <p className="text-xs font-semibold text-emerald-700 mb-1">Co dalej?</p>
                                     <ul className="text-xs text-emerald-700 space-y-1 leading-relaxed">
                                         <li>✓ Twoje dziecko może teraz się zalogować</li>
-                                        <li>✓ W każdej chwili możesz wycofać zgodę przez email na kontakt@lokalni.pl</li>
+                                        <li>✓ W każdej chwili możesz wycofać zgodę przez email na mylokalni@gmail.com</li>
                                         <li>✓ Możesz przeglądać Politykę Prywatności na naszej stronie</li>
                                     </ul>
                                 </div>
@@ -65,7 +65,7 @@ const ParentalConsentVerifyView = () => {
                                 </div>
                                 <div className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 text-left">
                                     <p className="text-xs text-amber-700 leading-relaxed">
-                                        Jeśli potrzebujesz pomocy, napisz do nas na <strong>kontakt@lokalni.pl</strong>
+                                        Jeśli potrzebujesz pomocy, napisz do nas na <strong>mylokalni@gmail.com</strong>
                                     </p>
                                 </div>
                                 <button
