@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-09-29 14:28 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-01 09:23 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
-- Branch: `main`
-- Uncommitted files: **1**
+- Branch: `dev`
+- Uncommitted files: **2**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-c664e0c feat(footer): link TestFlight iOS w stopce — beta pobierz aplikację
-ae7b879 feat(ui): własny czas wykonania usługi — stepper h/min w formularzu dodawania
-e82432b fix(perf): timeout 15s na fetch usługi — zapobiega wiecznym spinner gdy API zawiesza
-a4bad3e fix(ui): napraw ucinanie ostatniej linii tytułu w karuzeli podobnych usług na iOS
-2792f18 fix(ui): whitespace-nowrap na nagłówku sekcji podobne w okolicy
-d2a58ea fix(profile): race condition przy szybkiej nawigacji ServiceDetails→Profile
-0188d15 fix(chat): autoscroll na iOS + błąd next/image w BookingCard
-ad6d4c7 chore(seo): wyłącz sitemap profili — endpoint API niezaimplementowany
-16745b9 fix(seo): 404 dla wszystkich slug stron bez wyników zamiast 200+noindex
-763cffc fix(ui): naprawa layoutu bloku opinii na mobile w PublicProfileView
+7b385d8 feat(auth): imię i nazwisko w kroku daty urodzenia (sync z apką)
+5495f62 fix(dg): limit działalności nierejestrowanej kwartalnie od 2026 + ewidencja sprzedaży
+e43232c fix(settings): nagłówek Ustawień jak w Rezerwacjach i Postach
+d16f846 refactor(settings): jeden wzór wiersza w całych Ustawieniach
+d61d03f fix(users): BlockUserModal spójny z arkuszami otwieranymi nad czatem
+30f9895 fix(dev): emulator Cloudflare w next dev tylko na żądanie (CF_DEV_PLATFORM=1)
+cd2d682 feat(users): modal potwierdzenia blokady zamiast window.confirm
+759bd0e feat(users): blokowanie użytkowników w czacie, profilu i ustawieniach
+566135d feat(premium): darmowy miesiąc Plus zamiast udawanej płatności
+d6cfaf5 fix(ui): usuń podwójny przycisk cofania na stronach informacyjnych (mobile)
 ```
 
 <!-- AI_AUTO_END -->
