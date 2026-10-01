@@ -7,6 +7,7 @@ import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import ServiceDetailsContent from './ServiceDetailsContent';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -89,7 +90,7 @@ export default async function ServicePage({ params }: Props) {
                 <script
                     key={i}
                     type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+                    dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
                 />
             ))}
             {/* SSR visible content — LCP candidate for real users + Googlebot indexable HTML.

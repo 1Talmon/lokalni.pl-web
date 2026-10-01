@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { HelpCircle, MessageCircle, ShieldCheck, CreditCard, User } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const title = 'FAQ – Często zadawane pytania';
 const description = 'Odpowiedzi na najczęstsze pytania o MyLokalni.pl – jak znaleźć specjalistę, zarezerwować usługę i co zrobić w razie problemów.';
@@ -55,7 +56,7 @@ const faqJsonLd = {
 export default function FaqPage() {
     return (
         <>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqJsonLd) }} />
             <div className="min-h-screen bg-gray-50 pb-20 font-sans text-gray-700">
                 <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">

@@ -3,6 +3,7 @@ import { BackButton } from './BackButton';
 import { LegalDocument } from '@/components/legal/LegalDocument';
 import { OPERATOR } from '@/lib/legal/operator';
 import type { LegalDocumentData } from '@/lib/legal/types';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 export function LegalPageShell({ icon: Icon, heading, doc, jsonLd }: {
     icon: LucideIcon;
@@ -12,7 +13,7 @@ export function LegalPageShell({ icon: Icon, heading, doc, jsonLd }: {
 }) {
     return (
         <>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
             <div className="min-h-screen bg-gray-50 pb-20">
                 <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">

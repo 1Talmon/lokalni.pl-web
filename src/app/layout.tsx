@@ -4,6 +4,7 @@ import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
 import '../index.css';
 import '../App.css';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const font = Plus_Jakarta_Sans({
     subsets: ['latin', 'latin-ext'],
@@ -121,8 +122,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body className={font.className}>
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <WebVitals />
-                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
-                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
                 {children}
             </body>
         </html>

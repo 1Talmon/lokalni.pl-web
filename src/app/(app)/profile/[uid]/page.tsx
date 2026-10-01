@@ -7,6 +7,7 @@ import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 import PublicProfileContent from './PublicProfileContent';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 interface Props { params: Promise<{ uid: string }> }
 
@@ -82,7 +83,7 @@ export default async function ProfilePage({ params }: Props) {
             )}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
             />
             {/* SSR visible shell — LCP candidate for real users + Googlebot indexable HTML.
                 Hidden by PublicProfileClient once interactive version renders. */}

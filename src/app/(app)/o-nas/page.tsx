@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Users, Target, Heart, Award, Mail, Building2, MapPin, Phone } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const title = 'O nas – Platforma lokalnych specjalistów';
 const description = 'Poznaj MyLokalni.pl – największą polską platformę łączącą klientów ze sprawdzonymi lokalnymi specjalistami w całej Polsce.';
@@ -27,7 +28,7 @@ const webPageJsonLd = {
 export default function AboutPage() {
     return (
         <>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(webPageJsonLd) }} />
             <div className="min-h-screen bg-gray-50 pb-20 font-sans">
                 <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">

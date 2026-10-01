@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 interface Props { params: Promise<{ uid: string }> }
 
@@ -71,7 +72,7 @@ export default async function OgProfilePage({ params }: Props) {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
             />
             <PublicProfileStaticShell data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']} />
         </>

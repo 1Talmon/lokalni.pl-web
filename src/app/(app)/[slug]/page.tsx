@@ -7,6 +7,7 @@ import { createServiceUrl } from '@/utils/helpers';
 import { fetchServices, resolveFetchParams, buildH1 } from '@/lib/slug-services';
 import { SlugContent } from './_components/SlugContent';
 import { SlugStaticShell } from './_components/SlugStaticShell';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 // Slug routes live in (app) so AppShell handles them natively:
 // - detects isSlugRoute, hides tab strip, pre-fills search state (useLayoutEffect)
@@ -105,10 +106,10 @@ export default async function SlugPage({ params }: Props) {
     return (
         <>
             {/* JSON-LD for Googlebot */}
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }} />
             {aggregateRatingJsonLd && (
-                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingJsonLd) }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(aggregateRatingJsonLd) }} />
             )}
             {/* SSR shell — widoczny HTML dla użytkownika i Googlebota zanim JS się załaduje */}
             {services.length > 0 && (

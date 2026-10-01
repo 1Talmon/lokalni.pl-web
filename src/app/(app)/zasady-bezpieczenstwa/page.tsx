@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ShieldCheck, Lock, AlertTriangle, CheckCircle, Mail, UserCheck } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
+import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const title = 'Zasady bezpieczeństwa';
 const description = 'Zasady bezpiecznego korzystania z MyLokalni.pl – weryfikacja specjalistów, ochrona danych, zgłaszanie nadużyć.';
@@ -27,7 +28,7 @@ const webPageJsonLd = {
 export default function SafetyPage() {
     return (
         <>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(webPageJsonLd) }} />
             <div className="min-h-screen bg-gray-50 pb-20 font-sans text-gray-700">
                 <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
