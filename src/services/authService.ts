@@ -66,6 +66,8 @@ export interface TwoFAChallengeResult {
 export interface SocialDobResult {
     needs_dob: true;
     temp_token: string;
+    /** Konto bez imienia (dostawca go nie podał) — formularz musi zapytać o imię i nazwisko */
+    needs_name?: boolean;
 }
 
 export interface AuthSuccessResult {
@@ -143,7 +145,7 @@ export const authService = {
         if (!response.ok) throw new Error(result.message as string || 'Błąd logowania Google');
 
         if (result.needs_dob) {
-            return { needs_dob: true, temp_token: result.temp_token as string };
+            return { needs_dob: true, temp_token: result.temp_token as string, needs_name: result.needs_name === true };
         }
         if (result.needs_2fa) {
             return { needs_2fa: true, temp_token: result.temp_token as string, method: result.method as 'totp' | 'email' };
@@ -167,7 +169,7 @@ export const authService = {
         if (!response.ok) throw new Error(result.message as string || 'Błąd logowania Facebook');
 
         if (result.needs_dob) {
-            return { needs_dob: true, temp_token: result.temp_token as string };
+            return { needs_dob: true, temp_token: result.temp_token as string, needs_name: result.needs_name === true };
         }
         if (result.needs_2fa) {
             return { needs_2fa: true, temp_token: result.temp_token as string, method: result.method as 'totp' | 'email' };
@@ -176,11 +178,11 @@ export const authService = {
     },
 
     // --- DOKOŃCZENIE REJESTRACJI SOCIAL (DOB) ---
-    async completeSocialLogin(tempToken: string, dateOfBirth: string, parentalEmail?: string): Promise<{ success: boolean; parentalConsentRequired?: boolean; childEmail?: string } | AuthSuccessResult> {
+    async completeSocialLogin(tempToken: string, dateOfBirth: string, parentalEmail?: string, name?: { firstName: string; lastName: string }): Promise<{ success: boolean; parentalConsentRequired?: boolean; childEmail?: string } | AuthSuccessResult> {
         const response = await fetch(`${API_URL}/auth/social/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail }),
+            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail, ...(name ? { firstName: name.firstName, lastName: name.lastName } : {}) }),
             credentials: 'include',
         });
         const result: RawAuthPayload = await response.json();

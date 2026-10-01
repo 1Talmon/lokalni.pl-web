@@ -43,7 +43,7 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
         acceptTerms, acceptNewsletter, setAcceptNewsletter,
         termsError, firstNameError, lastNameError, passwordError, confirmPasswordError, phoneError, emailError,
         apiError, setApiError, apiSuccess,
-        isLoading, resendTimer, isResending,
+        isLoading, resendTimer, isResending, socialNeedsName,
         passwordRequirements, passwordStrength,
         handleGoogleLogin, handleFacebookLogin, handleSubmit, handleResendCode,
         handleFirstNameChange, handleLastNameChange,
@@ -203,6 +203,38 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                     </motion.div>
                                 ) : authMode === 'social-dob' ? (
                                     <motion.div key="social-dob-fields" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="flex flex-col gap-4">
+                                        {socialNeedsName && (
+                                            <div className="flex gap-4">
+                                                <div className="relative flex-1">
+                                                    <div className="relative">
+                                                        <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${firstNameError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                                                        <input name="firstName" required value={firstName}
+                                                            onChange={handleFirstNameChange}
+                                                            autoComplete="given-name"
+                                                            autoCorrect="off"
+                                                            autoCapitalize="words"
+                                                            enterKeyHint="next"
+                                                            className={`w-full border rounded-xl py-3 pl-12 pr-4 outline-none transition-all ${firstNameError ? 'border-red-300 bg-red-50' : 'bg-gray-50 border-gray-200 focus:ring-2 focus:ring-[#6366F1]'}`}
+                                                            placeholder="Imię" />
+                                                    </div>
+                                                    {firstNameError && <div className="text-red-500 text-xs pl-4 font-medium mt-1 -ml-1">{firstNameError}</div>}
+                                                </div>
+                                                <div className="relative flex-1">
+                                                    <div className="relative">
+                                                        <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${lastNameError ? 'text-red-400' : 'text-gray-400'}`} size={20} />
+                                                        <input name="lastName" value={lastName}
+                                                            onChange={handleLastNameChange}
+                                                            autoComplete="family-name"
+                                                            autoCorrect="off"
+                                                            autoCapitalize="words"
+                                                            enterKeyHint="next"
+                                                            className={`w-full border rounded-xl py-3 pl-12 pr-4 outline-none transition-all ${lastNameError ? 'border-red-300 bg-red-50' : 'bg-gray-50 border-gray-200 focus:ring-2 focus:ring-[#6366F1]'}`}
+                                                            placeholder="Nazwisko" />
+                                                    </div>
+                                                    {lastNameError && <div className="text-red-500 text-xs pl-4 font-medium mt-1 -ml-1">{lastNameError}</div>}
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700 leading-relaxed">
                                             Wymagamy daty urodzenia zgodnie z przepisami o ochronie danych (RODO). Informacja jest przechowywana bezpiecznie i nie jest widoczna publicznie.
                                         </div>

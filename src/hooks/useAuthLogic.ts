@@ -106,6 +106,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     const [tempToken, setTempToken] = useState('');
     const [twoFaMethod, setTwoFaMethod] = useState<'totp' | 'email'>('email');
     const [socialDobToken, setSocialDobToken] = useState('');
+    const [socialNeedsName, setSocialNeedsName] = useState(false);
     const [referralCode, setReferralCode] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('referral_code') || '' : '');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [parentalEmail, setParentalEmail] = useState('');
@@ -139,6 +140,8 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         if ((result as SocialDobResult).needs_dob) {
             const r = result as SocialDobResult;
             setSocialDobToken(r.temp_token);
+            setSocialNeedsName(r.needs_name === true);
+            setFirstNameError(''); setLastNameError('');
             setDateOfBirth('');
             setParentalEmail('');
             setAuthMode('social-dob');
@@ -455,13 +458,17 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     const handleCompleteSocialDob = async () => {
         setIsLoading(true); setApiError('');
         setDateOfBirthError(''); setParentalEmailError('');
+        if (socialNeedsName && !firstName.trim()) { setFirstNameError('Podaj imię'); setIsLoading(false); return; }
         if (!dateOfBirth) { setDateOfBirthError('Podaj datę urodzenia'); setIsLoading(false); return; }
         const age = calculateAge(dateOfBirth);
         if (age < 13) { setDateOfBirthError('Rejestracja jest dostępna od 13. roku życia'); setIsLoading(false); return; }
         if (age < 16 && !parentalEmail) { setParentalEmailError('Adres email rodzica jest wymagany'); setIsLoading(false); return; }
         if (age < 16 && !emailFormatRegex.test(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); setIsLoading(false); return; }
         try {
-            const result = await authService.completeSocialLogin(socialDobToken, dateOfBirth, parentalEmail || undefined);
+            const result = await authService.completeSocialLogin(
+                socialDobToken, dateOfBirth, parentalEmail || undefined,
+                socialNeedsName ? { firstName: firstName.trim(), lastName: lastName.trim() } : undefined,
+            );
             if ((result as { parentalConsentRequired?: boolean }).parentalConsentRequired) {
                 setSocialChildEmail((result as { childEmail?: string }).childEmail ?? '');
                 setAuthMode('parental-pending');
@@ -660,6 +667,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         apiError, setApiError, apiSuccess,
         // Loading
         isLoading, resendTimer, isResending,
+        socialNeedsName,
         // Computed
         passwordRequirements, passwordStrength,
         // Handlers
