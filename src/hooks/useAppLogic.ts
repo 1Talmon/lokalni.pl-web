@@ -537,7 +537,7 @@ export const useAppLogic = () => {
             const res = await apiClient.post('/bookings/for-client', { sessionId, servicePublicId, date, time, recurrence });
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
-                throw new Error((errJson as { message?: string }).message || 'Błąd tworzenia rezerwacji');
+                throw new Error((errJson as { error?: string; message?: string }).error || (errJson as { message?: string }).message || 'Błąd tworzenia rezerwacji');
             }
             queryClient.invalidateQueries({ queryKey: ['chat-messages', sessionId] });
             queryClient.invalidateQueries({ queryKey: ['chats'] });

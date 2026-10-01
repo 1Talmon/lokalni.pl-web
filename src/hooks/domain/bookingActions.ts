@@ -67,7 +67,7 @@ export async function submitBooking(e: React.FormEvent, deps: BookingSubmitDeps)
 
         const res = await apiClient.post('/bookings', payload as unknown as Record<string, unknown>);
         const json = await res.json();
-        if (!res.ok) throw new Error(json.message || 'Błąd rezerwacji');
+        if (!res.ok) throw new Error(json.error || json.message || 'Błąd rezerwacji');
 
         addToast(service.type === 'request' ? 'Oferta wysłana!' : 'Prośba wysłana!', 'success');
 
@@ -155,7 +155,10 @@ export async function rescheduleBooking(
     const { addToast, queryClient, setCurrentChatId, setActiveModal } = deps;
     try {
         const res = await apiClient.patch(`/bookings/${bookingId}/reschedule`, { date: newDate, time: newTime });
-        if (!res.ok) throw new Error('Błąd zmiany terminu');
+        if (!res.ok) {
+            const errJson = await res.json().catch(() => ({})) as { error?: string; message?: string };
+            throw new Error(errJson.error || errJson.message || 'Błąd zmiany terminu');
+        }
         const json = await res.json() as { chatId?: string };
         queryClient.invalidateQueries({ queryKey: ['bookings'] });
         queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
