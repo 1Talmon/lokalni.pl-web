@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Plus, Loader2, ShieldCheck, FileText, Trash2, Clock, X, ImagePlus, Pencil, AlertCircle } from 'lucide-react';
+import { Award, Plus, Loader2, FileText, Trash2, Clock, X, ImagePlus, Pencil, AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { CertificatePreviewModal } from '../../../../components/modals/CertificatePreviewModal';
 import { apiClient } from '../../../../services/apiClient';
@@ -389,8 +389,8 @@ export const CertificateSection = ({
             {showSkeleton ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     {[0, 1].map(i => (
-                        <div key={i} className="flex items-center gap-3 p-3 md:p-4 rounded-[1.8rem] border border-gray-100">
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gray-100 animate-pulse shrink-0" />
+                        <div key={i} className="min-h-[76px] flex items-center gap-4 px-5 py-4 rounded-[1.5rem] border border-gray-100">
+                            <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
                             <div className="flex-1 space-y-2">
                                 <div className="h-3.5 w-2/3 bg-gray-100 rounded animate-pulse" />
                                 <div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
@@ -402,7 +402,7 @@ export const CertificateSection = ({
                 <button
                     type="button"
                     onClick={() => setIsAdding(true)}
-                    className="w-full min-h-[160px] border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 p-6 bg-gradient-to-br from-gray-50/50 to-white group hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50/50 transition-colors duration-300"
+                    className="w-full min-h-[180px] border-2 border-dashed border-gray-100 rounded-[2rem] flex items-center justify-center gap-8 px-6 bg-gradient-to-br from-gray-50/50 to-white group hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50/50 transition-colors duration-300"
                 >
                     <div className="relative">
                         <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center group-hover:rotate-6 transition-transform duration-300">
@@ -412,7 +412,7 @@ export const CertificateSection = ({
                             <Plus size={14} strokeWidth={3} />
                         </div>
                     </div>
-                    <div className="text-center sm:text-left">
+                    <div className="text-left">
                         <h5 className="text-[15px] font-bold text-gray-800">Uwiarygodnij swój profil</h5>
                         <p className="text-xs text-gray-400 mt-0.5">Dodaj certyfikaty, aby przyciągnąć więcej klientów.</p>
                     </div>
@@ -429,26 +429,28 @@ export const CertificateSection = ({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                                    className="group flex items-center gap-1 bg-gray-50/50 border border-gray-100 rounded-[1.8rem] p-2 md:p-3 hover:bg-white hover:border-indigo-100 hover:shadow-md transition-colors duration-300"
+                                    className={`min-h-[76px] flex items-center gap-1 pl-4 pr-2 py-3 rounded-[1.5rem] border transition-all duration-300 ${cert.status === 'verified' ? 'bg-white border-indigo-100 shadow-lg shadow-indigo-50/50' : 'bg-gray-50/50 border-gray-100 hover:border-gray-200'}`}
                                 >
                                     <button
                                         type="button"
                                         onClick={() => openCert(cert)}
-                                        className="flex items-center gap-3 md:gap-4 flex-1 min-w-0 p-1 text-left rounded-2xl"
+                                        className="flex items-center gap-4 flex-1 min-w-0 text-left rounded-xl"
                                     >
-                                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+                                        <div className="w-10 h-10 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-100 shadow-sm">
                                             {cert.url
                                                 ? cert.fileType === 'image'
                                                     ? <img src={cert.url} alt="" className="w-full h-full object-cover" />
-                                                    : <div className="w-full h-full flex items-center justify-center bg-rose-50 text-rose-500"><FileText size={20} /></div>
-                                                : <div className="w-full h-full flex items-center justify-center bg-indigo-50"><Award size={20} className="text-indigo-300" /></div>
+                                                    : <div className="w-full h-full flex items-center justify-center bg-rose-50 text-rose-500"><FileText size={18} /></div>
+                                                : <div className="w-full h-full flex items-center justify-center bg-indigo-50"><Award size={18} className="text-indigo-300" /></div>
                                             }
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h5 className="text-[13px] md:text-[14px] font-bold text-gray-800 line-clamp-2 break-words leading-snug">{cert.name}</h5>
-                                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mt-1 ${cert.status === 'verified' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                                                {cert.status === 'verified' ? <ShieldCheck size={10} /> : <Clock size={10} />}
-                                                {cert.status === 'verified' ? 'Zweryfikowany' : 'W weryfikacji'}
+                                            <p className="text-[13px] font-bold text-gray-700 line-clamp-2 break-words leading-snug">{cert.name}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${cert.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                                                <span className={`text-[10px] font-bold uppercase tracking-wider ${cert.status === 'verified' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                                    {cert.status === 'verified' ? 'Zweryfikowany' : 'W weryfikacji'}
+                                                </span>
                                             </div>
                                         </div>
                                     </button>
