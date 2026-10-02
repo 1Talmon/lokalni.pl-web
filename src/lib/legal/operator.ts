@@ -8,7 +8,7 @@
 export const OPERATOR = {
     fullName: 'Cyprian Talmon',
     /** Adres zamieszkania — wymagany przez art. 5 ust. 2 UŚUDE i art. 12 ust. 1 pkt 3 ustawy o prawach konsumenta. */
-    street: 'ul. Władysława Głocka 3',
+    street: 'ul. Władysława Glocka 3',
     postalCity: '83-400 Kościerzyna',
     email: 'mylokalni@gmail.com',
     /** Optional — leave null to omit. */
