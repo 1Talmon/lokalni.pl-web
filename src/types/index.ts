@@ -19,6 +19,8 @@ export interface UserProfile {
   bio?: string
   isPremium?: boolean
   premiumExpiresAt?: string
+  /** Darmowy miesiąc Plus już wykorzystany na tym koncie (z GET /users/me). */
+  premiumTrialUsed?: boolean
   facebook?: string | null
   instagram?: string | null
   tiktok?: string | null

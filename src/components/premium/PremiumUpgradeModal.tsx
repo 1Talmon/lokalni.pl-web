@@ -8,6 +8,7 @@ import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/apiClient';
+import { useMyProfile } from '../../hooks/useMyProfile';
 
 interface PremiumUpgradeModalProps {
     isOpen: boolean;
@@ -28,6 +29,13 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
     const [done, setDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const queryClient = useQueryClient();
+    // Real account state, so the sheet never offers something that will fail (App Review, 2026-10-01).
+    const { data: me, isLoading: meLoading } = useMyProfile(isOpen);
+    const plusActive = !!me?.isPremium;
+    const trialUsed = !plusActive && !!me?.premiumTrialUsed;
+    const activeUntil = me?.premiumExpiresAt
+        ? new Date(me.premiumExpiresAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
 
     useEffect(() => {
@@ -48,7 +56,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
         return () => document.removeEventListener('keydown', onKey);
     }, [isOpen, triggerClose]);
 
-    // Okres startowy: zamiast płatności darmowy miesiąc Plus (raz na konto, wygasa sam po 30 dniach).
+    // Plus jest bezpłatny: 30 dni raz na konto, wygasa sam. Brak jakichkolwiek płatności (App Store 3.1.1).
     const handleClaim = async () => {
         setLoading(true);
         setError(null);
@@ -125,41 +133,68 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                             ))}
                         </div>
 
-                        {/* Okres startowy + CTA */}
+                        {/* Stan konta + CTA */}
                         <div className="px-6 pb-8" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 2rem)' }}>
-                            <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between mb-4">
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Okres startowy</p>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-black text-white">Miesiąc za darmo</span>
+                            {plusActive && !done ? (
+                                <>
+                                    <div className="bg-white/5 rounded-2xl p-4 mb-4 text-center">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Twój status</p>
+                                        <p className="text-xl font-black text-white">Plus jest aktywny</p>
+                                        {activeUntil && <p className="text-[12px] text-slate-400 font-medium mt-1">do {activeUntil}</p>}
                                     </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] text-slate-500 font-medium">Bez karty</p>
-                                    <p className="text-[10px] text-slate-500 font-medium">bez zobowiązań</p>
-                                </div>
-                            </div>
+                                    <button onClick={() => triggerClose()} className="w-full py-4 rounded-2xl font-black text-base bg-white/10 text-white hover:bg-white/15 active:scale-95 transition-all">
+                                        Zamknij
+                                    </button>
+                                </>
+                            ) : trialUsed && !done ? (
+                                <>
+                                    <div className="bg-white/5 rounded-2xl p-4 mb-4 text-center">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Darmowy miesiąc wykorzystany</p>
+                                        <p className="text-[13px] text-slate-300 font-medium leading-relaxed">
+                                            Na tym koncie wykorzystano już bezpłatny miesiąc Plus. Plus nie jest obecnie dostępny w sprzedaży — damy znać, gdy pojawi się nowa możliwość.
+                                        </p>
+                                    </div>
+                                    <button onClick={() => triggerClose()} className="w-full py-4 rounded-2xl font-black text-base bg-white/10 text-white hover:bg-white/15 active:scale-95 transition-all">
+                                        Zamknij
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between mb-4">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Bezpłatnie</p>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-white">30 dni Plus</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-slate-500 font-medium">Bez płatności</p>
+                                            <p className="text-[10px] text-slate-500 font-medium">raz na konto</p>
+                                        </div>
+                                    </div>
 
-                            <button
-                                onClick={handleClaim}
-                                disabled={loading || done}
-                                className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 shadow-xl shadow-amber-500/30 hover:from-amber-300 hover:to-amber-400 disabled:opacity-80"
-                            >
-                                {done ? (
-                                    <><Check size={20} strokeWidth={3} /> Plus aktywowane!</>
-                                ) : loading ? (
-                                    <><Loader2 size={20} className="animate-spin" /> Przetwarzanie...</>
-                                ) : (
-                                    <><Sparkles size={18} /> Odbierz darmowy miesiąc</>
-                                )}
-                            </button>
+                                    <button
+                                        onClick={handleClaim}
+                                        disabled={loading || done || meLoading}
+                                        className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 shadow-xl shadow-amber-500/30 hover:from-amber-300 hover:to-amber-400 disabled:opacity-80"
+                                    >
+                                        {done ? (
+                                            <><Check size={20} strokeWidth={3} /> Plus aktywowane!</>
+                                        ) : loading || meLoading ? (
+                                            <><Loader2 size={20} className="animate-spin" /> {loading ? 'Aktywowanie...' : 'Wczytywanie...'}</>
+                                        ) : (
+                                            <><Sparkles size={18} /> Aktywuj bezpłatnie na 30 dni</>
+                                        )}
+                                    </button>
 
-                            {error && (
-                                <p className="text-center text-[12px] text-rose-400 mt-3 font-semibold">{error}</p>
+                                    {error && (
+                                        <p className="text-center text-[12px] text-rose-400 mt-3 font-semibold">{error}</p>
+                                    )}
+                                    <p className="text-center text-[11px] text-slate-600 mt-3 font-medium">
+                                        Plus wyłącza się automatycznie po 30 dniach. Nic nie płacisz.
+                                    </p>
+                                </>
                             )}
-                            <p className="text-center text-[11px] text-slate-600 mt-3 font-medium">
-                                Plus wygasa automatycznie po 30 dniach · bez opłat
-                            </p>
                         </div>
                     </motion.div>
                 </div>
