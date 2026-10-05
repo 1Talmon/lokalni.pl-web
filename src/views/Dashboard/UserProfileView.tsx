@@ -760,7 +760,7 @@ export const UserProfileView = ({
                 <div ref={desktopScrollAnchorRef} className="hidden lg:block" />
 
                 {/* --- TAB NAV --- */}
-                <div ref={mobileNavRef} className="lg:hidden mb-6" style={{ scrollMarginTop: 'calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px) + 8px)' }}>
+                <div ref={mobileNavRef} className="lg:hidden mb-6" style={{ scrollMarginTop: 'calc(var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))) + 8px)' }}>
                     <div className="bg-white/95 backdrop-blur-sm shadow-sm border border-gray-100 rounded-3xl p-1.5">
                         <div className="flex w-full overflow-x-auto no-scrollbar gap-1.5 items-center">
                             {(['dashboard', 'orders', 'services', 'posts'] as ActiveTab[]).map(tab => {
