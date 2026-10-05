@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-05 08:27 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-05 12:14 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **0**
+- Uncommitted files: **1**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-e9916c4 docs(legal): odbiorcy danych jako kategorie dostawców (lista z nazwy na prośbę)
-a4fc831 docs(legal): polityka — OpenStreetMap, Backblaze, kopie zapasowe maks. 4 mies.; regulamin bez zbędnego katalogu ustaw
-e5d6847 docs(legal): poprawka adresu operatora — ul. Glocka
-f547e8f fix(plus): okno Plus pokazuje prawdziwy stan konta + bez sugestii płatnej subskrypcji (App Review 2.1)
-89c0fe5 docs(legal): dane operatora — Cyprian Talmon, Kościerzyna [G-01]
-5f345c4 docs(legal): zasady dostępu do danych w panelu administracyjnym
-48fa465 docs(legal): Grafana Labs w podmiotach przetwarzających [G-03]
-043d257 fix(security): escapowanie JSON-LD (XSS przez treści użytkowników) [D-01]
-34e5892 feat(legal): nowy regulamin i polityka prywatności — operator osoba fizyczna (działalność nierejestrowana)
-2faebae chore(ai): sync current-state
+95c827a chore(deps): łatka postcss (next>postcss 8.5.29) + drobne aktualizacje
+971359e fix(deploy): ChunkLoadError po deployu — jednorazowe przeładowanie zamiast ekranu błędu
+3b74ec2 fix(build): czcionka Plus Jakarta Sans w repo (next/font/local) zamiast pobierania z Google przy buildzie
+2537a53 fix(api): client-event — limit 1 KB treści, ms musi być skończoną liczbą
+6fcfce4 docs(claude): pitfall — zawieszona nawigacja, beginTrackedNav, test:nav
+b521622 chore(deps): next 15.5.27 + npm run test:nav (Playwright smoke nawigacji)
+d95ed36 refactor(nav): useNavRecovery — ratowanie zawieszonej nawigacji w jednym hooku + telemetria
+ddc8c5d fix(nav): zawieszone przejście do ogłoszenia — wymuszony re-render gdy React nie dostaje pinga
+a07612b chore(ai): sync current-state
+92f7d7d fix(csp): media-src — filmy z media.mylokalni.pl były blokowane przez default-src
 ```
 
 <!-- AI_AUTO_END -->
