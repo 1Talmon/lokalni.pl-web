@@ -605,16 +605,11 @@ export const ChatModal = ({
                         const uploadRes = await apiClient.postFormData('/upload/image', fd);
                         const uploaded = await parseUploadJson(uploadRes);
                         if (!uploadRes.ok || !uploaded.url) throw new Error('Błąd przesyłania zdjęcia');
-                        // Preload URL serwera zanim podmienimy src — przeglądarka ma go w cache
-                        // gdy React zmieni src, więc <img> nie przechodzi przez stan "ładowania"
-                        await new Promise<void>(resolve => {
-                            const img = new window.Image();
-                            img.onload = img.onerror = () => resolve();
-                            img.src = uploaded.url ?? '';
-                        });
-                        // Podmień src IN PLACE (ten sam węzeł React) — zero flashu
+                        // Keep the local data: preview — uploaded.url points at the private bucket
+                        // without a signature and can't be displayed (bubble fell into "Brak połączenia").
+                        // The refetch below brings the message with a signed URL and replaces this one.
                         setOptimisticMsgs(prev => prev.map(m =>
-                            m.id === tempId ? { ...m, image: uploaded.url, pending: false } : m
+                            m.id === tempId ? { ...m, pending: false } : m
                         ));
                         const sentMsg = await chatService.sendMessage(currentChatId, textToSend || undefined, uploaded.url);
                         // Podmień tempId na prawdziwe id z serwera — deduplication będzie dokładne
