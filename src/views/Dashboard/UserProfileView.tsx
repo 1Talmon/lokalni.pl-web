@@ -150,12 +150,44 @@ export const UserProfileView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs only on user change; isAppLoading in deps would cause loop
     }, [user]);
 
+    // Own smooth scroll instead of scrollIntoView({ behavior: 'smooth' }): the native one fixes
+    // its target at the start, so when the page shifts mid-scroll (tab swap) it stops short —
+    // in WKWebView a few px. Here the target is re-measured every frame → one motion, exact landing.
+    const navScrollTokenRef = useRef(0);
+    const smoothScrollToNav = (el: HTMLElement) => {
+        const token = ++navScrollTokenRef.current;
+        const cancel = () => { navScrollTokenRef.current++; };
+        window.addEventListener('touchstart', cancel, { once: true, passive: true });
+        window.addEventListener('wheel', cancel, { once: true, passive: true });
+        const cleanup = () => {
+            window.removeEventListener('touchstart', cancel);
+            window.removeEventListener('wheel', cancel);
+        };
+        const targetY = () => {
+            const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+            const maxY = document.documentElement.scrollHeight - window.innerHeight;
+            return Math.max(0, Math.min(window.scrollY + el.getBoundingClientRect().top - margin, maxY));
+        };
+        const startY = window.scrollY;
+        const duration = Math.min(650, Math.max(300, 250 + Math.abs(targetY() - startY) * 0.4));
+        const t0 = performance.now();
+        const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        const step = (now: number) => {
+            if (token !== navScrollTokenRef.current) return cleanup();
+            const t = Math.min(1, (now - t0) / duration);
+            window.scrollTo(0, startY + (targetY() - startY) * ease(t));
+            if (t < 1) requestAnimationFrame(step);
+            else cleanup();
+        };
+        requestAnimationFrame(step);
+    };
+
     const scrollToNav = () => {
         const tabNavEl = mobileNavRef.current;
         if (!tabNavEl) return;
         if (tabNavEl.offsetHeight > 0) {
-            // Mobile: tab nav widoczny — scrollIntoView z scroll-margin-top
-            tabNavEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Mobile: tab nav widoczny — do scroll-margin-top
+            smoothScrollToNav(tabNavEl);
         } else {
             // Desktop: tab nav ukryty (lg:hidden) — scrolluj do gridu treści
             const contentEl = contentAnchorRef.current;
@@ -168,13 +200,17 @@ export const UserProfileView = ({
     };
 
     const handleTabChange = (tab: string) => {
-        if (tab === activeTab) return;
+        if (tab === activeTab) {
+            // e.g. header gear while Settings is already the (restored) active tab — still bring the nav into place
+            if (tab !== 'dashboard') scrollToNav();
+            return;
+        }
         setActiveTab(tab as ActiveTab);
         if (tab === 'dashboard') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            requestAnimationFrame(() => scrollToNav());
+            return;
         }
+        requestAnimationFrame(() => scrollToNav());
     };
 
     useSwipeBack(activeTab === 'settings' && detailView === 'none', () => handleTabChange('dashboard'));
