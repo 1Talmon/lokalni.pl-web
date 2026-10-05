@@ -147,7 +147,7 @@ export function findLandingSlug(phrase: string, cityDisplay: string | null): str
 /** Normalize API media URL — replaces localhost with production domain */
 export function normalizeMediaUrl(url: string | null | undefined): string | null {
     if (!url) return null;
-    return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
+    return url.replace(/^https?:\/\/(localhost:\d+|127\.0\.0\.1(:\d+)?)/, 'https://api.mylokalni.pl');
 }
 
 // ─── Elastic slug parser (Faza 3 — replaces parseLandingSlug) ─────────────────
