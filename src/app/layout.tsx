@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
+import { ChunkErrorRecovery } from '@/components/ChunkErrorRecovery';
 import '../index.css';
 import '../App.css';
 import { safeJsonLd } from '@/lib/safeJsonLd';
@@ -126,6 +127,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body className={font.className}>
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <WebVitals />
+                <ChunkErrorRecovery />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
                 {children}

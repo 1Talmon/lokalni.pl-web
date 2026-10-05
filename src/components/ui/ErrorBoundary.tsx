@@ -2,6 +2,7 @@
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { logger } from '../../utils/logger';
+import { isChunkLoadError, reloadOnceForChunkError } from '../../utils/chunkReload';
 
 interface Props {
     children: ReactNode;
@@ -26,9 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
             `ErrorBoundary [${this.props.context ?? 'App'}]: ${error.message}`,
             info.componentStack
         );
-        if (error.message.includes('Failed to fetch dynamically imported module')) {
-            window.location.reload();
-        }
+        if (isChunkLoadError(error)) reloadOnceForChunkError();
     }
 
     handleReset = () => {
