@@ -10,7 +10,7 @@ import type { SelectedMarker } from './types';
 
 const MapView = dynamic(() => import('./MapView').then(m => ({ default: m.MapView })), { ssr: false });
 
-const F = "'Plus Jakarta Sans',system-ui,-apple-system,sans-serif";
+const F = "var(--font-jakarta),'Plus Jakarta Sans',system-ui,-apple-system,sans-serif";
 const PRIMARY = '#6366F1';
 
 export const MapFallback = memo(({ services, onServiceClick, location, hoveredServiceId, onBoundsChange, onMarkerSelect, onMapReady }: {

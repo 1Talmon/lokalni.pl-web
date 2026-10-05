@@ -1,14 +1,18 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
 import '../index.css';
 import '../App.css';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 
-const font = Plus_Jakarta_Sans({
-    subsets: ['latin', 'latin-ext'],
-    weight: ['400', '500', '600', '700', '800'],
+// Self-hosted (was next/font/google): the build no longer depends on Google Fonts responding —
+// an unexpected Google response broke the production build on 2026-10-05. Variable font, wght 200–800,
+// latin + latin-ext subset of google/fonts PlusJakartaSans[wght].ttf (OFL, see fonts/PlusJakartaSans-OFL.txt).
+const font = localFont({
+    src: './fonts/PlusJakartaSans-Variable.woff2',
+    weight: '200 800',
+    style: 'normal',
     display: 'swap',
     variable: '--font-jakarta',
 });

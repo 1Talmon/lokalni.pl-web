@@ -9,7 +9,7 @@ export const catColor = (cat: string): string => CAT_COLORS[cat] ?? '#6366F1';
 
 export const POLAND = { lat: 52.07, lng: 19.48 };
 export const POLAND_ZOOM = 6;
-export const FONT = "'Plus Jakarta Sans',system-ui,-apple-system,sans-serif";
+export const FONT = "var(--font-jakarta),'Plus Jakarta Sans',system-ui,-apple-system,sans-serif";
 
 export const MAP_STYLES: google.maps.MapTypeStyle[] = [
     { elementType: 'geometry', stylers: [{ color: '#e8edf5' }] },
