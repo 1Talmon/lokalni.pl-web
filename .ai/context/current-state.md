@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-01 09:23 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-05 08:27 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **2**
+- Uncommitted files: **0**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-7b385d8 feat(auth): imię i nazwisko w kroku daty urodzenia (sync z apką)
-5495f62 fix(dg): limit działalności nierejestrowanej kwartalnie od 2026 + ewidencja sprzedaży
-e43232c fix(settings): nagłówek Ustawień jak w Rezerwacjach i Postach
-d16f846 refactor(settings): jeden wzór wiersza w całych Ustawieniach
-d61d03f fix(users): BlockUserModal spójny z arkuszami otwieranymi nad czatem
-30f9895 fix(dev): emulator Cloudflare w next dev tylko na żądanie (CF_DEV_PLATFORM=1)
-cd2d682 feat(users): modal potwierdzenia blokady zamiast window.confirm
-759bd0e feat(users): blokowanie użytkowników w czacie, profilu i ustawieniach
-566135d feat(premium): darmowy miesiąc Plus zamiast udawanej płatności
-d6cfaf5 fix(ui): usuń podwójny przycisk cofania na stronach informacyjnych (mobile)
+e9916c4 docs(legal): odbiorcy danych jako kategorie dostawców (lista z nazwy na prośbę)
+a4fc831 docs(legal): polityka — OpenStreetMap, Backblaze, kopie zapasowe maks. 4 mies.; regulamin bez zbędnego katalogu ustaw
+e5d6847 docs(legal): poprawka adresu operatora — ul. Glocka
+f547e8f fix(plus): okno Plus pokazuje prawdziwy stan konta + bez sugestii płatnej subskrypcji (App Review 2.1)
+89c0fe5 docs(legal): dane operatora — Cyprian Talmon, Kościerzyna [G-01]
+5f345c4 docs(legal): zasady dostępu do danych w panelu administracyjnym
+48fa465 docs(legal): Grafana Labs w podmiotach przetwarzających [G-03]
+043d257 fix(security): escapowanie JSON-LD (XSS przez treści użytkowników) [D-01]
+34e5892 feat(legal): nowy regulamin i polityka prywatności — operator osoba fizyczna (działalność nierejestrowana)
+2faebae chore(ai): sync current-state
 ```
 
 <!-- AI_AUTO_END -->
