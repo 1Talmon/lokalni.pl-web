@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CATEGORIES_DATA } from '../data/categories';
@@ -189,6 +189,22 @@ function AppShellContent({ children }: AppShellProps) {
         const isNavRoute = pathname.startsWith('/service/') || pathname.startsWith('/profile/');
         if (!isNavRoute) actions.setNavLoading(false);
     }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Nudge — on production (real CF latency) a router transition to /service occasionally
+    // suspends on the page's client module and React never gets pinged after it resolves,
+    // so the navigation hangs until *any* re-render retries it (verified: a resize unsticks it
+    // in ~150ms). While a nav is pending, force a cheap re-render every 300ms.
+    const [, nudge] = useReducer((n: number) => n + 1, 0);
+    useEffect(() => {
+        if (!state.isNavLoading) return;
+        const target = sessionStorage.getItem('__nav_target__');
+        if (!target || window.location.pathname === target) return;
+        const id = setInterval(() => {
+            if (window.location.pathname === target) { clearInterval(id); return; }
+            nudge();
+        }, 300);
+        return () => clearInterval(id);
+    }, [state.isNavLoading, pathname]);
 
     // Watchdog — a client-side navigation to service/profile occasionally never settles
     // (overlay spins until the user refreshes). After 10s do the refresh for them, once per URL;
