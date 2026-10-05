@@ -105,7 +105,8 @@ export const useAppLogic = () => {
                         tokenUtils.clearAll();
                         await secureStorage.removeRefreshToken();
                         queryClient.clear();
-                        router.push('/auth');
+                        // Stay on the current page as a guest — a visitor from Google must not be
+                        // bounced to /auth just because an old session expired.
                     }
                     // 5xx / inne → nie wylogowuj
                     return;
