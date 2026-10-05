@@ -10,7 +10,8 @@
     "preview:cf": "npx wrangler pages dev",
     "start": "next start",
     "lint": "eslint .",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "test:nav": "node scripts/e2e/nav-smoke.mjs"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
@@ -21,7 +22,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.462.0",
-    "next": "^15.3.5",
+    "next": "^15.5.27",
     "nextjs-toploader": "^3.9.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -45,6 +46,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.5.5",
     "globals": "^17.11.0",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
