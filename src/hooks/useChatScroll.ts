@@ -15,8 +15,8 @@ export const useChatScroll = ({
 }: UseChatScrollOptions) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef   = useRef<HTMLDivElement>(null);
-    const touchStartYRef = useRef(0);
     const pinToBottomRef = useRef(true);
+    const lastScrollTopRef = useRef(0);
 
     const [messagesVisible, setMessagesVisible]     = useState(false);
     const [showScrollBtn, setShowScrollBtn]         = useState(false);
@@ -30,6 +30,7 @@ export const useChatScroll = ({
     // ── Reset przy każdej zmianie sesji lub otwarciu ──────────────────────────
     useLayoutEffect(() => {
         pinToBottomRef.current = true;
+        lastScrollTopRef.current = 0;
         setMessagesVisible(false);
         setShowScrollBtn(false);
         setUnreadWhileScrolled(0);
@@ -83,23 +84,17 @@ export const useChatScroll = ({
         const el = getContainer();
         if (!el) return;
         const d = dist(el);
-        pinToBottomRef.current = d <= 50;
+        // Unpin only on a real upward scroll. A scroll event can arrive after content
+        // already grew (image/video/booking card loaded) but before the content
+        // ResizeObserver re-anchors — scrollTop unchanged, distance large. Treating that
+        // as "user scrolled up" left the chat stuck mid-history.
+        if (d <= 50) pinToBottomRef.current = true;
+        else if (el.scrollTop < lastScrollTopRef.current - 2) pinToBottomRef.current = false;
+        lastScrollTopRef.current = el.scrollTop;
         setShowScrollBtn(d > 350);
         if (d < 80) setUnreadWhileScrolled(0);
         if (el.scrollTop < 80) onScrolledToTop?.();
     }, [onScrolledToTop]);
-
-    // ── Touch handlers ────────────────────────────────────────────────────────
-    const onTouchStart = useCallback((e: React.TouchEvent) => {
-        touchStartYRef.current = e.touches[0].clientY;
-        const el = getContainer();
-        if (el && dist(el) > 30) pinToBottomRef.current = false;
-    }, []);
-
-    const onTouchMove = useCallback((e: React.TouchEvent) => {
-        const dy = e.touches[0].clientY - touchStartYRef.current;
-        if (dy < -10) pinToBottomRef.current = false;
-    }, []);
 
     // ── Akcje eksponowane na zewnątrz ────────────────────────────────────────
     const scrollToBottom = useCallback(() => {
@@ -135,8 +130,6 @@ export const useChatScroll = ({
         showScrollBtn,
         unreadWhileScrolled,
         onScroll,
-        onTouchStart,
-        onTouchMove,
         scrollToBottom,
         snapToBottom,
         addUnread,

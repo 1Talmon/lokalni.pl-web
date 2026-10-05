@@ -316,7 +316,7 @@ export const ChatModal = ({
     const {
         containerRef, contentRef,
         messagesVisible, showScrollBtn, unreadWhileScrolled,
-        onScroll, onTouchStart, onTouchMove,
+        onScroll,
         scrollToBottom, snapToBottom,
         addUnread,
         restoreScrollAfterOlderLoad,
@@ -1089,8 +1089,6 @@ export const ChatModal = ({
                         <div
                             ref={containerRef}
                             onScroll={onScroll}
-                            onTouchStart={onTouchStart}
-                            onTouchMove={onTouchMove}
                             className="h-full overflow-y-auto overflow-x-hidden px-3 pt-3"
                             style={{
                                 backgroundColor: '#F5F5F7',
