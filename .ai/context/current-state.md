@@ -7,18 +7,20 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-05 12:14 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-05 13:20 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **1**
+- Uncommitted files: **0**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
+3839f6f chore(ai): sync current-state
+77546b9 fix(dashboard): odstęp przy scrollu do paska zakładek z mierzonej wysokości nawigacji
 95c827a chore(deps): łatka postcss (next>postcss 8.5.29) + drobne aktualizacje
 971359e fix(deploy): ChunkLoadError po deployu — jednorazowe przeładowanie zamiast ekranu błędu
 3b74ec2 fix(build): czcionka Plus Jakarta Sans w repo (next/font/local) zamiast pobierania z Google przy buildzie
@@ -27,8 +29,6 @@ _Regenerated: **2026-10-05 12:14 UTC** przez `scripts/ai-refresh.sh`_
 b521622 chore(deps): next 15.5.27 + npm run test:nav (Playwright smoke nawigacji)
 d95ed36 refactor(nav): useNavRecovery — ratowanie zawieszonej nawigacji w jednym hooku + telemetria
 ddc8c5d fix(nav): zawieszone przejście do ogłoszenia — wymuszony re-render gdy React nie dostaje pinga
-a07612b chore(ai): sync current-state
-92f7d7d fix(csp): media-src — filmy z media.mylokalni.pl były blokowane przez default-src
 ```
 
 <!-- AI_AUTO_END -->
