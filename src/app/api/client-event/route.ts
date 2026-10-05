@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 const KINDS = new Set(['nudge_recovered', 'hard_nav', 'gave_up']);
+const MAX_BODY_BYTES = 1024; // real events are ~80 bytes
 
 interface ClientEvent {
     kind: string;
@@ -14,8 +15,12 @@ interface ClientEvent {
 // Visible in CF Dashboard → Pages → Functions logs, same as /api/vitals.
 export async function POST(request: NextRequest) {
     try {
-        const ev = await request.json() as ClientEvent;
-        if (!KINDS.has(ev.kind) || typeof ev.path !== 'string' || typeof ev.ms !== 'number') {
+        const declared = Number(request.headers.get('content-length') ?? 0);
+        if (declared > MAX_BODY_BYTES) return NextResponse.json({ error: 'too_large' }, { status: 413 });
+        const raw = await request.text();
+        if (raw.length > MAX_BODY_BYTES) return NextResponse.json({ error: 'too_large' }, { status: 413 });
+        const ev = JSON.parse(raw) as ClientEvent;
+        if (!KINDS.has(ev.kind) || typeof ev.path !== 'string' || !Number.isFinite(ev.ms)) {
             return NextResponse.json({ error: 'invalid' }, { status: 400 });
         }
         // eslint-disable-next-line no-console
