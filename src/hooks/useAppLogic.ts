@@ -454,7 +454,9 @@ export const useAppLogic = () => {
         onServiceClick: (s: Service) => {
             setSelectedService(s);
             setIsNavLoading(true);
-            router.push(`/service/${createServiceUrl(s.title, s.publicId ?? '')}`);
+            const url = `/service/${createServiceUrl(s.title, s.publicId ?? '')}`;
+            sessionStorage.setItem('__nav_target__', url); // read by the AppShell nav watchdog
+            router.push(url);
         },
         toggleFavorite: (publicId: string) => {
             if (!isLoggedIn) { router.push('/auth'); return; }

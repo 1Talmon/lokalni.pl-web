@@ -190,6 +190,31 @@ function AppShellContent({ children }: AppShellProps) {
         if (!isNavRoute) actions.setNavLoading(false);
     }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Watchdog — a client-side navigation to service/profile occasionally never settles
+    // (overlay spins until the user refreshes). After 10s do the refresh for them, once per URL;
+    // if that already happened, drop the overlay instead of looping.
+    useEffect(() => {
+        if (!state.isNavLoading) {
+            sessionStorage.removeItem('__nav_reloaded__');
+            return;
+        }
+        const t = setTimeout(() => {
+            const target = sessionStorage.getItem('__nav_target__') || window.location.pathname;
+            sessionStorage.removeItem('__nav_target__');
+            if (sessionStorage.getItem('__nav_reloaded__') === target) {
+                sessionStorage.removeItem('__nav_reloaded__');
+                logger.warn('AppShell: nav loading stuck after reload, hiding overlay', target);
+                actions.setNavLoading(false);
+                return;
+            }
+            logger.warn('AppShell: nav loading stuck, hard navigation', target);
+            sessionStorage.setItem('__nav_reloaded__', target);
+            if (window.location.pathname === target) window.location.reload();
+            else window.location.assign(target);
+        }, 10_000);
+        return () => clearTimeout(t);
+    }, [state.isNavLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
     return (
         <ErrorBoundary context="App">
             <div className="min-h-screen bg-gray-50 font-sans antialiased">

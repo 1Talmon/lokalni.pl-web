@@ -152,7 +152,10 @@ export default function ServiceDetailsClient() {
         const uid = service.provider.uid || createSlug(service.provider.name);
         const url = `/profile/${uid}`;
         const cached = queryClient.getQueryData(['public-profile', uid]);
-        if (!cached) actions.setNavLoading(true);
+        if (!cached) {
+            sessionStorage.setItem('__nav_target__', url); // read by the AppShell nav watchdog
+            actions.setNavLoading(true);
+        }
         router.push(url);
     }, [service, router, actions, queryClient]);
 
