@@ -61,7 +61,11 @@ export const MediaLightbox = ({
 
     const thumbStripRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [videoReady, setVideoReady] = useState(false);
+    // Keyed by URL instead of a boolean reset in an effect — a cached video can fire
+    // loadedmetadata before a post-render reset, which used to leave the spinner forever.
+    const [readyUrl, setReadyUrl] = useState<string | null>(null);
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
+    const [retry, setRetry] = useState(0);
 
     const resetZoom = useCallback(() => {
         scaleRef.current = 1;
@@ -100,7 +104,6 @@ export const MediaLightbox = ({
             wasPinchingRef.current = false;
             setSwipeDownY(0);
             isDraggingDownRef.current = false;
-            setVideoReady(false);
         }
     }, [isOpen, initialIndex, resetZoom]);
 
@@ -108,7 +111,6 @@ export const MediaLightbox = ({
     useEffect(() => {
         imgSizeRef.current = null;
         resetZoom();
-        setVideoReady(false);
     }, [current, resetZoom]);
 
     // Auto-scroll thumbnail strip — centruje aktywną miniaturę
@@ -303,6 +305,40 @@ export const MediaLightbox = ({
 
     const currentItem = items[current];
     const isVideo = currentItem?.type === 'video';
+    const currentUrl = currentItem?.url ?? '';
+    const mediaReady = readyUrl === currentUrl;
+    const mediaFailed = failedUrl === currentUrl;
+    // Retry busts the WebView cache only for images; videos are reloaded via video.load()
+    const mediaSrc = retry > 0 && !isVideo
+        ? `${currentUrl}${currentUrl.includes('?') ? '&' : '?'}retry=${retry}`
+        : currentUrl;
+
+    const markReady = useCallback(() => setReadyUrl(currentUrl), [currentUrl]);
+    const markFailed = useCallback(() => setFailedUrl(currentUrl), [currentUrl]);
+
+    // The load event may have fired before React attached handlers (cache hit) — check element state directly
+    useLayoutEffect(() => {
+        if (!isOpen || !currentUrl || mediaReady) return;
+        if (isVideo) {
+            if ((videoRef.current?.readyState ?? 0) >= 1) markReady();
+        } else {
+            const img = imgRef.current;
+            if (img?.complete && img.naturalWidth > 0) markReady();
+        }
+    }, [isOpen, currentUrl, isVideo, mediaReady, retry, markReady]);
+
+    // Never spin forever: stalled download → error state with retry
+    useEffect(() => {
+        if (!isOpen || !currentUrl || mediaReady || mediaFailed) return;
+        const t = setTimeout(markFailed, 15000);
+        return () => clearTimeout(t);
+    }, [isOpen, currentUrl, mediaReady, mediaFailed, retry, markFailed]);
+
+    const handleRetry = () => {
+        setFailedUrl(null);
+        setRetry(r => r + 1);
+        if (isVideo) videoRef.current?.load();
+    };
 
     const safeBottom = 'env(safe-area-inset-bottom)';
     const slideBottomPad = items.length > 1
@@ -408,38 +444,58 @@ export const MediaLightbox = ({
                                     onTouchEnd={!isVideo ? onImgTouchEnd : undefined}
                                     onClick={!isVideo ? onImgTap : undefined}
                                 >
+                                    {!mediaReady && !mediaFailed && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <span className="w-10 h-10 border-[3px] border-white/20 border-t-white rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                    {mediaFailed && (
+                                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-white text-center px-6">
+                                            <p className="text-sm font-semibold text-white/80">
+                                                {navigator.onLine ? 'Nie udało się wczytać' : 'Brak połączenia z internetem'}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={e => { e.stopPropagation(); handleRetry(); }}
+                                                onTouchEnd={e => e.stopPropagation()}
+                                                className="px-5 py-2 rounded-full bg-white/15 backdrop-blur-sm text-sm font-bold active:scale-95 transition-transform"
+                                            >
+                                                Spróbuj ponownie
+                                            </button>
+                                        </div>
+                                    )}
                                     {isVideo ? (
-                                        <>
-                                            {!videoReady && (
-                                                <div className="flex items-center justify-center w-16 h-16">
-                                                    <span className="w-10 h-10 border-[3px] border-white/20 border-t-white rounded-full animate-spin" />
-                                                </div>
-                                            )}
-                                            <video
-                                                ref={videoRef}
-                                                src={currentItem.url}
-                                                controls
-                                                playsInline
-                                                autoPlay
-                                                className="max-w-full max-h-full rounded-xl shadow-2xl"
-                                                style={{
-                                                    opacity: videoReady ? 1 : 0,
-                                                    transition: videoReady ? 'opacity 0.2s ease' : 'none',
-                                                    position: videoReady ? undefined : 'absolute',
-                                                    pointerEvents: videoReady ? undefined : 'none',
-                                                }}
-                                                onLoadedMetadata={() => setVideoReady(true)}
-                                                onClick={e => e.stopPropagation()}
-                                            />
-                                        </>
+                                        <video
+                                            ref={videoRef}
+                                            src={mediaSrc}
+                                            controls
+                                            playsInline
+                                            autoPlay
+                                            preload="auto"
+                                            className="max-w-full max-h-full rounded-xl shadow-2xl"
+                                            style={{
+                                                opacity: mediaReady ? 1 : 0,
+                                                transition: mediaReady ? 'opacity 0.2s ease' : 'none',
+                                                position: mediaReady ? undefined : 'absolute',
+                                                pointerEvents: mediaReady ? undefined : 'none',
+                                            }}
+                                            onLoadedMetadata={markReady}
+                                            onLoadedData={markReady}
+                                            onCanPlay={markReady}
+                                            onError={markFailed}
+                                            onClick={e => e.stopPropagation()}
+                                        />
                                     ) : (
                                         <img
+                                            key={mediaSrc}
                                             ref={imgRef}
-                                            src={currentItem?.url}
+                                            src={mediaSrc}
                                             onLoad={() => {
+                                                markReady();
                                                 const el = imgRef.current;
                                                 if (el) imgSizeRef.current = { w: el.offsetWidth, h: el.offsetHeight };
                                             }}
+                                            onError={markFailed}
                                             className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
                                             style={{
                                                 transform: `scale(${scale}) translate(${imgOffset.x / scale}px, ${imgOffset.y / scale}px)`,
