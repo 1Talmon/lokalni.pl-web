@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
+import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CATEGORIES_DATA } from '../data/categories';
@@ -7,6 +7,7 @@ import { parseSlug, KEYWORD_DISPLAY, CITY_DISPLAY } from '../lib/seo-data';
 import { SWIPE_TABS } from '../hooks/useTabSwipe';
 import { useApp } from '../providers/AppProvider';
 import { useBiometricLock } from '../hooks/useBiometricLock';
+import { useNavRecovery } from '../hooks/useNavRecovery';
 import { ToastContainer } from './ui/ToastContainer';
 import { LoadingScreen } from './ui/LoadingScreen';
 import { MainLayout } from './layout/MainLayout';
@@ -190,46 +191,7 @@ function AppShellContent({ children }: AppShellProps) {
         if (!isNavRoute) actions.setNavLoading(false);
     }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Nudge — on production (real CF latency) a router transition to /service occasionally
-    // suspends on the page's client module and React never gets pinged after it resolves,
-    // so the navigation hangs until *any* re-render retries it (verified: a resize unsticks it
-    // in ~150ms). While a nav is pending, force a cheap re-render every 300ms.
-    const [, nudge] = useReducer((n: number) => n + 1, 0);
-    useEffect(() => {
-        if (!state.isNavLoading) return;
-        const target = sessionStorage.getItem('__nav_target__');
-        if (!target || window.location.pathname === target) return;
-        const id = setInterval(() => {
-            if (window.location.pathname === target) { clearInterval(id); return; }
-            nudge();
-        }, 300);
-        return () => clearInterval(id);
-    }, [state.isNavLoading, pathname]);
-
-    // Watchdog — a client-side navigation to service/profile occasionally never settles
-    // (overlay spins until the user refreshes). After 10s do the refresh for them, once per URL;
-    // if that already happened, drop the overlay instead of looping.
-    useEffect(() => {
-        if (!state.isNavLoading) {
-            sessionStorage.removeItem('__nav_reloaded__');
-            return;
-        }
-        const t = setTimeout(() => {
-            const target = sessionStorage.getItem('__nav_target__') || window.location.pathname;
-            sessionStorage.removeItem('__nav_target__');
-            if (sessionStorage.getItem('__nav_reloaded__') === target) {
-                sessionStorage.removeItem('__nav_reloaded__');
-                logger.warn('AppShell: nav loading stuck after reload, hiding overlay', target);
-                actions.setNavLoading(false);
-                return;
-            }
-            logger.warn('AppShell: nav loading stuck, hard navigation', target);
-            sessionStorage.setItem('__nav_reloaded__', target);
-            if (window.location.pathname === target) window.location.reload();
-            else window.location.assign(target);
-        }, 10_000);
-        return () => clearTimeout(t);
-    }, [state.isNavLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+    useNavRecovery(!!state.isNavLoading, pathname, actions.setNavLoading);
 
     return (
         <ErrorBoundary context="App">

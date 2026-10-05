@@ -11,6 +11,7 @@ import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
+import { beginTrackedNav } from '../../../utils/navRecovery';
 
 function DeletedServiceView({ onBack }: { onBack: () => void }) {
     return (
@@ -153,7 +154,7 @@ export default function ServiceDetailsClient() {
         const url = `/profile/${uid}`;
         const cached = queryClient.getQueryData(['public-profile', uid]);
         if (!cached) {
-            sessionStorage.setItem('__nav_target__', url); // read by the AppShell nav watchdog
+            beginTrackedNav(url);
             actions.setNavLoading(true);
         }
         router.push(url);
