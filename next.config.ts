@@ -18,6 +18,7 @@ const SECURITY_HEADERS = [
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob: https:",
+            "media-src 'self' data: blob: https:",
             "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://accounts.google.com https://maps.googleapis.com",
             "frame-src 'self' https://accounts.google.com",
             "object-src 'none'",

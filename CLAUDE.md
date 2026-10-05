@@ -196,7 +196,7 @@ Kluczowe. `tsconfig.json:paths` + `next.config.ts:webpack.resolve.alias` mapują
 ```
 script-src 'self' 'unsafe-inline' https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com
 ```
-+ `default-src 'self'`, `style-src 'self' 'unsafe-inline' fonts.googleapis.com`, `img-src 'self' data: blob: https:`, `connect-src` API + wss, `frame-src` Google, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`.
++ `default-src 'self'`, `media-src 'self' data: blob: https:` (bez tego filmy w postach/chacie blokowane), `style-src 'self' 'unsafe-inline' fonts.googleapis.com`, `img-src 'self' data: blob: https:`, `connect-src` API + wss, `frame-src` Google, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`.
 
 **🚫 NIE dodawaj nonce (ani hashy) do `script-src`.** Zepsuło produkcję **dwa razy** (2026-09-09 → fix `6c0f903`, 2026-09-30 → revert `ecdce5c`) — biała strona, wszystkie skrypty zablokowane. Powód: obecność nonce/hash w `script-src` sprawia, że przeglądarka **ignoruje `'unsafe-inline'`**, a inline scripts Next.js (bootstrap + RSC payload) nie dostają nonce — strony są statyczne/ISR na CF Pages, więc Next nie wstrzykuje nonce do HTML. `'unsafe-inline'` jest świadomym kompromisem (audyt SEC-3 — zaakceptowane ryzyko). Ochrona przed XSS = brak niebezpiecznych sinków w kodzie. `dangerouslySetInnerHTML` jest używany tylko dla JSON-LD (`<script type="application/ld+json">`) — ⚠️ `JSON.stringify` nie escapuje `<`, więc JSON-LD z treścią od userów (`service/[slug]`, `profile/[uid]`, `og/*`, `[slug]`) powinien przechodzić przez `.replace(/</g, '\u003c')` (otwarty punkt, patrz `current-state.md`).
 
