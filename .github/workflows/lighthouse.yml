@@ -18,13 +18,16 @@ jobs:
         id: urls
         run: |
           BASE=https://dev.lokalni-pl-web.pages.dev
-          # Browser UA: plain curl from CI IPs can be challenged by Cloudflare
-          LANDINGS=$(curl -sSL --retry 2 -A "Mozilla/5.0 (X11; Linux x86_64) Chrome/130 Safari/537.36" "$BASE/sitemap-landings.xml" | grep -o '<loc>[^<]*' | sed 's|<loc>https://mylokalni.pl/||' | head -2 || true)
+          # Browser UA: plain curl from CI IPs can be challenged by Cloudflare; hard timeout so CI never hangs
+          HTTP=$(curl -sSL --max-time 20 -A "Mozilla/5.0 (X11; Linux x86_64) Chrome/130 Safari/537.36" -o sitemap.xml -w '%{http_code}' "$BASE/sitemap-landings.xml" || echo "timeout")
+          echo "sitemap-landings.xml: HTTP $HTTP"
+          LANDINGS=$(grep -o '<loc>[^<]*' sitemap.xml 2>/dev/null | sed 's|<loc>https://mylokalni.pl/||' | head -2 || true)
           [ -z "$LANDINGS" ] && echo "::warning::No landing URLs found in sitemap-landings.xml"
           {
             echo 'list<<EOF'
             echo "$BASE/"
             echo "$BASE/faq"
+            echo "$BASE/wpisy"
             for s in $LANDINGS; do echo "$BASE/$s"; done
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
