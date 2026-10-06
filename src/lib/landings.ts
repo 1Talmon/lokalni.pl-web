@@ -3,6 +3,7 @@ import { API_URL, CATEGORY_SLUG, CITY_LOCATIVE, KEYWORD_DISPLAY } from './seo-da
 import { mapServiceRaw } from './mappers/serviceMapper';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import { polishPlural } from '../utils/helpers';
+import { ssrHeaders } from './ssrHeaders';
 import type { Service } from '../types';
 
 // Server-side data for SEO pages (home, landings, posts). Everything comes from the API's
@@ -10,10 +11,10 @@ import type { Service } from '../types';
 
 /** Cache tag revalidated by /api/revalidate when the API reports a change. */
 export const SEO_TAG = 'seo';
-const FETCH_INIT = {
-    headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
+const fetchInit = () => ({
+    headers: ssrHeaders(),
     next: { revalidate: 300, tags: [SEO_TAG] },
-};
+});
 
 export type LandingType = 'category' | 'city' | 'category-city';
 
@@ -56,7 +57,7 @@ export class SeoApiError extends Error {}
 async function getJson<T>(path: string): Promise<T | null> {
     let res: Response;
     try {
-        res = await fetch(`${API_URL}${path}`, FETCH_INIT);
+        res = await fetch(`${API_URL}${path}`, fetchInit());
     } catch (e) {
         throw new SeoApiError(`fetch ${path}: ${String(e)}`);
     }

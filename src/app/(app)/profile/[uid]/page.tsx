@@ -10,13 +10,14 @@ import PublicProfileContent from './PublicProfileContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { fetchPosts, fetchProviderServices } from '@/lib/landings';
 import { profileDescription } from '@/lib/seoText';
+import { ssrHeaders } from '@/lib/ssrHeaders';
 
 interface Props { params: Promise<{ uid: string }> }
 
 const fetchProfileMeta = cache(async function fetchProfileMeta(uid: string) {
     try {
         const res = await fetch(`${API_URL}/users/${uid}/profile`, {
-            headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
+            headers: ssrHeaders(),
             next: { revalidate: 3600 },
         });
         if (!res.ok) return null;

@@ -1,6 +1,7 @@
 import { API_URL, BASE_URL } from '@/lib/seo-data';
 import { SEO_TAG } from '@/lib/landings';
 import { urlsetResponse, sitemapUnavailable } from '@/lib/sitemap';
+import { ssrHeaders } from '@/lib/ssrHeaders';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const res = await fetch(`${API_URL}/public/sitemap/posts`, {
-            headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
+            headers: ssrHeaders('Lokalni-SitemapBot/1.0'),
             next: { revalidate: 300, tags: [SEO_TAG] },
         });
         if (!res.ok) return sitemapUnavailable();

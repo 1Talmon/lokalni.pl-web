@@ -10,13 +10,14 @@ import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import ServiceDetailsContent from './ServiceDetailsContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { serviceDescription, serviceTitle } from '@/lib/seoText';
+import { ssrHeaders } from '@/lib/ssrHeaders';
 
 interface Props { params: Promise<{ slug: string }> }
 
 const fetchServiceMeta = cache(async function fetchServiceMeta(publicId: string) {
     try {
         const res = await fetch(`${API_URL}/services/${publicId}`, {
-            headers: { 'User-Agent': 'Lokalni-MetaBot/1.0' },
+            headers: ssrHeaders(),
             next: { revalidate: 3600 },
         });
         if (!res.ok) return null;
