@@ -6,6 +6,8 @@ import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import { fetchProviderServices } from '@/lib/landings';
+import { profileDescription } from '@/lib/seoText';
 
 interface Props { params: Promise<{ uid: string }> }
 
@@ -34,9 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const name = buildProfileName(profile);
     const title = name;
-    const bio = typeof profile.bio === 'string' && profile.bio
-        ? `${profile.bio.slice(0, 155).trimEnd()}…`
-        : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
+    const services = await fetchProviderServices(uid).catch(() => []);
+    const bio = profileDescription(name, profile, services.map(s => ({ title: s.title, city: s.city })));
     const url = `${BASE_URL}/profile/${uid}`;
     const image = ((profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined) ?? DEFAULT_OG_IMAGE;
 

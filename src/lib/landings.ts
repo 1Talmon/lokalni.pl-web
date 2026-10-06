@@ -121,7 +121,9 @@ export const fetchPost = cache(async (slug: string): Promise<PostDetail | null> 
 export const offersLabel = (n: number) => `${n} ${polishPlural(n, 'oferta', 'oferty', 'ofert')}`;
 
 export function categoryLabel(categorySlug: string | null): string | null {
-    return categorySlug ? (KEYWORD_DISPLAY[categorySlug] ?? null) : null;
+    if (!categorySlug) return null;
+    // "Inne" alone reads badly in titles ("Inne w Rowach") — "Inne usługi w Rowach"
+    return categorySlug === 'inne' ? 'Inne usługi' : (KEYWORD_DISPLAY[categorySlug] ?? null);
 }
 
 /** "w Gdańsku" when the locative is known, otherwise "– Wielki Klincz" (never a guessed declension). */

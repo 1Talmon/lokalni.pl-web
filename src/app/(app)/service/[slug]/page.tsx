@@ -9,6 +9,7 @@ import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import ServiceDetailsContent from './ServiceDetailsContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import { serviceDescription, serviceTitle } from '@/lib/seoText';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -34,13 +35,6 @@ function canonicalSlug(service: Record<string, unknown>, fallback: string): stri
     return title && publicId ? createServiceUrl(title, publicId) : fallback;
 }
 
-function buildDescription(service: Record<string, unknown>): string {
-    const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
-    const raw = typeof service.description === 'string' ? service.description : '';
-    if (raw.length > 15) return `${raw.slice(0, 155).trimEnd()}…`;
-    return `${service.title}${city} – sprawdź opinie i zarezerwuj usługę online na MyLokalni.pl.`;
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const publicId = slug.split('-').pop() ?? '';
@@ -49,8 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const canonical = canonicalSlug(service, slug);
     if (canonical !== slug) permanentRedirect(`/service/${canonical}`);
 
-    const title = service.title as string;
-    const description = buildDescription(service);
+    const title = serviceTitle(service);
+    const description = serviceDescription(service);
     const url = `${BASE_URL}/service/${canonical}`;
     // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
     const image = ((service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined) ?? DEFAULT_OG_IMAGE;

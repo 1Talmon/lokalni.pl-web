@@ -9,6 +9,7 @@ import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStati
 import PublicProfileContent from './PublicProfileContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { fetchPosts, fetchProviderServices } from '@/lib/landings';
+import { profileDescription } from '@/lib/seoText';
 
 interface Props { params: Promise<{ uid: string }> }
 
@@ -37,9 +38,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const name = buildProfileName(profile);
     const title = name;
-    const bio = typeof profile.bio === 'string' && profile.bio
-        ? `${profile.bio.slice(0, 155).trimEnd()}…`
-        : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
     const url = `${BASE_URL}/profile/${uid}`;
     const image = ((profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined) ?? DEFAULT_OG_IMAGE;
     // Index only profiles with real public content (offers or posts) — an empty account is a thin page
@@ -48,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         fetchPosts(1, 10, uid).catch(() => null),
     ]);
     const isEmpty = services !== null && posts !== null && services.length === 0 && posts.posts.length === 0;
+    const bio = profileDescription(name, profile, (services ?? []).map(s => ({ title: s.title, city: s.city })));
 
     return {
         title,

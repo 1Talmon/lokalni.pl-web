@@ -4,10 +4,11 @@ import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { BASE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import {
-    fetchPost, postTitle, postExcerpt, authorName, formatDatePl, categoryLabel, offersLabel,
+    fetchPost, postTitle, authorName, formatDatePl, categoryLabel, offersLabel,
     landingLinkLabel, type PostDetail,
 } from '@/lib/landings';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import { postDescription } from '@/lib/seoText';
 
 // Single provider post. URL /wpis/<slug-from-content>-<id>; any other slug 301s to the canonical one.
 // Indexed only when the post has real content (API `indexable`: ≥80 chars or a photo).
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const post = await load(slug);
     const name = authorName(post.author);
     const title = `${postTitle(post.content)} – ${name}`;
-    const description = postExcerpt(post.content);
+    const description = postDescription(post.content, name);
     const url = `${BASE_URL}/wpis/${post.slug}`;
     const image = post.image || post.author.profilowe || DEFAULT_OG_IMAGE;
 
