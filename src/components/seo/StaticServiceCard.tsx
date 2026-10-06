@@ -1,4 +1,5 @@
 import { createServiceUrl } from '@/utils/helpers';
+import { cardImageUrl } from '@/utils/normalizeUrl';
 import type { Service } from '@/types';
 
 // Server-rendered service card with a real <a href> — used in SSR shells (home, landings, posts)
@@ -6,7 +7,7 @@ import type { Service } from '@/types';
 
 export function StaticServiceCard({ s, priority }: { s: Service; priority: boolean }) {
     const slug = s.publicId && s.title ? createServiceUrl(s.title, s.publicId) : null;
-    const img = s.image || s.images?.[0] || null;
+    const img = cardImageUrl(s.image || s.images?.[0]);
     const href = slug ? `/service/${slug}` : '/';
 
     return (

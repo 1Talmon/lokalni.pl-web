@@ -41,6 +41,7 @@ export function SlugContent({ categoryId, city }: Props) {
 
     return (
         <HomeView
+            skipInitialAnimation
             {...state.homeProps}
             {...actions.homeActions}
             categories={CATEGORIES_DATA}

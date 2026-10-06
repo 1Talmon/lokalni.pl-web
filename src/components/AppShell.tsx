@@ -137,6 +137,7 @@ function AppShellContent({ children }: AppShellProps) {
     const tabElements = isSlugRoute ? [null, null, null, null] : [
         <HomeView
             key="home"
+            skipInitialAnimation
             {...state.homeProps}
             {...actions.homeActions}
             categories={CATEGORIES_DATA}
