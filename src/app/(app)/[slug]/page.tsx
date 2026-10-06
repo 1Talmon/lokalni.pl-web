@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { BASE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import {
-    fetchLanding, fetchLandingGroups, landingH1, offersLabel, categoryLabel, categoryIdForSlug,
+    fetchLanding, servicesOgImage, fetchLandingGroups, landingH1, offersLabel, categoryLabel, categoryIdForSlug,
     type LandingData, type LandingGroup,
 } from '@/lib/landings';
 import { SlugContent } from './_components/SlugContent';
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const url = `${BASE_URL}/${slug}`;
     const title = `${landingH1(data.group)} – ${offersLabel(data.total)}`;
     const desc = description(data);
-    const image = data.services.find(s => s.image)?.image || DEFAULT_OG_IMAGE;
+    const image = servicesOgImage(data.services) || DEFAULT_OG_IMAGE;
 
     return {
         title,

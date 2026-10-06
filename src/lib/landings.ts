@@ -173,3 +173,10 @@ export function landingLinkLabel(g: LandingGroup): string {
     if (g.type === 'city') return g.city ?? g.slug;
     return landingH1(g);
 }
+
+/** Social preview image for a list of services: the API stores a JPEG twin "<file>_og.jpg" for every
+ * uploaded WebP (Facebook/WhatsApp don't render WebP previews reliably). */
+export function servicesOgImage(services: Service[]): string | null {
+    const img = services.find(s => s.image)?.image;
+    return img ? img.replace(/\.webp$/, '_og.jpg') : null;
+}

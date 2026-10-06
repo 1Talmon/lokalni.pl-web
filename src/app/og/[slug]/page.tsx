@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BASE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
-import { fetchLanding, landingH1, offersLabel } from '@/lib/landings';
+import { fetchLanding, servicesOgImage, landingH1, offersLabel } from '@/lib/landings';
 
 // Social-bot variant of a landing page (middleware rewrites bots here): og: tags in <head>.
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const url = `${BASE_URL}/${slug}`;
     const title = `${landingH1(data.group)} – ${offersLabel(data.total)}`;
     const description = `${offersLabel(data.total)}: ${[...new Set(data.services.map(s => s.title))].slice(0, 3).join(', ')}. Porównaj opinie i zarezerwuj termin na MyLokalni.pl.`;
-    const image = data.services.find(s => s.image)?.image || DEFAULT_OG_IMAGE;
+    const image = servicesOgImage(data.services) || DEFAULT_OG_IMAGE;
 
     return {
         title,
