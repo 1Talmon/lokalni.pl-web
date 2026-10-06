@@ -1,6 +1,47 @@
 # SEO Architecture — MyLokalni.pl
 
-Kompletna dokumentacja SEO + plan refaktoru. Source of truth dla każdej sesji pracy.
+## 0. Stan obecny (2026-10-06) — źródło prawdy
+
+> Sekcje 1–11 niżej to **historyczny plan** (Droga B, LANDING_SLUGS, próg ≥2). Tam, gdzie się różnią, obowiązuje ta sekcja.
+
+**Zasada: tylko realne dane.** Każda indeksowalna strona ma treść z bazy w HTML (SSR). Grupa istnieje, gdy ma ≥1 publiczną pozycję, a przy 0 pozycji zwraca prawdziwy 404. Sitemapy zawierają tylko indeksowalne URL-e z `lastmod` z bazy (nigdy „dziś”).
+
+**Publiczna usługa** (API `src/lib/seo.ts` → `PUBLIC_SERVICE_SQL`): `is_deleted=false`, `status='active'`, `is_hidden=false`, autor nieusunięty i niezablokowany. Ten sam filtr stosują `GET /services`, sitemapy i grupy.
+
+**Publiczny wpis** (`PUBLIC_POST_SQL`): autor premium, nieusunięty i niezablokowany (ta sama reguła co `/users/:uid/feed`). Wpis jest **indeksowany**, gdy ma ≥80 znaków albo zdjęcie (`isPostIndexable`). Krótszy dostaje `noindex, follow` i nie trafia do sitemapy.
+
+| Typ strony | URL | Dane (API) | Plik web |
+|---|---|---|---|
+| Strona główna | `/` | `/services?sort=newest`, `/public/landings`, `/public/posts` | `(app)/page.tsx` → `HomeStaticShell` |
+| Grupa: kategoria / miasto / kategoria+miasto | `/auto`, `/gdansk`, `/auto-gdansk` | `/public/landings/:slug` (404 gdy brak grupy) | `(app)/[slug]/page.tsx` |
+| Usługa | `/service/<slug>-<publicId>` | `/services/:id` (inny slug → 308 na kanoniczny; `isPublic=false` → noindex) | `(app)/service/[slug]` |
+| Profil | `/profile/<uid>` | `/users/:uid/profile` + `/services?uid=` + `/public/posts?uid=` (noindex gdy bez ofert i wpisów) | `(app)/profile/[uid]` |
+| Wpis | `/wpis/<slug-z-treści>-<id>` | `/public/posts/:id` (inny slug → 308) | `(app)/wpis/[slug]` |
+| Wszystkie wpisy | `/wpisy?page=N` | `/public/posts` | `(app)/wpisy` |
+
+**Sitemapy** (`sitemap.xml` = indeks):
+- `static`: `/` z lastmod najnowszej oferty, strony prawne z datą ostatniej zmiany treści (ręcznie w pliku).
+- `landings`: `/public/landings`.
+- `services`: proxy `/public/sitemap/services`.
+- `profiles`: `/public/sitemap/profiles`.
+- `posts`: `/public/sitemap/posts` plus `/wpisy`.
+
+Gdy API nie odpowiada, sitemapa zwraca **503**, a nie pusty 200.
+
+**SSR w `(app)`:** `AppShell` renderuje `children` (szablony serwerowe stron) dopóki `isLoadingApp`, poza trasami prywatnymi (`PRIVATE_ROUTE_RE`). `useSearchParams` siedzi w osobnym `<Suspense>` (`SearchParamsEffects`). Nie wolno opakowywać całego `AppShell` w Suspense ani wołać tam `useSearchParams`, bo to daje `BAILOUT_TO_CLIENT_SIDE_RENDERING` (pusty `<body>`) i soft 404 (200 zamiast 404).
+
+**Natychmiastowa indeksacja:** zmiana usługi lub wpisu w API → `publishSeoChange()`:
+1. Kasuje cache sitemap i grup w Redis.
+2. Wysyła `POST /api/revalidate` na web (`revalidateTag('seo')` + ścieżki: pojedyncza strona, `/`, `/wpisy`, profil, wszystkie grupy autora przed i po zmianie).
+3. Pinguje IndexNow (Bing/Yandex; Google korzysta z sitemapy).
+
+Fetch cache SEO na webie ma `revalidate: 300` jako zabezpieczenie.
+
+**Nie ma** stron fraz z `search_phrases`. Te frazy były seedowane (count=1), a nie realne, więc zostały usunięte razem z `sitemap-keywords/search/categories/locations`.
+
+---
+
+Kompletna dokumentacja SEO + plan refaktoru (historyczne).
 
 **Cel biznesowy:** każde aktywne ogłoszenie discoverable przez Google. Landing pages są PEŁNĄ aplikacją (jak OLX) — nie przekierowaniem. Jeden spójny system, zero granicy między "landing page" a "apką".
 

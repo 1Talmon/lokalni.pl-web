@@ -8,7 +8,8 @@ function StarIcon() {
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_SLUG } from '@/lib/seo-data';
+import { CATEGORY_SLUG, KEYWORD_DISPLAY } from '@/lib/seo-data';
+import { createSlug } from '@/utils/helpers';
 import { normalizeMediaUrl } from '@/utils/normalizeUrl';
 
 interface ServiceShellData {
@@ -23,7 +24,9 @@ interface ServiceShellData {
     image?: string;
     images?: string[];
     provider?: {
-        name?: string;
+        uid?: string;
+        imie?: string;
+        nazwisko?: string;
         profilowe?: string;
     };
 }
@@ -35,7 +38,9 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
     const providerAvatar = normalizeMediaUrl(data.provider?.profilowe);
     const catSlug = data.category ? (CATEGORY_SLUG[data.category] ?? null) : null;
     const catLabel = catSlug ? (KEYWORD_DISPLAY[catSlug] ?? null) : null;
-    const citySlug = data.city ? (CITY_SLUG[data.city] ?? null) : null;
+    // Every public service belongs to its category, city and category-city landing groups (API /public/landings)
+    const citySlug = data.city ? (createSlug(data.city) || null) : null;
+    const providerName = [data.provider?.imie, data.provider?.nazwisko].filter(Boolean).join(' ');
     const catCitySlug = catSlug && citySlug ? `${catSlug}-${citySlug}` : null;
 
     return (
@@ -112,12 +117,12 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                     )}
                 </div>
 
-                {data.provider?.name && (
-                    <div className="mt-6 flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                {providerName && (
+                    <a href={data.provider?.uid ? `/profile/${data.provider.uid}` : undefined} className="mt-6 flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         {providerAvatar ? (
                             <Image
                                 src={providerAvatar}
-                                alt={data.provider.name}
+                                alt={providerName}
                                 width={40}
                                 height={40}
                                 loading="lazy"
@@ -126,25 +131,34 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                         ) : (
                             <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
                                 <span className="text-[#6366F1] font-bold text-base">
-                                    {data.provider.name.charAt(0).toUpperCase()}
+                                    {providerName.charAt(0).toUpperCase()}
                                 </span>
                             </div>
                         )}
                         <div>
                             <p className="text-xs text-gray-400 font-medium">Specjalista</p>
-                            <p className="font-bold text-gray-900 text-sm">{data.provider.name}</p>
+                            <p className="font-bold text-gray-900 text-sm">{providerName}</p>
                         </div>
-                    </div>
+                    </a>
                 )}
 
-                {(catCitySlug || catSlug) && catLabel && (
-                    <div className="mt-6 pt-6 border-t border-gray-100">
-                        <Link
-                            href={`/${catCitySlug ?? catSlug}`}
-                            className="inline-flex items-center gap-2 text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors"
-                        >
-                            ← Więcej: {catLabel}{data.city ? ` w ${data.city}` : ''}
-                        </Link>
+                {(catSlug || citySlug) && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col gap-2">
+                        {catCitySlug && catLabel && (
+                            <Link href={`/${catCitySlug}`} className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+                                ← Więcej: {catLabel} – {data.city}
+                            </Link>
+                        )}
+                        {catSlug && catLabel && (
+                            <Link href={`/${catSlug}`} className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+                                ← Wszystkie oferty: {catLabel}
+                            </Link>
+                        )}
+                        {citySlug && (
+                            <Link href={`/${citySlug}`} className="text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+                                ← Usługi – {data.city}
+                            </Link>
+                        )}
                     </div>
                 )}
             </div>

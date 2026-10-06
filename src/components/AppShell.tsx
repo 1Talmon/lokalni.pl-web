@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CATEGORIES_DATA } from '../data/categories';
@@ -28,11 +28,41 @@ const SLUG_RE = /^\/[a-z0-9][a-z0-9-]*(?:\/\d+)?$/;
 const KNOWN_APP_ROUTES = new Set([
     '/dashboard', '/booking-form', '/support', '/faq', '/regulamin',
     '/polityka-prywatnosci', '/o-nas', '/zasady-bezpieczenstwa',
-    '/jak-to-dziala', '/zgoda-rodzica',
+    '/jak-to-dziala', '/zgoda-rodzica', '/wpisy',
 ]);
+
+// Private, client-only routes: never rendered before the app has loaded (no SEO value, need auth state).
+const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
 
 interface AppShellProps {
     children: React.ReactNode;
+}
+
+// useSearchParams lives in its own Suspense boundary — calling it in AppShellContent would bail the
+// whole tree out of SSR (BAILOUT_TO_CLIENT_SIDE_RENDERING) and Google would get an empty <body>.
+function SearchParamsEffects() {
+    const { state, actions } = useApp();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (state.isLoadingApp) return;
+        const ref = searchParams.get('ref');
+        if (ref && /^[a-zA-Z0-9_-]{3,32}$/.test(ref)) {
+            localStorage.setItem('referral_code', ref);
+            router.replace('/');
+        }
+        const q = searchParams.get('q');
+        if (q && pathname === '/') {
+            actions.homeActions.setSearchQuery(q);
+            actions.homeActions.setSearchDisplay(q);
+        }
+        const city = searchParams.get('city');
+        if (city) actions.homeActions.setLocation(city);
+    }, [pathname, searchParams, router, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return null;
 }
 
 function AppShellContent({ children }: AppShellProps) {
@@ -40,7 +70,6 @@ function AppShellContent({ children }: AppShellProps) {
     const { locked, verify, verifying, forceUnlock } = useBiometricLock();
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [showTour, setShowTour] = useState(false);
     const wasLockedRef = useRef(locked);
 
@@ -58,19 +87,7 @@ function AppShellContent({ children }: AppShellProps) {
             localStorage.removeItem('pending_tour');
             setShowTour(true);
         }
-        const ref = searchParams.get('ref');
-        if (ref && /^[a-zA-Z0-9_-]{3,32}$/.test(ref)) {
-            localStorage.setItem('referral_code', ref);
-            router.replace('/');
-        }
-        const q = searchParams.get('q');
-        if (q && pathname === '/') {
-            actions.homeActions.setSearchQuery(q);
-            actions.homeActions.setSearchDisplay(q);
-        }
-        const city = searchParams.get('city');
-        if (city) actions.homeActions.setLocation(city);
-    }, [pathname, searchParams, router, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [state.isLoadingApp]);
 
     const handleUrl = useCallback((url: string) => {
         const DOMAINS = ['https://mylokalni.pl', 'https://www.mylokalni.pl', 'https://mylokalni.com', 'https://www.mylokalni.com'];
@@ -104,34 +121,6 @@ function AppShellContent({ children }: AppShellProps) {
 
     const isTabRoute = SWIPE_TAB_SET.has(pathname as '/');
     const isSlugRoute = SLUG_RE.test(pathname) && !SWIPE_TAB_SET.has(pathname as '/') && !KNOWN_APP_ROUTES.has(pathname);
-
-    // Pre-populate search from slug URL — useLayoutEffect prevents flash (runs before browser paint)
-    useLayoutEffect(() => {
-        if (!isSlugRoute || state.isLoadingApp) return;
-        const slug = pathname.split('/').filter(Boolean)[0];
-        const parsed = parseSlug(slug);
-        if (parsed.type === 'keyword') {
-            const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
-            actions.homeActions.setSearchQuery(kw);
-            actions.homeActions.setSearchDisplay(kw);
-            actions.homeActions.setLocation('');
-        } else if (parsed.type === 'city') {
-            const city = CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ');
-            actions.homeActions.setSearchQuery('');
-            actions.homeActions.setSearchDisplay('');
-            actions.homeActions.setLocation(city);
-        } else if (parsed.type === 'keyword-city') {
-            const kw = KEYWORD_DISPLAY[parsed.keyword] ?? parsed.keyword.replace(/-/g, ' ');
-            const city = CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' ');
-            actions.homeActions.setSearchQuery(kw);
-            actions.homeActions.setSearchDisplay(kw);
-            actions.homeActions.setLocation(city);
-        } else {
-            actions.homeActions.setSearchQuery(parsed.query);
-            actions.homeActions.setSearchDisplay(parsed.query);
-            if (parsed.citySlug) actions.homeActions.setLocation(CITY_DISPLAY[parsed.citySlug] ?? parsed.citySlug.replace(/-/g, ' '));
-        }
-    }, [pathname, isSlugRoute, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const openChat = useCallback((chatId: string) => {
         actions.setCurrentChatId(chatId);
@@ -202,8 +191,12 @@ function AppShellContent({ children }: AppShellProps) {
                     removeToast={actions.removeToast}
                 />
 
-                {/* Slug SSR shell: rendered before app loads so initial HTML contains service cards */}
-                {isSlugRoute && state.isLoadingApp && children}
+                {/* SSR: before the app loads, render the page's server shell (h1, text, links) so the
+                    initial HTML has real content for crawlers. Once loaded, MainLayout takes over. */}
+                {state.isLoadingApp && !PRIVATE_ROUTE_RE.test(pathname) && children}
+                <Suspense fallback={null}>
+                    <SearchParamsEffects />
+                </Suspense>
 
                 {!state.isLoadingApp && (
                     <>
@@ -255,9 +248,5 @@ function AppShellContent({ children }: AppShellProps) {
 }
 
 export function AppShell({ children }: AppShellProps) {
-    return (
-        <Suspense fallback={null}>
-            <AppShellContent>{children}</AppShellContent>
-        </Suspense>
-    );
+    return <AppShellContent>{children}</AppShellContent>;
 }

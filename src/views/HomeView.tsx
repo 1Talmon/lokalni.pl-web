@@ -278,7 +278,7 @@ const HomeView = ({
                 Znajdź specjalistę <br className="hidden md:block"/> w swojej okolicy.
             </h1>
             <p className="text-white/90 text-base md:text-lg mb-8">
-                Tysiące usługodawców czeka na Twoje zlecenie
+                Lokalni specjaliści czekają na Twoje zlecenie
             </p>
             
             <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl relative z-50">

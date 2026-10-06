@@ -1,30 +1,25 @@
-import { NextResponse } from 'next/server';
 import { API_URL } from '@/lib/seo-data';
+import { SEO_TAG } from '@/lib/landings';
+import { sitemapUnavailable } from '@/lib/sitemap';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
+// Proxies the API sitemap (public services only, lastmod = services.updated_at).
 export async function GET() {
     try {
         const res = await fetch(`${API_URL}/public/sitemap/services`, {
             headers: { 'User-Agent': 'Lokalni-SitemapBot/1.0' },
-            next: { revalidate: 3600 },
+            next: { revalidate: 300, tags: [SEO_TAG] },
         });
-
-        if (res.ok) {
-            const xml = await res.text();
-            return new NextResponse(xml, {
-                headers: {
-                    'Content-Type': 'application/xml; charset=utf-8',
-                    'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-                },
-            });
-        }
+        if (!res.ok) return sitemapUnavailable();
+        return new Response(await res.text(), {
+            headers: {
+                'Content-Type': 'application/xml; charset=utf-8',
+                'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            },
+        });
     } catch {
-        // API unavailable — return empty sitemap
+        return sitemapUnavailable();
     }
-
-    const empty = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>`;
-    return new NextResponse(empty, {
-        headers: { 'Content-Type': 'application/xml; charset=utf-8' },
-    });
 }

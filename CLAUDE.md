@@ -127,7 +127,8 @@ src/app/
 ├── invite/[code], r/[code]/  # top-level bez providerów (marketing landings)
 ├── service/[slug]/           # top-level edge runtime, SSR metadata + JSON-LD LocalBusiness
 ├── profile/[uid]/            # jw.
-├── [slug]/                   # top-level SSG landing pages (city / keyword / keyword-city)
+├── (app)/[slug]/             # landingi z realnych grup (kategoria / miasto / kategoria-miasto)
+├── (app)/wpis/[slug], wpisy/ # wpisy usługodawców — pojedynczo i lista
 ├── layout.tsx                # root: metadata, JSON-LD Organization + WebSite
 ├── error.tsx, not-found.tsx  # global error/404
 ├── robots.ts                 # App Router native robots.txt
@@ -178,8 +179,11 @@ Kluczowe. `tsconfig.json:paths` + `next.config.ts:webpack.resolve.alias` mapują
 ### SEO
 
 - **Root metadata** w `src/app/layout.tsx` (metadataBase, OG, Twitter, keywords, canonical `/`) + JSON-LD `Organization` + `WebSite` z `SearchAction`.
-- **`/service/[slug]`, `/profile/[uid]`**: `runtime: 'edge'`, `generateMetadata` + JSON-LD `LocalBusiness`. **Muszą wołać `notFound()`** gdy fetch API zwróci null (inaczej Google zaindeksuje puste strony z generic tytułem).
-- **`/[slug]` (landing)**: `dynamicParams = false`, `generateStaticParams` **musi używać `LANDING_SLUGS`** (`src/lib/seo-data.ts`) — Set z 924 valid slugów (48 keywords + 30 cities + 576 keyword-topcity + 270 category-extracity). Jeśli używać samego `ALL_KEYWORDS + ALL_CITIES` (78), 846 URLi z `sitemap-locations.xml` da 404.
+- **Tylko realne dane** — pełny opis w `.ai/context/02-seo-architecture.md` § 0. Strony SEO są w `(app)/`: server component (`runtime: 'edge'`) renderuje szablon SSR z danymi z API `/public/*` (`src/lib/landings.ts`), a klient przejmuje widok po załadowaniu.
+- **`/service/[slug]`, `/profile/[uid]`, `/wpis/[slug]`**: `generateMetadata` + JSON-LD. **Muszą wołać `notFound()`** gdy API zwróci 404. Inny slug niż kanoniczny → `permanentRedirect`.
+- **`/[slug]` (landing)**: tylko grupy z `GET /public/landings` (kategoria / miasto / kategoria+miasto z ≥1 publiczną ofertą). Brak grupy → 404. **Bez** hardkodowanych list miast/fraz (stare `LANDING_SLUGS` jest martwe).
+- **Wpisy**: `/wpis/<slug>-<id>` (pojedynczo) + `/wpisy`, landingi i profil (grupowo). API po zmianie woła `publishSeoChange` → `/api/revalidate` + IndexNow.
+- **`AppShell` + SSR**: nie wołaj `useSearchParams` w `AppShellContent` i nie opakowuj całego shella w `<Suspense>` — daje pusty `<body>` dla Google i soft 404. Patrz `SearchParamsEffects`.
 - **`src/middleware.ts`**: 301 redirect legacy `/{title-PublicId}` (mixed-case) → `/service/{slug}` + 404 na `/_next/data/*` (stara Pages Router pułapka Googlebot cache) + rewrite social botów na `/og/*` + `Cache-Control` ISR dla landingów / service / profile + **nagłówek CSP na każdej odpowiedzi** (patrz niżej).
 
 ### Security headers — `src/middleware.ts` (CSP) + `public/_headers` (reszta), NIE `next.config.ts`

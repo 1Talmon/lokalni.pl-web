@@ -45,6 +45,7 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                         <li><Link href="/jak-to-dziala" className="hover:text-white transition-colors">Jak to działa</Link></li>
                         <li><Link href="/o-nas" className="hover:text-white transition-colors">O nas</Link></li>
                         <li><Link href="/faq" className="hover:text-white transition-colors">Najczęstsze pytania</Link></li>
+                        <li><Link href="/wpisy" className="hover:text-white transition-colors">Wpisy specjalistów</Link></li>
                     </ul>
                 </div>
 
@@ -55,7 +56,7 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                         <li>
                             {onOpenSupport
                                 ? <button onClick={onOpenSupport} className="hover:text-white transition-colors text-left">Centrum wsparcia</button>
-                                : <Link href="/pomoc" className="hover:text-white transition-colors">Centrum wsparcia</Link>
+                                : <Link href="/faq" className="hover:text-white transition-colors">Centrum wsparcia</Link>
                             }
                         </li>
                         <li><Link href="/regulamin" className="hover:text-white transition-colors">Regulamin serwisu</Link></li>

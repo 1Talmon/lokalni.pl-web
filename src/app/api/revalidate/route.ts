@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SEO_TAG } from '@/lib/landings';
 
 export const runtime = 'edge';
 
-// revalidatePath is a Next.js server API — on CF Pages (next-on-pages) it invalidates
-// the CF KV cache entry for that path, triggering ISR regeneration on next request.
-// Dynamic import + try-catch guards against edge runtimes where it may be unavailable.
-async function tryRevalidatePath(path: string): Promise<void> {
+// Called by the API (lib/seo.ts publishSeoChange) right after a service/post/profile changes.
+// Drops the SEO data cache (fetch tag) and the affected pages — single page + every group page
+// (home, /wpisy, profile, landings) — so new content is visible to crawlers immediately.
+// revalidatePath/revalidateTag are dynamically imported: on edge runtimes where they're missing
+// the fetch cache still expires on its own (revalidate: 300).
+async function tryRevalidate(kind: 'path' | 'tag', value: string): Promise<boolean> {
     try {
-        const { revalidatePath } = await import('next/cache');
-        revalidatePath(path);
+        const cache = await import('next/cache');
+        if (kind === 'tag') cache.revalidateTag(value);
+        else cache.revalidatePath(value);
+        return true;
     } catch {
-        console.warn('[revalidate] revalidatePath unavailable for', path);
+        console.warn('[revalidate] unavailable for', kind, value);
+        return false;
     }
 }
 
 interface RevalidateBody {
     event: string;
     data: {
-        slug?: string;
+        slug?: string;          // legacy service events
+        categorySlug?: string;  // legacy service events
         uid?: string;
-        categorySlug?: string;
+        paths?: string[];
     };
 }
+
+const SAFE_PATH = /^\/[a-z0-9/_-]*$/i;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validate webhook secret — set REVALIDATE_SECRET in CF Pages env vars
@@ -38,32 +47,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const { event, data } = body;
+    if (!/^(service|post|profile)\.[a-z]+$/.test(event ?? '')) {
+        return NextResponse.json({ error: 'unknown_event', event }, { status: 400 });
+    }
+
+    const paths = new Set<string>(Array.isArray(data?.paths) ? data.paths : []);
+    if (data?.slug) paths.add(`/service/${data.slug}`);
+    if (data?.categorySlug) paths.add(`/${data.categorySlug}`);
+    if (data?.uid) paths.add(`/profile/${data.uid}`);
+
+    await tryRevalidate('tag', SEO_TAG);
     const revalidated: string[] = [];
-
-    switch (event) {
-        case 'service.created':
-        case 'service.updated':
-        case 'service.deleted':
-            if (data.slug) {
-                await tryRevalidatePath(`/service/${data.slug}`);
-                revalidated.push(`/service/${data.slug}`);
-            }
-            // Also invalidate category landing pages when services change
-            if (data.categorySlug) {
-                await tryRevalidatePath(`/${data.categorySlug}`);
-                revalidated.push(`/${data.categorySlug}`);
-            }
-            break;
-
-        case 'profile.updated':
-            if (data.uid) {
-                await tryRevalidatePath(`/profile/${data.uid}`);
-                revalidated.push(`/profile/${data.uid}`);
-            }
-            break;
-
-        default:
-            return NextResponse.json({ error: 'unknown_event', event }, { status: 400 });
+    for (const p of [...paths].filter(p => SAFE_PATH.test(p)).slice(0, 100)) {
+        if (await tryRevalidate('path', p)) revalidated.push(p);
     }
 
     // eslint-disable-next-line no-console

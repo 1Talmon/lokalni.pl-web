@@ -29,7 +29,7 @@ const SLIDES: Slide[] = [
         emoji: '✨',
         bg: 'bg-violet-50',
         title: 'Dodaj ogłoszenie',
-        desc: 'Jesteś wykonawcą lub masz zlecenie? Naciśnij przycisk + i opublikuj ogłoszenie widoczne dla tysięcy użytkowników.',
+        desc: 'Jesteś wykonawcą lub masz zlecenie? Naciśnij przycisk + i opublikuj ogłoszenie widoczne dla wszystkich użytkowników serwisu.',
     },
     {
         emoji: '👤',

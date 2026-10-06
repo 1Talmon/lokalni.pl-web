@@ -75,6 +75,9 @@ export const CITY_LOCATIVE: Record<string, string> = {
     'bielsko-biala': 'Bielsku-Białej', bytom: 'Bytomiu',
     'zielona-gora': 'Zielonej Górze', rybnik: 'Rybniku', opole: 'Opolu',
     tychy: 'Tychach', tarnow: 'Tarnowie', koszalin: 'Koszalinie', kalisz: 'Kaliszu',
+    // Towns that already have offers on the site (landing H1 "w …"); unknown towns fall back to "– Nazwa"
+    slupsk: 'Słupsku', rowy: 'Rowach', 'wielki-klincz': 'Wielkim Klinczu', sopot: 'Sopocie',
+    koscierzyna: 'Kościerzynie', ustka: 'Ustce', lebork: 'Lęborku', wejherowo: 'Wejherowie',
 };
 
 export const KEYWORD_DISPLAY: Record<string, string> = {

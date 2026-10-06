@@ -15,6 +15,10 @@ function MapPinIcon() {
 }
 
 import Link from 'next/link';
+import { StaticServiceCard } from '@/components/seo/StaticServiceCard';
+import { StaticPostCard } from '@/components/seo/StaticPostCard';
+import type { PublicPost } from '@/lib/landings';
+import type { Service } from '@/types';
 
 function normalizeUrl(url: string | null | undefined): string | null {
     if (!url) return null;
@@ -32,7 +36,7 @@ interface ProfileShellData {
     reviewsCount?: string | number;
 }
 
-export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
+export function PublicProfileStaticShell({ data, services = [], posts = [] }: { data: ProfileShellData; services?: Service[]; posts?: PublicPost[] }) {
     const name = [data.imie, data.nazwisko].filter(Boolean).join(' ') || 'Specjalista';
     const avatar = normalizeUrl(data.profilowe);
     const cover = normalizeUrl(data.zdjecieTla);
@@ -52,8 +56,6 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
                 <nav aria-label="breadcrumb" className="px-4 pt-3 pb-1">
                     <ol className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs text-gray-400">
                         <li><Link href="/" className="hover:text-indigo-600 transition-colors">Strona główna</Link></li>
-                        <li aria-hidden="true">/</li>
-                        <li><Link href="/warszawa" className="hover:text-indigo-600 transition-colors">Specjaliści</Link></li>
                         <li aria-hidden="true">/</li>
                         <li className="text-gray-600 font-medium truncate max-w-[200px]">{name}</li>
                     </ol>
@@ -115,6 +117,24 @@ export function PublicProfileStaticShell({ data }: { data: ProfileShellData }) {
                         <p className="text-gray-600 leading-relaxed text-sm">
                             {String(data.bio).slice(0, 400)}
                         </p>
+                    )}
+
+                    {services.length > 0 && (
+                        <section className="mt-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-3">Usługi ({services.length})</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {services.map((s, i) => <StaticServiceCard key={s.publicId} s={s} priority={i < 2} />)}
+                            </div>
+                        </section>
+                    )}
+
+                    {posts.length > 0 && (
+                        <section className="mt-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-3">Wpisy</h2>
+                            <div className="grid grid-cols-1 gap-4">
+                                {posts.map(p => <StaticPostCard key={p.id} post={p} />)}
+                            </div>
+                        </section>
                     )}
                 </div>
             </div>

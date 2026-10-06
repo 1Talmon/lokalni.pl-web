@@ -8,6 +8,7 @@ import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 import PublicProfileContent from './PublicProfileContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
+import { fetchPosts, fetchProviderServices } from '@/lib/landings';
 
 interface Props { params: Promise<{ uid: string }> }
 
@@ -41,10 +42,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : `Sprawdź profil ${name} na MyLokalni.pl – opinie klientów, dostępne usługi i możliwość bezpośredniego kontaktu.`;
     const url = `${BASE_URL}/profile/${uid}`;
     const image = ((profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined) ?? DEFAULT_OG_IMAGE;
+    // Index only profiles with real public content (offers or posts) — an empty account is a thin page
+    const [services, posts] = await Promise.all([
+        fetchProviderServices(uid).catch(() => null),
+        fetchPosts(1, 10, uid).catch(() => null),
+    ]);
+    const isEmpty = services !== null && posts !== null && services.length === 0 && posts.posts.length === 0;
 
     return {
         title,
         description: bio,
+        ...(isEmpty ? { robots: { index: false, follow: true } } : {}),
         alternates: { canonical: url },
         openGraph: {
             title: `${name}`,
@@ -67,6 +75,10 @@ export default async function ProfilePage({ params }: Props) {
     const profile = await fetchProfileMeta(uid);
     if (!profile || profile.deleted) notFound();
     const jsonLd = buildProfileJsonLd(profile, uid);
+    const [services, posts] = await Promise.all([
+        fetchProviderServices(uid).catch(() => []),
+        fetchPosts(1, 10, uid).then(r => r.posts).catch(() => []),
+    ]);
 
     // Cover is full-width (h-44) — primary LCP candidate; avatar is fallback
     const heroImage = ((profile.zdjecieTla || profile.profilowe || profile.avatar) as string | null) || null;
@@ -87,7 +99,11 @@ export default async function ProfilePage({ params }: Props) {
             />
             {/* SSR visible shell — LCP candidate for real users + Googlebot indexable HTML.
                 Hidden by PublicProfileClient once interactive version renders. */}
-            <PublicProfileStaticShell data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']} />
+            <PublicProfileStaticShell
+                data={profile as Parameters<typeof PublicProfileStaticShell>[0]['data']}
+                services={services}
+                posts={posts}
+            />
             <PublicProfileContent />
         </>
     );

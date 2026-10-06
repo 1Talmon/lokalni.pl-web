@@ -2,7 +2,8 @@ export const runtime = 'edge';
 
 import { cache } from 'react';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { createServiceUrl } from '@/utils/helpers';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
@@ -25,6 +26,14 @@ const fetchServiceMeta = cache(async function fetchServiceMeta(publicId: string)
     }
 });
 
+/** Canonical slug = slugified title + publicId (same algorithm as API sitemap). */
+function canonicalSlug(service: Record<string, unknown>, fallback: string): string {
+    if (typeof service.slug === 'string' && service.slug) return service.slug;
+    const title = typeof service.title === 'string' ? service.title : '';
+    const publicId = typeof service.publicId === 'string' ? service.publicId : '';
+    return title && publicId ? createServiceUrl(title, publicId) : fallback;
+}
+
 function buildDescription(service: Record<string, unknown>): string {
     const city = typeof service.city === 'string' && service.city ? ` w ${service.city}` : '';
     const raw = typeof service.description === 'string' ? service.description : '';
@@ -37,16 +46,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
+    const canonical = canonicalSlug(service, slug);
+    if (canonical !== slug) permanentRedirect(`/service/${canonical}`);
 
     const title = service.title as string;
     const description = buildDescription(service);
-    const url = `${BASE_URL}/service/${slug}`;
+    const url = `${BASE_URL}/service/${canonical}`;
     // Preferuj ogImage (JPEG) nad image (WebP) — Facebook OG scraper wymaga JPEG/PNG
     const image = ((service.ogImage || service.image || (Array.isArray(service.images) ? service.images[0] : undefined)) as string | undefined) ?? DEFAULT_OG_IMAGE;
 
     return {
         title,
         description,
+        // Hidden / pending / rejected services stay reachable for the owner but are never indexed
+        ...(service.isPublic === false ? { robots: { index: false, follow: true } } : {}),
         alternates: { canonical: url },
         openGraph: {
             title,
@@ -69,7 +82,9 @@ export default async function ServicePage({ params }: Props) {
     const publicId = slug.split('-').pop() ?? '';
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
-    const jsonLdSchemas = buildServiceJsonLd(service, slug);
+    const canonical = canonicalSlug(service, slug);
+    if (canonical !== slug) permanentRedirect(`/service/${canonical}`);
+    const jsonLdSchemas = buildServiceJsonLd(service, canonical);
 
     // Hero image for LCP preload — sent in <head> before any body content
     const heroImage = (service.ogImage || service.image ||

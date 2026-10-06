@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 // Social bots that need og: tags in <head> — rewrite to /og/* which is a
 // top-level server component where generateMetadata lands in <head>, not after
 // the (app)/ 'use client' layout RSC payload.
-const SOCIAL_BOT_RE = /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|redditbot|Applebot/i;
+// Applebot is Apple's search crawler (Spotlight/Siri), not a link-preview bot — it gets the real page.
+const SOCIAL_BOT_RE = /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|redditbot/i;
 
 // Landing slug pattern: single lowercase path segment (/hydraulik-warszawa)
 const LANDING_SLUG_RE = /^\/[a-z][a-z0-9-]*$/;
@@ -17,8 +18,15 @@ const APP_SEGMENTS = new Set([
     'faq', 'regulamin', 'polityka-prywatnosci', 'o-nas', 'zasady-bezpieczenstwa',
     'jak-to-dziala', 'zgoda-rodzica', 'auth', 'reset-password', 'verify-email',
     'delete-account', 'delete-account-confirm', 'invite', 'r',
-    'service', 'profile', 'og', 'api',
+    'service', 'profile', 'og', 'api', 'wpis', 'wpisy',
 ]);
+
+// Legacy root-level service URL: /<title-slug>-<publicId> (publicId = 10 chars, nanoid alphabet,
+// at least one uppercase letter). Anything else with uppercase (/FAQ) is a normal 404, not a service.
+function isLegacyServicePath(pathname: string): boolean {
+    if (!/^\/(?:[a-z0-9-]*-)?[A-Za-z0-9_-]{10}$/.test(pathname)) return false;
+    return /[A-Z]/.test(pathname.slice(-10));
+}
 
 function buildCsp(): string {
     const isDev = process.env.NODE_ENV === 'development';
@@ -51,7 +59,7 @@ export function middleware(request: NextRequest) {
     // indexed URLs or links. Service slugs always contain a mixed-case publicId
     // (uppercase letters), while landing slugs (keywords/cities) are lowercase.
     // Redirect permanently to /service/<slug> to preserve SEO link equity.
-    if (!pathname.includes('/', 1) && /[A-Z]/.test(pathname)) {
+    if (isLegacyServicePath(pathname)) {
         const slug = pathname.slice(1);
         return NextResponse.redirect(new URL(`/service/${slug}`, request.url), 301);
     }
@@ -69,8 +77,9 @@ export function middleware(request: NextRequest) {
             res.headers.set('Content-Security-Policy', csp);
             return res;
         }
-        // Landing slug pages: /hydraulik-warszawa, /sprzatanie, /warszawa etc.
-        if (LANDING_SLUG_RE.test(pathname)) {
+        // Landing slug pages: /auto-gdansk, /auto, /gdansk etc. (not app routes like /faq — those
+        // are plain server pages with og: tags in <head> already)
+        if (LANDING_SLUG_RE.test(pathname) && !APP_SEGMENTS.has(pathname.slice(1))) {
             const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
             res.headers.set('Content-Security-Policy', csp);
             return res;

@@ -10,7 +10,7 @@ export const AuthSidePanel = () => (
                 Wszystko,<br />czego potrzebujesz<br />w jednym miejscu.
             </h1>
             <p className="text-lg opacity-80">
-                Dołącz do tysięcy zadowolonych użytkowników i znajdź specjalistę w swojej okolicy już dziś.
+                Dołącz do MyLokalni.pl i znajdź specjalistę w swojej okolicy już dziś.
             </p>
         </div>
         <div className="flex gap-4 opacity-50 text-sm">

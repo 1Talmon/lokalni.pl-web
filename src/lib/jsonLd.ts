@@ -35,19 +35,20 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
             url: `${BASE_URL}/service/${slug}`,
         } : undefined,
         areaServed: s.city ? { '@type': 'City', name: s.city } : undefined,
+        // Real reviews of this service only (API: AVG over non-auto-generated reviews)
+        ...(Number(s.reviewsCount) > 0 && Number(s.rating) > 0 ? {
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: Number(s.rating),
+                reviewCount: Number(s.reviewsCount),
+                bestRating: 5,
+                worstRating: 1,
+            },
+        } : {}),
         provider: provider ? {
             '@type': 'Person',
-            name: provider.name,
+            name: [provider.imie, provider.nazwisko].filter(Boolean).join(' ') || provider.name,
             ...(providerUid ? { url: `${BASE_URL}/profile/${providerUid}` } : {}),
-            ...(provider.avgRating && provider.reviewsCount ? {
-                aggregateRating: {
-                    '@type': 'AggregateRating',
-                    ratingValue: provider.avgRating,
-                    reviewCount: provider.reviewsCount,
-                    bestRating: 5,
-                    worstRating: 1,
-                },
-            } : {}),
         } : undefined,
     };
 

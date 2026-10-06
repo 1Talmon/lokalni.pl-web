@@ -1,109 +1,71 @@
-import { createServiceUrl } from '@/utils/helpers';
-import type { Service } from '@/types';
-import { buildH1, type ParsedSlug } from '@/lib/slug-services';
+import { StaticServiceCard } from '@/components/seo/StaticServiceCard';
+import { StaticPostCard } from '@/components/seo/StaticPostCard';
+import { LandingLinks } from '@/components/seo/LandingLinks';
+import { categoryLabel, landingH1, offersLabel, type LandingData, type LandingGroup } from '@/lib/landings';
 
 interface Props {
-    parsed: ParsedSlug;
-    services: Service[];
-    total: number;
+    data: LandingData;
+    related: LandingGroup[];
+    parents: LandingGroup[];
 }
 
-function normalizeImg(url: string | undefined): string | null {
-    if (!url) return null;
-    return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://api.mylokalni.pl');
+function intro(g: LandingGroup, total: number, providers: number, cities: string[]): string {
+    const cat = categoryLabel(g.categorySlug);
+    const who = `${providers} ${providers === 1 ? 'specjalisty' : 'specjalistów'}`;
+    if (g.type === 'category') {
+        const where = cities.length > 0 ? ` z miejscowości: ${cities.join(', ')}` : '';
+        return `Kategoria ${cat}: ${offersLabel(total)} od ${who}${where}. Porównaj ceny i opinie, napisz do wykonawcy i zarezerwuj termin na MyLokalni.pl.`;
+    }
+    if (g.type === 'city') {
+        return `${offersLabel(total)} lokalnych usług od ${who} w miejscowości ${g.city}. Porównaj ceny i opinie, napisz do wykonawcy i zarezerwuj termin na MyLokalni.pl.`;
+    }
+    return `${cat} w miejscowości ${g.city}: ${offersLabel(total)} od ${who}. Porównaj ceny i opinie, napisz do wykonawcy i zarezerwuj termin na MyLokalni.pl.`;
 }
 
-function StaticCard({ s, priority }: { s: Service; priority: boolean }) {
-    const slug = s.publicId && s.title ? createServiceUrl(s.title, s.publicId) : null;
-    const img = normalizeImg(s.image || s.images?.[0]);
-    const href = slug ? `/service/${slug}` : '/';
+export function SlugStaticShell({ data, related, parents }: Props) {
+    const { group, services, posts, total } = data;
+    const providers = new Set(services.map(s => s.provider.uid)).size;
+    const cities = [...new Set(services.map(s => s.city).filter(Boolean))];
 
     return (
-        <a href={href} className="relative bg-white rounded-3xl overflow-hidden shadow-lg block">
-            {/* Image */}
-            <div className="relative h-48 w-full bg-gray-200">
-                {img ? (
-                    <img
-                        src={img}
-                        alt={s.title}
-                        loading={priority ? 'eager' : 'lazy'}
-                        fetchPriority={priority ? 'high' : 'auto'}
-                        decoding={priority ? 'sync' : 'async'}
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-indigo-200" />
-                )}
-                {/* Location badge */}
-                <div className="absolute top-3 left-3 z-10">
-                    <span className="bg-black/80 text-white px-2 py-0.5 rounded-lg text-[10px] font-semibold">
-                        {s.isRemote ? 'Zdalnie' : (s.city || '')}
-                    </span>
-                </div>
-                {/* Price badge */}
-                <div className="absolute bottom-3 right-3 z-10">
-                    <div className="bg-white px-3 py-2 rounded-xl shadow-sm text-right">
-                        <div className="font-bold text-lg text-gray-900">{s.price} zł</div>
-                        <div className="text-[10px] text-gray-500">{s.priceUnit}</div>
-                    </div>
-                </div>
-            </div>
+        <div data-slug-shell className="max-w-7xl mx-auto px-4 pt-4 pb-12">
+            <nav aria-label="breadcrumb" className="mb-2">
+                <ol className="flex items-center flex-wrap gap-x-1.5 text-xs text-gray-400">
+                    <li><a href="/" className="hover:text-indigo-600">Strona główna</a></li>
+                    {parents.map(p => (
+                        <li key={p.slug} className="flex items-center gap-x-1.5">
+                            <span aria-hidden="true">/</span>
+                            <a href={`/${p.slug}`} className="hover:text-indigo-600">{p.type === 'category' ? categoryLabel(p.categorySlug) : p.city}</a>
+                        </li>
+                    ))}
+                    <li className="flex items-center gap-x-1.5"><span aria-hidden="true">/</span><span className="text-gray-600">{landingH1(group)}</span></li>
+                </ol>
+            </nav>
 
-            {/* Card body */}
-            <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                        {/* Avatar */}
-                        <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm shrink-0 overflow-hidden">
-                            {s.provider.avatar
-                                ? <img src={normalizeImg(s.provider.avatar) ?? ''} alt="" className="w-full h-full object-cover" />
-                                : (s.provider.name?.[0] ?? '?')
-                            }
-                        </div>
-                        <span className="font-bold text-sm text-gray-900 truncate max-w-[120px]">{s.provider.name}</span>
-                    </div>
-                    {s.rating > 0 && (
-                        <div className="flex items-center gap-1 bg-amber-50 text-amber-900 px-2 py-1 rounded-lg shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                            <span className="font-bold text-xs">{s.rating.toFixed(1)}</span>
-                        </div>
-                    )}
-                </div>
-                <h2 className="font-bold text-base text-gray-900 mb-1 line-clamp-1">{s.title}</h2>
-                <p className="text-gray-600 text-xs mb-3 line-clamp-2 min-h-[32px]">{s.description}</p>
-                <div className="w-full bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm text-center">
-                    Zobacz szczegóły
-                </div>
-            </div>
-        </a>
-    );
-}
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{landingH1(group)}</h1>
+            <p className="text-sm text-gray-600 mt-2 max-w-3xl">{intro(group, total, providers, cities)}</p>
 
-export function SlugStaticShell({ parsed, services, total }: Props) {
-    const h1 = buildH1(parsed);
-
-    return (
-        <div data-slug-shell>
-            {/* Search context header */}
-            <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{h1}</h1>
-                {total > 0 && (
-                    <p className="text-sm text-gray-500 mt-1">
-                        {total} {total === 1 ? 'oferta' : total < 5 ? 'oferty' : 'ofert'}
-                    </p>
-                )}
-            </div>
-
-            {/* Service grid */}
-            <div className="max-w-7xl mx-auto px-4 pb-8">
+            <section className="mt-6" aria-label="Oferty">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {services.map((s, i) => (
-                        <StaticCard key={s.publicId} s={s} priority={i < 4} />
+                        <StaticServiceCard key={s.publicId} s={s} priority={i < 4} />
                     ))}
                 </div>
-            </div>
+            </section>
+
+            {posts.length > 0 && (
+                <section className="mt-10">
+                    <h2 className="text-lg font-bold text-gray-900 mb-3">Wpisy specjalistów</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {posts.map(p => <StaticPostCard key={p.id} post={p} />)}
+                    </div>
+                </section>
+            )}
+
+            <LandingLinks
+                title={group.type === 'city' ? `Kategorie usług – ${group.city}` : group.type === 'category' ? `${categoryLabel(group.categorySlug)} w innych miejscowościach` : 'Zobacz także'}
+                groups={related}
+            />
         </div>
     );
 }

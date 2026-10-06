@@ -5,7 +5,7 @@ import { BASE_URL } from '@/lib/seo-data';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const title = 'O nas – Platforma lokalnych specjalistów';
-const description = 'Poznaj MyLokalni.pl – największą polską platformę łączącą klientów ze sprawdzonymi lokalnymi specjalistami w całej Polsce.';
+const description = 'Poznaj MyLokalni.pl – polską platformę łączącą klientów z lokalnymi specjalistami: oferty z cenami, opinie, czat i rezerwacje online.';
 const url = `${BASE_URL}/o-nas`;
 
 export const metadata: Metadata = {
