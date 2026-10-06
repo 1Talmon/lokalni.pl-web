@@ -12,18 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Landing pages exist only for real groups with offers (API /public/landings) — pick live ones
-      # instead of hardcoded slugs, which correctly return 404 when nobody offers that service.
+      # Landing pages exist only for real groups with offers — take live ones from the tested host's
+      # sitemap instead of hardcoded slugs (which correctly 404 when nobody offers that service).
       - name: Pick URLs
         id: urls
         run: |
           BASE=https://dev.lokalni-pl-web.pages.dev
-          SLUGS=$(curl -sf https://api.mylokalni.pl/api/public/landings | jq -r '[.data[] | select(.type=="category")][0].slug, [.data[] | select(.type=="category-city")][0].slug' | grep -v null || true)
+          LANDINGS=$(curl -sfL "$BASE/sitemap-landings.xml" | grep -o '<loc>[^<]*' | sed 's|<loc>https://mylokalni.pl/||' | head -2 || true)
+          [ -z "$LANDINGS" ] && echo "::warning::No landing URLs found in sitemap-landings.xml"
           {
             echo 'list<<EOF'
             echo "$BASE/"
             echo "$BASE/faq"
-            for s in $SLUGS; do echo "$BASE/$s"; done
+            for s in $LANDINGS; do echo "$BASE/$s"; done
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -31,6 +32,8 @@ jobs:
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: ${{ steps.urls.outputs.list }}
-          budgetPath: .lighthouserc.json
+          # lhci config with assertions (was wired as budgetPath → "Cannot use both budgets AND assertions",
+          # so thresholds were never checked)
+          configPath: .lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
