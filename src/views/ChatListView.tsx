@@ -120,10 +120,7 @@ export const ChatListView = ({ chats, onChatClick, isLoading = false }: ChatList
                                     </div>
                                     <p className="text-xs text-gray-400 truncate mb-0.5">{chat.serviceTitle}</p>
                                     <p className={`text-[13px] truncate ${isUnread ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
-                                        {chat.lastMessage?.startsWith('📷')
-                                            ? <span className="text-[#6366F1]">📷 Zdjęcie</span>
-                                            : (chat.lastMessage || <span className="italic text-gray-300">Brak wiadomości</span>)
-                                        }
+                                        {chat.lastMessage || <span className="italic text-gray-300">Brak wiadomości</span>}
                                     </p>
                                 </div>
                             </button>
