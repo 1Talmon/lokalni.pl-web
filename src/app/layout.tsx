@@ -55,6 +55,8 @@ export const metadata: Metadata = {
         languages: { 'pl': BASE_URL },
     },
     manifest: '/manifest.json',
+    // Safari (iOS) Smart App Banner: "Pobierz" for people without the app, "Otwórz" when installed
+    itunes: { appId: '6788702057' },
     appleWebApp: {
         capable: true,
         statusBarStyle: 'default',
