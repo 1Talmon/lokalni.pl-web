@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { navPush } from '../utils/navState';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { usePersistedState } from './usePersistedState';
 import { useMyProfile } from './useMyProfile';
 import { useNotifications } from './useNotifications';
@@ -240,8 +240,10 @@ export const useAppLogic = () => {
     // Koordynaty dla filtrowania geo: picked z autocomplete (wszystkie 259 miast z DB)
     // albo fallback na CITY_COORDS (38 hardkodowanych — dla odtworzonych z localStorage)
     const userCoords = useMemo(() => {
-        if (!location || location === 'Moja okolica') return null;
+        if (!location) return null;
         if (pickedCoords) return pickedCoords;
+        // "Moja okolica" (GPS without a resolved city) only makes sense with its coords
+        if (location === 'Moja okolica') return null;
         const raw = CITY_COORDS[location];
         if (!raw) return null;
         const [lat, lng] = raw.split(',').map(Number);
@@ -250,7 +252,7 @@ export const useAppLogic = () => {
     }, [location, pickedCoords]);
 
     const { data: servicesData, isLoading: servicesLoading } = useQuery({
-        queryKey: ['services', activeCategory, filterType, location, showOnlineOnly, searchQuery, apiSort],
+        queryKey: ['services', activeCategory, filterType, location, userCoords?.lat, userCoords?.lng, showOnlineOnly, searchQuery, apiSort],
         queryFn: () => serviceService.getServices({
             limit: 50,
             category: activeCategory !== 'all' ? activeCategory : undefined,
@@ -265,6 +267,9 @@ export const useAppLogic = () => {
             userLng: userCoords?.lng,
         }),
         staleTime: 1000 * 30,
+        // Keep the current cards on screen while a new sort/filter loads — otherwise the list
+        // empties for a moment and flashes "Brak wyników" before the new order arrives
+        placeholderData: keepPreviousData,
     });
 
     const allServices: Service[] = useMemo(() => (servicesData?.data ?? []) as unknown as Service[], [servicesData]);

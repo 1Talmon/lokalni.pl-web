@@ -142,12 +142,13 @@ const HomeView = ({
 
     // Wstrzyknij rekomendacje na górę gridu gdy brak aktywnych filtrów (bez duplikatów)
     const displayServices = useMemo(() => {
-        const noFilters = !searchQuery && activeCategory === 'all' && filterType === 'all' && !showOnlineOnly && !location;
+        // Only for the default "Polecane" order — on top of price/distance sorting they'd break the order
+        const noFilters = !searchQuery && activeCategory === 'all' && filterType === 'all' && !showOnlineOnly && !location && sortBy === 'rating';
         if (!noFilters || recommendedServices.length === 0) return services;
         const existingIds = new Set(services.map(s => s.publicId));
         const newRecs = recommendedServices.filter(s => !existingIds.has(s.publicId)).slice(0, 6);
         return [...newRecs, ...services];
-    }, [recommendedServices, services, searchQuery, activeCategory, filterType, showOnlineOnly, location]);
+    }, [recommendedServices, services, searchQuery, activeCategory, filterType, showOnlineOnly, location, sortBy]);
 
     const [showMap, setShowMap] = useState(false);
     const pathname = usePathname();
@@ -180,30 +181,35 @@ const HomeView = ({
     const heroRef = useRef<HTMLDivElement>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
-    const handleGps = () => {
-        if (isGpsLoading) return;
+    // Resolves false when no position was obtained (denied / timeout); true once coords are set
+    const handleGps = (): Promise<boolean> => {
+        if (isGpsLoading) return Promise.resolve(true);
         setIsGpsLoading(true);
-        navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-                try {
+        return new Promise<boolean>(resolve => {
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
                     const { latitude, longitude } = pos.coords;
                     setLocationCoords({ lat: latitude, lng: longitude });
-                    const result = await cityService.getCityByLocation(latitude, longitude);
+                    // Reverse geocode is cosmetic (city label) — on failure keep the GPS coords as "Moja okolica"
+                    const result = await cityService.getCityByLocation(latitude, longitude).catch(() => null);
                     setLocation(result ? result.nazwa : 'Moja okolica');
-                } catch {
-                    // reverse geocode error
-                } finally {
                     setIsGpsLoading(false);
-                }
-            },
-            () => { setIsGpsLoading(false); },
-            { timeout: 10000, maximumAge: 60000 },
-        );
+                    resolve(true);
+                },
+                () => { setIsGpsLoading(false); resolve(false); },
+                { timeout: 10000, maximumAge: 60000 },
+            );
+        });
     };
 
     const handleSortChange = (newSort: typeof sortBy) => {
+        const prevSort = sortBy;
         setSortBy(newSort);
-        if (newSort === 'distance' && !location) handleGps();
+        // Distance needs a location — without one the list would silently stay in "newest" order
+        // under a "Odległość" label, so fall back to the previous sort if GPS gives nothing
+        if (newSort === 'distance' && !location) {
+            handleGps().then(ok => { if (!ok) setSortBy(prevSort); });
+        }
     };
 
     useEffect(() => {
@@ -473,7 +479,7 @@ const HomeView = ({
                     <div className="bg-gray-50 p-4 rounded-full mb-4"><Filter size={32} className="text-gray-300" /></div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">Brak wyników</h3>
                     <p className="text-gray-400 font-medium text-center max-w-xs">Nie znaleziono usług spełniających Twoje kryteria. Spróbuj zmienić filtry lub lokalizację.</p>
-                    <button onClick={() => { setFilterType('all'); setSearchQuery(''); setShowOnlineOnly(false); setLocation(''); }} className="mt-6 text-[#6366F1] font-bold hover:underline">Wyczyść filtry</button>
+                    <button onClick={() => { setFilterType('all'); setSearchQuery(''); setShowOnlineOnly(false); setLocation(''); setLocationCoords(null); }} className="mt-6 text-[#6366F1] font-bold hover:underline">Wyczyść filtry</button>
                   </div>
                 )}
 
