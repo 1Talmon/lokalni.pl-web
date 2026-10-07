@@ -28,7 +28,7 @@ export const ServiceSearchAutocomplete = ({
     value,
     onChange,
     onSelect,
-    placeholder = "Np. hydraulik, lekcje angielskiego...",
+    placeholder = "Np. koszenie trawnika, paznokcie, korepetycje...",
     inputClassName = "",
 }: ServiceSearchAutocompleteProps) => {
     const [query, setQuery] = useState(value);

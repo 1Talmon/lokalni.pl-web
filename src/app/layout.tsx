@@ -23,10 +23,10 @@ const BASE_URL = 'https://mylokalni.pl';
 export const metadata: Metadata = {
     metadataBase: new URL(BASE_URL),
     title: {
-        default: 'MyLokalni.pl – znajdź specjalistę w swoim mieście',
+        default: 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy',
         template: '%s | MyLokalni.pl',
     },
-    description: 'MyLokalni.pl – lokalni specjaliści w Twojej okolicy. Oferty z cenami, opinie, czat z wykonawcą i rezerwacja terminu online.',
+    description: 'Zarabiaj na tym, co umiesz, albo znajdź kogoś do pomocy tuż obok. Koszenie trawnika, paznokcie, korepetycje – oferty z cenami, opinie i rezerwacja online.',
     keywords: ['lokalny specjalista', 'usługi lokalne', 'rezerwacja usług online', 'Polska'],
     authors: [{ name: 'MyLokalni.pl' }],
     creator: 'MyLokalni.pl',
@@ -40,14 +40,14 @@ export const metadata: Metadata = {
         type: 'website',
         locale: 'pl_PL',
         siteName: 'MyLokalni.pl',
-        title: 'MyLokalni.pl – znajdź specjalistę w swoim mieście',
-        description: 'Lokalni specjaliści w Twojej okolicy – oferty z cenami, opinie i rezerwacja online.',
+        title: 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy',
+        description: 'Zarabiaj na tym, co umiesz, albo znajdź kogoś do pomocy tuż obok.',
         images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MyLokalni.pl' }],
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'MyLokalni.pl – znajdź specjalistę w swoim mieście',
-        description: 'Lokalni specjaliści w Twojej okolicy – oferty z cenami, opinie i rezerwacja online.',
+        title: 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy',
+        description: 'Zarabiaj na tym, co umiesz, albo znajdź kogoś do pomocy tuż obok.',
         images: ['/og-image.png'],
     },
     alternates: {

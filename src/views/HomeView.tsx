@@ -281,10 +281,10 @@ const HomeView = ({
 
           <div className="max-w-7xl mx-auto text-center md:text-left relative z-10">
             <h1 className="text-3xl md:text-6xl font-black mb-3 md:mb-4 leading-tight">
-                Znajdź specjalistę <br className="hidden md:block"/> w swojej okolicy.
+                Zarabiaj na tym, co umiesz. <br className="hidden md:block"/> Albo znajdź kogoś tuż obok.
             </h1>
             <p className="text-white/90 text-base md:text-lg mb-8">
-                Lokalni specjaliści czekają na Twoje zlecenie
+                Lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika po montaż TikToków.
             </p>
             
             <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl relative z-50">
@@ -309,7 +309,7 @@ const HomeView = ({
                                 serviceService.trackEvent('search', category);
                             }
                         }}
-                        placeholder="Np. hydraulik, lekcje angielskiego..."
+                        placeholder="Np. koszenie trawnika, paznokcie, korepetycje..."
                         inputClassName="text-base md:text-lg border-none pr-8"
                     />
                     {searchDisplay && (

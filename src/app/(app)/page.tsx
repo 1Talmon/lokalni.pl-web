@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
         groups.filter(g => g.type === 'category').map(g => categoryLabel(g.categorySlug) ?? ''),
         groups.filter(g => g.type === 'city' && g.city).map(g => g.city!),
     );
-    const title = 'MyLokalni.pl – znajdź specjalistę w swoim mieście';
+    const title = 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy';
     // openGraph/twitter replace the layout's objects as a whole — repeat every field, not just description
     return {
         description,

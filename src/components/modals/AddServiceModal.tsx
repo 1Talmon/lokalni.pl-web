@@ -488,7 +488,7 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                             autoCorrect="on"
                                             autoCapitalize="sentences"
                                             className={INPUT}
-                                            placeholder={isOffer ? 'np. Remont łazienki, Sprzątanie…' : 'np. Potrzebuję hydraulika na cito…'}
+                                            placeholder={isOffer ? 'np. Koszenie trawnika, Montaż TikToków…' : 'np. Szukam kogoś do wyprowadzania psa…'}
                                             onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Tytuł musi mieć co najmniej 5 znaków')}
                                             onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                                             onChange={handleTitleChange}

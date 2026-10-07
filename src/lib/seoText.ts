@@ -97,7 +97,7 @@ export function homeDescription(categories: string[], cities: string[]): string 
     // Only towns whose locative we know ("w Gdańsku") — never a guessed declension
     const where = cities.map(c => CITY_LOCATIVE[createSlug(c)]).filter(Boolean).slice(0, 4).join(', ');
     const lead = cats.length > 0
-        ? `Lokalni specjaliści${where ? ` w ${where}` : ''} – ${cats.slice(0, 4).join(', ')}.`
-        : 'Lokalni specjaliści w Twojej okolicy.';
-    return clip(`${lead} Oferty z cenami, opinie, czat z wykonawcą i rezerwacja terminu online.`, MAX_DESC);
+        ? `Lokalne usługi od młodych${where ? ` w ${where}` : ''} – ${cats.slice(0, 4).join(', ')}.`
+        : 'Lokalne usługi od młodych z Twojej okolicy.';
+    return clip(`${lead} Zarabiaj na tym, co umiesz, albo znajdź pomoc tuż obok – ceny, opinie i rezerwacja online.`, MAX_DESC);
 }
