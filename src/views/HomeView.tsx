@@ -19,7 +19,7 @@ import { apiClient } from '../services/apiClient';
 const SEARCH_EXAMPLES = [
     'koszenie trawnika', 'paznokcie hybrydowe', 'korepetycje z matmy', 'detailing auta',
     'wyprowadzanie psa', 'montaż rolek', 'sesja zdjęciowa', 'tort na urodziny',
-    'DJ na osiemnastkę', 'prowadzenie Instagrama', 'mycie okien', 'składanie mebli',
+    'DJ na osiemnastkę', 'social media dla firm', 'mycie okien', 'składanie mebli',
     'lekcje gitary', 'opieka nad kotem', 'strona internetowa', 'makijaż na wesele',
 ];
 
