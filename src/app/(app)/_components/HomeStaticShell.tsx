@@ -27,7 +27,7 @@ export function HomeStaticShell({ services, totalServices, groups, posts }: Prop
                     </h1>
                     <p className="text-white/90 text-base md:text-lg max-w-3xl">
                         MyLokalni.pl to lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika i detailingu,
-                        przez paznokcie i korepetycje, po montaż TikToków. Wystaw ogłoszenie i zarabiaj na tym, co umiesz,
+                        przez paznokcie i korepetycje, po montaż rolek. Wystaw ogłoszenie i zarabiaj na tym, co umiesz,
                         albo przeglądaj oferty z cenami, czytaj opinie, pisz bezpośrednio do wykonawcy i rezerwuj termin
                         online – bez prowizji od zlecenia.
                     </p>

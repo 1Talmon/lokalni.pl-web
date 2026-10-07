@@ -18,7 +18,7 @@ import { apiClient } from '../services/apiClient';
 // Typed one by one into the search placeholder — services young people actually offer here
 const SEARCH_EXAMPLES = [
     'koszenie trawnika', 'paznokcie hybrydowe', 'korepetycje z matmy', 'detailing auta',
-    'wyprowadzanie psa', 'montaż TikToków', 'sesja zdjęciowa', 'tort na urodziny',
+    'wyprowadzanie psa', 'montaż rolek', 'sesja zdjęciowa', 'tort na urodziny',
     'DJ na osiemnastkę', 'prowadzenie Instagrama', 'mycie okien', 'składanie mebli',
     'lekcje gitary', 'opieka nad kotem', 'strona internetowa', 'makijaż na wesele',
 ];
@@ -292,7 +292,7 @@ const HomeView = ({
                 Zarabiaj na tym, co umiesz. <br className="hidden md:block"/> Albo znajdź kogoś tuż obok.
             </h1>
             <p className="text-white/90 text-base md:text-lg mb-8">
-                Lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika po montaż TikToków.
+                Lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika po montaż rolek.
             </p>
             
             <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl relative z-50">
