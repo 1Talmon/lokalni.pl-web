@@ -15,10 +15,54 @@ interface ServiceSearchAutocompleteProps {
     onChange: (val: string) => void;
     onSelect: (label: string, category: string) => void;
     placeholder?: string;
+    /** Examples typed into the placeholder one after another ("Np. …"); static `placeholder` until hydrated. */
+    placeholderExamples?: string[];
     inputClassName?: string;
 }
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL || '/api'}/public/search-suggest`;
+
+const TYPE_MS = 70, ERASE_MS = 35, HOLD_MS = 1800, GAP_MS = 350;
+
+/**
+ * Typewriter placeholder written straight to the DOM — no React state, so the (heavy) parent view
+ * never re-renders per character. Starts at a random example; pauses while the field has text;
+ * with prefers-reduced-motion it just shows one random example.
+ */
+function useTypewriterPlaceholder(inputRef: React.RefObject<HTMLInputElement | null>, examples: string[] | undefined) {
+    useEffect(() => {
+        const input = inputRef.current;
+        if (!input || !examples || examples.length === 0) return;
+        const order = [...examples].sort(() => Math.random() - 0.5);
+        const set = (text: string) => { input.placeholder = `Np. ${text}`; };
+        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { set(order[0]); return; }
+
+        let i = 0, len = 0, erasing = false;
+        let timer: ReturnType<typeof setTimeout>;
+        const tick = () => {
+            // Idle while nothing would show: field has text, other tab (app keeps Home mounted), app in background
+            if (input.value || input.offsetParent === null || document.hidden) { timer = setTimeout(tick, 1000); return; }
+            const word = order[i % order.length];
+            if (!erasing) {
+                len++;
+                set(word.slice(0, len));
+                if (len < word.length) { timer = setTimeout(tick, TYPE_MS); return; }
+                erasing = true;
+                timer = setTimeout(tick, HOLD_MS);
+            } else {
+                len--;
+                set(word.slice(0, len));
+                if (len > 0) { timer = setTimeout(tick, ERASE_MS); return; }
+                erasing = false;
+                i++;
+                timer = setTimeout(tick, GAP_MS);
+            }
+        };
+        set('');
+        timer = setTimeout(tick, GAP_MS);
+        return () => clearTimeout(timer);
+    }, [inputRef, examples]);
+}
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
     CATEGORIES_DATA.filter(c => c.id !== 'all').map(c => [c.id, c.name])
@@ -29,8 +73,11 @@ export const ServiceSearchAutocomplete = ({
     onChange,
     onSelect,
     placeholder = "Np. koszenie trawnika, paznokcie, korepetycje...",
+    placeholderExamples,
     inputClassName = "",
 }: ServiceSearchAutocompleteProps) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    useTypewriterPlaceholder(inputRef, placeholderExamples);
     const [query, setQuery] = useState(value);
     const [results, setResults] = useState<SuggestResult[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -117,7 +164,9 @@ export const ServiceSearchAutocomplete = ({
     return (
         <div ref={wrapperRef} className="relative w-full">
             <input
+                ref={inputRef}
                 type="text"
+                aria-label={placeholderExamples ? 'Czego szukasz?' : undefined}
                 value={query}
                 onChange={e => {
                     setQuery(e.target.value);

@@ -15,6 +15,14 @@ import { serviceService, mapApiService } from '../services/serviceService';
 import { apiClient } from '../services/apiClient';
 
 
+// Typed one by one into the search placeholder — services young people actually offer here
+const SEARCH_EXAMPLES = [
+    'koszenie trawnika', 'paznokcie hybrydowe', 'korepetycje z matmy', 'detailing auta',
+    'wyprowadzanie psa', 'montaż TikToków', 'sesja zdjęciowa', 'tort na urodziny',
+    'DJ na osiemnastkę', 'prowadzenie Instagrama', 'mycie okien', 'składanie mebli',
+    'lekcje gitary', 'opieka nad kotem', 'strona internetowa', 'makijaż na wesele',
+];
+
 // ── Custom sort dropdown — zastępuje brzydki natywny <select> na Androidzie ──
 type SortBy = 'rating' | 'price-low' | 'distance' | 'verified';
 const SORT_OPTS: { value: SortBy; label: string }[] = [
@@ -310,6 +318,7 @@ const HomeView = ({
                             }
                         }}
                         placeholder="Np. koszenie trawnika, paznokcie, korepetycje..."
+                        placeholderExamples={SEARCH_EXAMPLES}
                         inputClassName="text-base md:text-lg border-none pr-8"
                     />
                     {searchDisplay && (
