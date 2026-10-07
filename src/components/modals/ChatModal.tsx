@@ -162,16 +162,17 @@ const VideoBubble = ({
                     }}
                 />
             ) : (
-                /* Brak miniatury — ciemny placeholder; serwer generuje thumb dla każdego uploadu,
-                   więc ten stan pojawia się tylko chwilowo przed refetchem React Query */
+                /* No server thumbnail (old messages, ffmpeg failure) — show the video's first
+                   frame instead, same fallback as ChatMediaGallery */
                 !isPending && (
-                    <div
-                        className="absolute inset-0 flex items-center justify-center bg-slate-900 pointer-events-none"
-                    >
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                            <Play size={20} className="text-white/40 ml-0.5" fill="rgba(255,255,255,0.4)" />
-                        </div>
-                    </div>
+                    <video
+                        src={videoUrl}
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        muted
+                        playsInline
+                        preload="metadata"
+                        onLoadedMetadata={e => { (e.target as HTMLVideoElement).currentTime = 0.1; }}
+                    />
                 )
             )}
             {!isPending && (
