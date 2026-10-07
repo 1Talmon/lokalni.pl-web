@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-05 13:20 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-07 12:18 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **0**
+- Uncommitted files: **1**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-3839f6f chore(ai): sync current-state
-77546b9 fix(dashboard): odstęp przy scrollu do paska zakładek z mierzonej wysokości nawigacji
-95c827a chore(deps): łatka postcss (next>postcss 8.5.29) + drobne aktualizacje
-971359e fix(deploy): ChunkLoadError po deployu — jednorazowe przeładowanie zamiast ekranu błędu
-3b74ec2 fix(build): czcionka Plus Jakarta Sans w repo (next/font/local) zamiast pobierania z Google przy buildzie
-2537a53 fix(api): client-event — limit 1 KB treści, ms musi być skończoną liczbą
-6fcfce4 docs(claude): pitfall — zawieszona nawigacja, beginTrackedNav, test:nav
-b521622 chore(deps): next 15.5.27 + npm run test:nav (Playwright smoke nawigacji)
-d95ed36 refactor(nav): useNavRecovery — ratowanie zawieszonej nawigacji w jednym hooku + telemetria
-ddc8c5d fix(nav): zawieszone przejście do ogłoszenia — wymuszony re-render gdy React nie dostaje pinga
+f1fda0b fix(chat): podgląd zdjęcia/filmu/pliku na liście czatów jak zwykła wiadomość
+33ad09e fix(chat): pierwsza klatka filmu w dymku gdy brak miniatury z serwera
+3ebedc1 perf(home): miniatury w kartach, bez podwójnego pobierania zdjęć, bez fade przy wejściu
+2217339 fix(og): podgląd landingów jako JPEG (_og.jpg) zamiast WebP
+4f1c4ed fix(ssr): zapytania SSR do API z nagłówkiem x-lokalni-ssr (bez limitu per IP Workers)
+8b94a59 ci(lighthouse): timeout na pobieranie sitemapy (CI wisiał), log kodu HTTP, + /wpisy
+b7b9153 ci(lighthouse): pomiń is-crawlable na hoście podglądowym (CF dodaje noindex na *.pages.dev), UA przeglądarki dla sitemapy
+e461e31 ci(lighthouse): landingi z sitemapy testowanego hosta + configPath (progi wreszcie sprawdzane)
+1f55b22 ci(lighthouse): testuj realne landingi z API zamiast nieistniejących slugów
+b05aace feat(seo): tytuły i opisy w Google z realnych danych
 ```
 
 <!-- AI_AUTO_END -->
