@@ -169,10 +169,9 @@ export const UserProfileView = ({
             return Math.max(0, Math.min(window.scrollY + el.getBoundingClientRect().top - margin, maxY));
         };
         const startY = window.scrollY;
-        const duration = Math.min(450, Math.max(250, 200 + Math.abs(targetY() - startY) * 0.3));
+        const duration = Math.min(650, Math.max(300, 250 + Math.abs(targetY() - startY) * 0.4));
         const t0 = performance.now();
-        // ease-out: moves immediately on tap and settles at the end — feels responsive at WKWebView's 60 Hz rAF
-        const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+        const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
         const step = (now: number) => {
             if (token !== navScrollTokenRef.current) return cleanup();
             const t = Math.min(1, (now - t0) / duration);
@@ -625,7 +624,7 @@ export const UserProfileView = ({
     const listVariants: Variants = {
         hidden: { opacity: 0, y: 6 },
         visible: { opacity: 1, y: 0 },
-        exit: { opacity: 0, transition: { duration: 0.1 } }
+        exit: { opacity: 0 }
     };
 
     if (!isLoggedIn || !user) return null;
