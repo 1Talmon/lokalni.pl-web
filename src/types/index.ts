@@ -171,7 +171,6 @@ export interface Category {
   id: string
   name: string
   icon: ReactNode
-  count: number
 }
 
 export type BookingStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed' | 'reviewed';

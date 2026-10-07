@@ -55,11 +55,10 @@ function normalizeImageOrientation(file: File): Promise<string> {
 const INPUT = "w-full bg-gray-50 p-3 rounded-xl border border-transparent outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:bg-white transition-all text-gray-900 text-sm placeholder:text-gray-400";
 const LABEL = "block text-xs font-bold text-gray-500 mb-1.5";
 const CATEGORY_PRICE_UNIT: Record<string, string> = {
-    cleaning: 'za usługę', home: 'za usługę', construction: 'za m²',
-    auto: 'za usługę', transport: 'za usługę', beauty: 'za usługę',
-    tech: 'za godzinę', edu: 'za godzinę', health: 'za godzinę',
-    pets: 'za usługę', finance: 'za usługę', care: 'za godzinę',
-    art: 'za usługę', events: 'za usługę', other: 'za usługę',
+    auto: 'za usługę', cleaning: 'za usługę', home: 'za usługę', help: 'za godzinę',
+    beauty: 'za usługę', health: 'za godzinę', edu: 'za godzinę', care: 'za godzinę',
+    pets: 'za usługę', photo: 'za usługę', social: 'za usługę', tech: 'za godzinę',
+    events: 'za usługę', art: 'za usługę', transport: 'za usługę', other: 'za usługę',
 };
 
 export const AddServiceModal = ({ isOpen, onClose, editingService, categories, onSubmit }: AddServiceModalProps) => {

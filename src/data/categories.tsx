@@ -2,27 +2,29 @@
 import React from 'react';
 import { Category } from '../types';
 import {
-    Home, Hammer, Zap, Truck, Scissors, Laptop, GraduationCap,
-    HeartPulse, Dog, Calculator, Baby, Palette, Coffee, Settings,
-    Sparkles, SprayCan, Flower2
+    Sparkles, Car, SprayCan, Flower2, HandHelping, Scissors, Dumbbell, GraduationCap,
+    Baby, Dog, Camera, Megaphone, Laptop, PartyPopper, Palette, Truck, Ellipsis
 } from 'lucide-react';
 
+// Ids are stored in the DB, used in SEO slugs (API `CATEGORY_SLUG`) and baked into app builds
+// already in the stores — rename labels freely, never an existing id.
+// Retired ids (mapped by the API): construction → help, garden → home, finance → other.
 export const CATEGORIES_DATA: Category[] = [
-    { id: 'all', name: 'Wszystko', icon: <Sparkles size={24} />, count: 999 },
-    { id: 'cleaning', name: 'Sprzątanie', icon: <SprayCan size={24} />, count: 128 },
-    { id: 'home', name: 'Dom i Ogród', icon: <Home size={24} />, count: 145 },
-    { id: 'construction', name: 'Budowa', icon: <Hammer size={24} />, count: 89 },
-    { id: 'auto', name: 'Auto', icon: <Zap size={24} />, count: 56 },
-    { id: 'transport', name: 'Transport', icon: <Truck size={24} />, count: 42 },
-    { id: 'beauty', name: 'Uroda', icon: <Scissors size={24} />, count: 112 },
-    { id: 'tech', name: 'IT/Naprawy', icon: <Laptop size={24} />, count: 34 },
-    { id: 'edu', name: 'Edukacja', icon: <GraduationCap size={24} />, count: 67 },
-    { id: 'health', name: 'Zdrowie', icon: <HeartPulse size={24} />, count: 28 },
-    { id: 'pets', name: 'Zwierzęta', icon: <Dog size={24} />, count: 45 },
-    { id: 'finance', name: 'Finanse', icon: <Calculator size={24} />, count: 19 },
-    { id: 'care', name: 'Opieka', icon: <Baby size={24} />, count: 53 },
-    { id: 'art', name: 'Sztuka', icon: <Palette size={24} />, count: 22 },
-    { id: 'events', name: 'Eventy', icon: <Coffee size={24} />, count: 25 },
-    { id: 'garden', name: 'Ogród', icon: <Flower2 size={24} />, count: 31 },
-    { id: 'other', name: 'Inne', icon: <Settings size={24} />, count: 76 }
+    { id: 'all', name: 'Wszystko', icon: <Sparkles size={24} /> },
+    { id: 'auto', name: 'Motoryzacja', icon: <Car size={24} /> },
+    { id: 'cleaning', name: 'Sprzątanie', icon: <SprayCan size={24} /> },
+    { id: 'home', name: 'Dom i ogród', icon: <Flower2 size={24} /> },
+    { id: 'help', name: 'Pomoc i drobne prace', icon: <HandHelping size={24} /> },
+    { id: 'beauty', name: 'Uroda', icon: <Scissors size={24} /> },
+    { id: 'health', name: 'Sport i zdrowie', icon: <Dumbbell size={24} /> },
+    { id: 'edu', name: 'Korepetycje i nauka', icon: <GraduationCap size={24} /> },
+    { id: 'care', name: 'Opieka', icon: <Baby size={24} /> },
+    { id: 'pets', name: 'Zwierzęta', icon: <Dog size={24} /> },
+    { id: 'photo', name: 'Foto i wideo', icon: <Camera size={24} /> },
+    { id: 'social', name: 'Grafika i social media', icon: <Megaphone size={24} /> },
+    { id: 'tech', name: 'IT i technologia', icon: <Laptop size={24} /> },
+    { id: 'events', name: 'Eventy i rozrywka', icon: <PartyPopper size={24} /> },
+    { id: 'art', name: 'Rękodzieło i sztuka', icon: <Palette size={24} /> },
+    { id: 'transport', name: 'Transport', icon: <Truck size={24} /> },
+    { id: 'other', name: 'Inne', icon: <Ellipsis size={24} /> }
 ];

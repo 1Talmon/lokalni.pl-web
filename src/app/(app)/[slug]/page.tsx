@@ -1,8 +1,8 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { BASE_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { BASE_URL, DEFAULT_OG_IMAGE, legacyLandingRedirect } from '@/lib/seo-data';
 import { createServiceUrl } from '@/utils/helpers';
 import {
     fetchLanding, servicesOgImage, fetchLandingGroups, landingH1, offersLabel, categoryLabel, categoryIdForSlug,
@@ -50,10 +50,17 @@ function relations(group: LandingGroup, all: LandingGroup[]) {
     return { parents, related: related.slice(0, 30) };
 }
 
+/** Retired category slug (pre-2026-10, e.g. /edukacja-gdynia) → 308 to its successor, else 404. */
+function notFoundOrLegacy(slug: string): never {
+    const target = legacyLandingRedirect(slug);
+    if (target) permanentRedirect(`/${target}`);
+    notFound();
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const data = await fetchLanding(slug);
-    if (!data) notFound();
+    if (!data) notFoundOrLegacy(slug);
 
     const url = `${BASE_URL}/${slug}`;
     const title = `${landingH1(data.group)} – ${offersLabel(data.total)}`;
@@ -73,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SlugPage({ params }: Props) {
     const { slug } = await params;
     const [data, all] = await Promise.all([fetchLanding(slug), fetchLandingGroups()]);
-    if (!data) notFound();
+    if (!data) notFoundOrLegacy(slug);
 
     const { group, services } = data;
     const h1 = landingH1(group);

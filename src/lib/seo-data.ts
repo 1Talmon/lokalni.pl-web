@@ -2,20 +2,40 @@ export const BASE_URL = 'https://mylokalni.pl';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.mylokalni.pl/api';
 export const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 
-/** Maps internal API category names → URL slugs */
+/** Maps internal API category names → URL slugs. Must match API `CATEGORY_SLUG` (src/lib/seo.ts).
+ *  Current ids first — `categoryIdForSlug` takes the first key; retired ids map to their successor. */
 export const CATEGORY_SLUG: Record<string, string> = {
-    cleaning: 'sprzatanie', home: 'dom-ogrod', construction: 'budowa',
-    auto: 'auto', transport: 'transport', beauty: 'uroda', tech: 'it-naprawy',
-    edu: 'edukacja', health: 'zdrowie', pets: 'zwierzeta',
-    finance: 'finanse', care: 'opieka', art: 'sztuka', events: 'eventy',
-    garden: 'inne', other: 'inne',
+    auto: 'motoryzacja', cleaning: 'sprzatanie', home: 'dom-ogrod', help: 'pomoc-drobne-prace',
+    beauty: 'uroda', health: 'sport-zdrowie', edu: 'korepetycje-nauka', care: 'opieka',
+    pets: 'zwierzeta', photo: 'foto-wideo', social: 'grafika-social-media', tech: 'it-technologia',
+    events: 'eventy-rozrywka', art: 'rekodzielo-sztuka', transport: 'transport', other: 'inne',
+    construction: 'pomoc-drobne-prace', garden: 'dom-ogrod', finance: 'inne',
 };
 
 export const CATEGORIES = [
-    'sprzatanie', 'dom-ogrod', 'budowa', 'auto', 'transport',
-    'uroda', 'it-naprawy', 'edukacja', 'zdrowie', 'zwierzeta',
-    'finanse', 'opieka', 'sztuka', 'eventy', 'inne',
+    'motoryzacja', 'sprzatanie', 'dom-ogrod', 'pomoc-drobne-prace', 'uroda', 'sport-zdrowie',
+    'korepetycje-nauka', 'opieka', 'zwierzeta', 'foto-wideo', 'grafika-social-media',
+    'it-technologia', 'eventy-rozrywka', 'rekodzielo-sztuka', 'transport', 'inne',
 ];
+
+/** Category slugs before the 2026-10 category overhaul → current slug (301 for indexed URLs,
+ *  also as the prefix of category+city landings: /edukacja-gdynia → /korepetycje-nauka-gdynia). */
+export const LEGACY_CATEGORY_SLUG: Record<string, string> = {
+    auto: 'motoryzacja', budowa: 'pomoc-drobne-prace', 'it-naprawy': 'it-technologia',
+    edukacja: 'korepetycje-nauka', zdrowie: 'sport-zdrowie', finanse: 'inne',
+    sztuka: 'rekodzielo-sztuka', eventy: 'eventy-rozrywka',
+};
+
+/** Current slug for a landing slug that used a retired category slug, or null. */
+export function legacyLandingRedirect(slug: string): string | null {
+    // Already a current category slug (e.g. 'eventy-rozrywka-…' also starts with legacy 'eventy-') — no loop
+    if (CATEGORIES.some(c => slug === c || slug.startsWith(`${c}-`))) return null;
+    for (const [oldSlug, newSlug] of Object.entries(LEGACY_CATEGORY_SLUG)) {
+        if (slug === oldSlug) return newSlug;
+        if (slug.startsWith(`${oldSlug}-`)) return `${newSlug}${slug.slice(oldSlug.length)}`;
+    }
+    return null;
+}
 
 export const POPULAR_KEYWORDS = [
     'hydraulik', 'elektryk', 'malarz', 'korepetycje', 'catering',
@@ -81,11 +101,12 @@ export const CITY_LOCATIVE: Record<string, string> = {
 };
 
 export const KEYWORD_DISPLAY: Record<string, string> = {
-    sprzatanie: 'Sprzątanie', 'dom-ogrod': 'Dom i Ogród', budowa: 'Budowa',
-    auto: 'Auto', transport: 'Transport', uroda: 'Uroda',
-    'it-naprawy': 'IT i Naprawy', edukacja: 'Edukacja', zdrowie: 'Zdrowie',
-    zwierzeta: 'Zwierzęta', finanse: 'Finanse', opieka: 'Opieka',
-    sztuka: 'Sztuka', eventy: 'Eventy', inne: 'Inne',
+    motoryzacja: 'Motoryzacja', sprzatanie: 'Sprzątanie', 'dom-ogrod': 'Dom i ogród',
+    'pomoc-drobne-prace': 'Pomoc i drobne prace', uroda: 'Uroda', 'sport-zdrowie': 'Sport i zdrowie',
+    'korepetycje-nauka': 'Korepetycje i nauka', opieka: 'Opieka', zwierzeta: 'Zwierzęta',
+    'foto-wideo': 'Foto i wideo', 'grafika-social-media': 'Grafika i social media',
+    'it-technologia': 'IT i technologia', 'eventy-rozrywka': 'Eventy i rozrywka',
+    'rekodzielo-sztuka': 'Rękodzieło i sztuka', transport: 'Transport', inne: 'Inne',
     hydraulik: 'Hydraulik', elektryk: 'Elektryk', malarz: 'Malarz',
     korepetycje: 'Korepetycje', catering: 'Catering', fryzjer: 'Fryzjer',
     mechanik: 'Mechanik', kosmetyczka: 'Kosmetyczka', fotograf: 'Fotograf',

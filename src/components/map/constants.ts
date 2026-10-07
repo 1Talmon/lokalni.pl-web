@@ -1,8 +1,10 @@
 export const CAT_COLORS: Record<string, string> = {
-    cleaning: '#6366F1', auto: '#F59E0B', home: '#10B981', construction: '#EF4444',
+    cleaning: '#6366F1', auto: '#F59E0B', home: '#10B981', help: '#EF4444',
     transport: '#3B82F6', beauty: '#EC4899', tech: '#8B5CF6', edu: '#06B6D4',
-    health: '#14B8A6', pets: '#F97316', finance: '#84CC16', care: '#E879F9',
-    art: '#F43F5E', events: '#A78BFA', garden: '#22C55E', other: '#94A3B8',
+    health: '#14B8A6', pets: '#F97316', social: '#84CC16', care: '#E879F9',
+    art: '#F43F5E', events: '#A78BFA', photo: '#0EA5E9', other: '#94A3B8',
+    // retired ids (old app builds / unmigrated rows) keep the color of their successor
+    construction: '#EF4444', garden: '#10B981', finance: '#94A3B8',
 };
 
 export const catColor = (cat: string): string => CAT_COLORS[cat] ?? '#6366F1';

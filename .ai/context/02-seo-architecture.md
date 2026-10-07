@@ -169,6 +169,34 @@ sitemap.xml (index)
 Backend: `GET /public/sitemap/category-pages` — `SELECT DISTINCT category HAVING COUNT(*) >= 2`, Redis 6h.
 Format: `/${CATEGORY_SLUG[category]}` → `/sprzatanie`, `/auto`, `/transport`...
 
+**Kategorie (od 2026-10):** 16 kategorii pod młodych / nowe małe biznesy. Id w DB się nie zmieniają (stare buildy appki),
+zmieniają się etykiety i slugi. Źródła prawdy: API `src/lib/categories.ts` + `CATEGORY_SLUG` w `src/lib/seo.ts`,
+web `CATEGORY_SLUG` w `src/lib/seo-data.ts`, klienci `src/data/categories.tsx` — muszą być zgodne.
+
+| id | Nazwa | Slug |
+|---|---|---|
+| auto | Motoryzacja | motoryzacja |
+| cleaning | Sprzątanie | sprzatanie |
+| home | Dom i ogród | dom-ogrod |
+| help | Pomoc i drobne prace | pomoc-drobne-prace |
+| beauty | Uroda | uroda |
+| health | Sport i zdrowie | sport-zdrowie |
+| edu | Korepetycje i nauka | korepetycje-nauka |
+| care | Opieka | opieka |
+| pets | Zwierzęta | zwierzeta |
+| photo | Foto i wideo | foto-wideo |
+| social | Grafika i social media | grafika-social-media |
+| tech | IT i technologia | it-technologia |
+| events | Eventy i rozrywka | eventy-rozrywka |
+| art | Rękodzieło i sztuka | rekodzielo-sztuka |
+| transport | Transport | transport |
+| other | Inne | inne |
+
+Wycofane id (API mapuje przy zapisie i filtrze, `normalizeCategory`): `construction` → `help`, `garden` → `home`,
+`finance` → `other`. Stare slugi (`auto`, `budowa`, `it-naprawy`, `edukacja`, `zdrowie`, `finanse`, `sztuka`,
+`eventy`) → 308 na nowe w `[slug]/page.tsx` (`legacyLandingRedirect`, także z miastem: `/edukacja-gdynia`).
+Migracja danych jednorazowa w `migrate.ts` (`data_migrations` → `2026-10-categories`).
+
 ### sitemap-services.xml ✅
 Backend: `GET /public/sitemap/services` — aktywne posty, Redis 1h. Format: `/service/${toSlug(title)}-${public_id}`.
 
