@@ -54,12 +54,6 @@ function normalizeImageOrientation(file: File): Promise<string> {
 
 const INPUT = "w-full bg-gray-50 p-3 rounded-xl border border-transparent outline-none focus:ring-2 focus:ring-[#6366F1]/20 focus:bg-white transition-all text-gray-900 text-sm placeholder:text-gray-400";
 const LABEL = "block text-xs font-bold text-gray-500 mb-1.5";
-const CATEGORY_PRICE_UNIT: Record<string, string> = {
-    auto: 'za usługę', cleaning: 'za usługę', home: 'za usługę', help: 'za godzinę',
-    beauty: 'za usługę', health: 'za godzinę', edu: 'za godzinę', care: 'za godzinę',
-    pets: 'za usługę', photo: 'za usługę', social: 'za usługę', tech: 'za godzinę',
-    events: 'za usługę', art: 'za usługę', transport: 'za usługę', other: 'za usługę',
-};
 
 export const AddServiceModal = ({ isOpen, onClose, editingService, categories, onSubmit }: AddServiceModalProps) => {
     const { sheetDragProps, startDrag, y, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
@@ -111,8 +105,11 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
     const [categoryValue, setCategoryValue] = useState(editingService?.category || 'home');
     const [categoryAutoSet, setCategoryAutoSet] = useState(false);
     const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
-    const [priceHint, setPriceHint] = useState<{ min: number; median: number; max: number; source: string } | null>(null);
-    const [isFetchingPriceHint, setIsFetchingPriceHint] = useState(false);
+    const [priceHint, setPriceHint] = useState<{ min: number; median: number; max: number; n: number; source: 'similar' | 'category' | 'estimate' } | null>(null);
+    // Values the user picked themselves — suggestions never overwrite them (editing: the saved ones)
+    const [manualCategory, setManualCategory] = useState<string | null>(editingService?.category ?? null);
+    const [manualUnit, setManualUnit] = useState<string | null>(editingService?.priceUnit ?? null);
+    const priceInputRef = useRef<HTMLInputElement>(null);
     const [priceUnitAutoSet, setPriceUnitAutoSet] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isSubmittingRef = useRef(false);
@@ -123,9 +120,7 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
         return u && VALID_UNITS.includes(u) ? u : 'za usługę';
     });
     const suggestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const priceHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const suggestAbortRef = useRef<AbortController | null>(null);
-    const priceHintAbortRef = useRef<AbortController | null>(null);
     const editingOriginalTitleRef = useRef<string | null>(editingService ? (editingService.title || '') : null);
     const DESC_MIN = 10;
     const onCloseRef = useRef(onClose);
@@ -141,70 +136,52 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
         return () => { unlockScroll(); window.removeEventListener('keydown', onKey); };
     }, [isOpen, triggerClose]);
 
+    // One call to the API suggestion engine (learns from real listings): category, price unit and
+    // price range. Re-asks when the title changes or the user fixes the category / unit by hand.
     useEffect(() => {
-        if (!isOpen || titleValue.length < 3 || isSuggestingCategory || (editingOriginalTitleRef.current !== null && titleValue === editingOriginalTitleRef.current)) {
-            priceHintAbortRef.current?.abort();
-            setPriceHint(null); setIsFetchingPriceHint(false); setCategoryAutoSet(false); setPriceUnitAutoSet(false); return;
-        }
-        priceHintAbortRef.current?.abort();
-        const ctrl = new AbortController();
-        priceHintAbortRef.current = ctrl;
-        if (priceHintTimerRef.current) clearTimeout(priceHintTimerRef.current);
-        setIsFetchingPriceHint(true);
-        priceHintTimerRef.current = setTimeout(async () => {
-            try {
-                const params = new URLSearchParams({ category: categoryValue });
-                params.set('title', titleValue);
-                if (editingService?.publicId) params.set('excludeId', editingService.publicId);
-                const res = await fetch(`${API_BASE}/public/price-hint?${params}`, { signal: ctrl.signal });
-                if (res.ok) { const d = await res.json(); if (d.min !== null && d.min !== undefined) setPriceHint(d); }
-            } catch (e) {
-                if (e instanceof Error && e.name === 'AbortError') return;
-            } finally {
-                if (!ctrl.signal.aborted) setIsFetchingPriceHint(false);
-            }
-        }, 300);
-    }, [categoryValue, formLocation, titleValue, isOpen, isSuggestingCategory, editingService]);
-
-    const suggestCategory = useCallback(async (title: string) => {
-        if (title.length < 5) return;
+        if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
         suggestAbortRef.current?.abort();
+        const untouchedEdit = editingOriginalTitleRef.current !== null && titleValue === editingOriginalTitleRef.current
+            && manualCategory === editingService?.category && manualUnit === editingService?.priceUnit;
+        if (!isOpen || titleValue.trim().length < 3 || untouchedEdit) {
+            setIsSuggestingCategory(false); setPriceHint(null); setCategoryAutoSet(false); setPriceUnitAutoSet(false);
+            return;
+        }
         const ctrl = new AbortController();
         suggestAbortRef.current = ctrl;
         setIsSuggestingCategory(true);
-        try {
-            const res = await fetch(`${API_BASE}/public/suggest-category`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title }),
-                signal: ctrl.signal,
-            });
-            if (!res.ok) return;
-            const data = await res.json() as { category: string | null };
-            if (data.category) {
-                setCategoryValue(data.category);
-                setCategoryAutoSet(true);
-                setPriceUnitValue(CATEGORY_PRICE_UNIT[data.category] || 'za usługę');
-                setPriceUnitAutoSet(true);
+        suggestTimerRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/public/suggest-listing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: titleValue,
+                        ...(manualCategory ? { category: manualCategory } : {}),
+                        ...(manualUnit ? { priceUnit: manualUnit } : {}),
+                        ...(editingService?.publicId ? { excludeId: editingService.publicId } : {}),
+                    }),
+                    signal: ctrl.signal,
+                });
+                if (!res.ok) return;
+                const data = await res.json() as {
+                    category: string | null; priceUnit: string;
+                    price: { min: number; median: number; max: number; n: number; source: 'similar' | 'category' | 'estimate' };
+                };
+                if (!manualCategory && data.category) { setCategoryValue(data.category); setCategoryAutoSet(true); }
+                if (!manualUnit && VALID_UNITS.includes(data.priceUnit)) { setPriceUnitValue(data.priceUnit); setPriceUnitAutoSet(true); }
+                setPriceHint(data.price);
+            } catch (e) {
+                if (e instanceof Error && e.name === 'AbortError') return;
+            } finally {
+                if (!ctrl.signal.aborted) setIsSuggestingCategory(false);
             }
-        } catch (e) {
-            if (e instanceof Error && e.name === 'AbortError') return;
-        } finally {
-            if (!ctrl.signal.aborted) setIsSuggestingCategory(false);
-        }
-    }, []);
+        }, 400);
+    }, [titleValue, manualCategory, manualUnit, isOpen, editingService]); // eslint-disable-line react-hooks/exhaustive-deps -- VALID_UNITS is a constant
 
     const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const title = e.target.value;
-        setTitleValue(title);
-        if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
-        if (title.length >= 5) {
-            setIsSuggestingCategory(true);
-            suggestTimerRef.current = setTimeout(() => suggestCategory(title), 400);
-        } else {
-            setIsSuggestingCategory(false);
-        }
-    }, [suggestCategory]);
+        setTitleValue(e.target.value);
+    }, []);
 
     useEffect(() => {
         editingOriginalTitleRef.current = editingService ? (editingService.title || '') : null;
@@ -242,6 +219,8 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
             setDescLength(editingService.description?.length ?? 0);
             setCategoryValue(editingService.category || 'home');
             setCategoryAutoSet(false);
+            setManualCategory(editingService.category ?? null);
+            setManualUnit(editingService.priceUnit ?? null);
             setTitleValue(editingService.title || '');
             setPriceHint(null);
             setPriceUnitAutoSet(false);
@@ -254,6 +233,8 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
             setDescLength(0);
             setCategoryValue('home');
             setCategoryAutoSet(false);
+            setManualCategory(null);
+            setManualUnit(null);
             setTitleValue('');
             setPriceHint(null);
             setPriceUnitAutoSet(false);
@@ -530,7 +511,7 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                             <select
                                                 name="category"
                                                 value={categoryValue}
-                                                onChange={e => { suggestAbortRef.current?.abort(); setIsSuggestingCategory(false); setCategoryValue(e.target.value); setCategoryAutoSet(false); setPriceHint(null); setPriceUnitValue(CATEGORY_PRICE_UNIT[e.target.value] || 'za usługę'); setPriceUnitAutoSet(true); }}
+                                                onChange={e => { setCategoryValue(e.target.value); setCategoryAutoSet(false); setManualCategory(e.target.value); }}
                                                 className={INPUT}
                                             >
                                                 {categories.filter(c => c.id !== 'all').map(c => (
@@ -541,22 +522,29 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                         <div>
                                             <div className="flex items-center justify-between mb-1.5">
                                                 <label className={LABEL.replace('mb-1.5', '')}>{isOffer ? 'Cena' : 'Budżet'}</label>
-                                                {(isFetchingPriceHint || isSuggestingCategory) && <Loader2 size={11} className="animate-spin text-indigo-400" />}
-                                                {!isFetchingPriceHint && !isSuggestingCategory && priceHint && (
-                                                    <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
+                                                {isSuggestingCategory && <Loader2 size={11} className="animate-spin text-indigo-400" />}
+                                                {!isSuggestingCategory && priceHint && isOffer && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { if (priceInputRef.current) priceInputRef.current.value = String(priceHint.median); }}
+                                                        title={priceHint.source === 'estimate' ? 'Orientacyjne stawki — dotknij, by wpisać typową cenę' : `Na podstawie ${priceHint.n} podobnych ofert — dotknij, by wpisać typową cenę`}
+                                                        className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500 active:scale-95"
+                                                    >
                                                         <Sparkles size={10} />
+                                                        {priceHint.source === 'estimate' ? 'ok. ' : ''}
                                                         {priceHint.min === priceHint.max
                                                             ? `~${priceHint.min} zł`
                                                             : `${priceHint.min}–${priceHint.max} zł`}
-                                                    </span>
+                                                    </button>
                                                 )}
                                             </div>
                                             <div className="relative">
                                                 <input
+                                                    ref={priceInputRef}
                                                     type="number" name="price" required min="1" step="1"
                                                     defaultValue={editingService ? parsePrice(editingService.price) : ''}
                                                     className={INPUT + " pl-7"}
-                                                    placeholder="1"
+                                                    placeholder={priceHint && isOffer ? String(priceHint.median) : '1'}
                                                     onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('Podaj kwotę bez groszy, co najmniej 1 zł')}
                                                     onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                                                 />
@@ -573,7 +561,7 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                                                     </span>
                                                 )}
                                             </div>
-                                            <select name="priceUnit" value={priceUnitValue} onChange={e => { setPriceUnitValue(e.target.value); setPriceUnitAutoSet(false); }} className={INPUT}>
+                                            <select name="priceUnit" value={priceUnitValue} onChange={e => { setPriceUnitValue(e.target.value); setPriceUnitAutoSet(false); setManualUnit(e.target.value); }} className={INPUT}>
                                                 <option value="za usługę">za usługę</option>
                                                 <option value="za godzinę">za godzinę</option>
                                                 <option value="za m²">za m²</option>
