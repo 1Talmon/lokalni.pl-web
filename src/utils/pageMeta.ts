@@ -1,5 +1,5 @@
 const DEFAULT_TITLE = 'MyLokalni – lokalne usługi od młodych z Twojej okolicy';
-const DEFAULT_DESC = 'Zarabiaj na tym, co umiesz, albo znajdź kogoś do pomocy tuż obok. Koszenie trawnika, paznokcie, korepetycje – oferty z cenami, opinie i rezerwacja online.';
+const DEFAULT_DESC = 'Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok. Koszenie trawnika, paznokcie, korepetycje – oferty z cenami, opinie i rezerwacja online.';
 const DEFAULT_URL = 'https://mylokalni.pl/';
 const DEFAULT_IMAGE = 'https://mylokalni.pl/og-image.png';
 

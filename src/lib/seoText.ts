@@ -99,5 +99,5 @@ export function homeDescription(categories: string[], cities: string[]): string 
     const lead = cats.length > 0
         ? `Lokalne usługi od młodych${where ? ` w ${where}` : ''} – ${cats.slice(0, 4).join(', ')}.`
         : 'Lokalne usługi od młodych z Twojej okolicy.';
-    return clip(`${lead} Zarabiaj na tym, co umiesz, albo znajdź pomoc tuż obok – ceny, opinie i rezerwacja online.`, MAX_DESC);
+    return clip(`${lead} Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok – ceny, opinie i rezerwacja online.`, MAX_DESC);
 }

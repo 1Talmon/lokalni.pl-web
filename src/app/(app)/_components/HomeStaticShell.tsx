@@ -23,7 +23,7 @@ export function HomeStaticShell({ services, totalServices, groups, posts }: Prop
             <section className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white py-8 md:py-16 px-4 md:px-6 rounded-b-[2rem] md:rounded-b-[3rem] shadow-2xl mb-6 md:mb-8">
                 <div className="max-w-7xl mx-auto text-center md:text-left">
                     <h1 className="text-3xl md:text-6xl font-black mb-3 md:mb-4 leading-tight">
-                        Zarabiaj na tym, co umiesz. <br className="hidden md:block" /> Albo znajdź kogoś tuż obok.
+                        Zarabiaj na tym, co umiesz, <br className="hidden md:block" /> lub znajdź kogoś tuż obok.
                     </h1>
                     <p className="text-white/90 text-base md:text-lg max-w-3xl">
                         MyLokalni.pl to lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika i detailingu,
