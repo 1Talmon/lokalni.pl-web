@@ -16,14 +16,19 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
 
     const isDeleted = s.isDeleted === true || s.status === 'deleted' || s.status === 'inactive';
 
+    const hasRating = Number(s.reviewsCount) > 0 && Number(s.rating) > 0;
+
+    // Google shows review stars only for supported types (not Service), so a
+    // rated offer is marked up as Product. Service-only props are kept just for
+    // the unrated Service variant.
     const serviceJsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Service',
+        '@type': hasRating ? 'Product' : 'Service',
         name: s.title,
         description: typeof s.description === 'string' ? s.description.slice(0, 500) : undefined,
         url: `${BASE_URL}/service/${slug}`,
         image: s.ogImage || s.image || (Array.isArray(s.images) ? s.images[0] : undefined) || undefined,
-        ...(catLabel ? { serviceType: catLabel } : {}),
+        ...(catLabel ? (hasRating ? { category: catLabel } : { serviceType: catLabel }) : {}),
         offers: s.price ? {
             '@type': 'Offer',
             price: String(s.price),
@@ -34,9 +39,9 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
                 : 'https://schema.org/InStock',
             url: `${BASE_URL}/service/${slug}`,
         } : undefined,
-        areaServed: s.city ? { '@type': 'City', name: s.city } : undefined,
+        areaServed: !hasRating && s.city ? { '@type': 'City', name: s.city } : undefined,
         // Real reviews of this service only (API: AVG over non-auto-generated reviews)
-        ...(Number(s.reviewsCount) > 0 && Number(s.rating) > 0 ? {
+        ...(hasRating ? {
             aggregateRating: {
                 '@type': 'AggregateRating',
                 ratingValue: Number(s.rating),
@@ -45,7 +50,7 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
                 worstRating: 1,
             },
         } : {}),
-        provider: provider ? {
+        provider: !hasRating && provider ? {
             '@type': 'Person',
             name: [provider.imie, provider.nazwisko].filter(Boolean).join(' ') || provider.name,
             ...(providerUid ? { url: `${BASE_URL}/profile/${providerUid}` } : {}),
@@ -69,22 +74,28 @@ export function buildProfileJsonLd(p: RawProfile, uid: string) {
     const name = [p.imie, p.nazwisko].filter(Boolean).join(' ') || (p.name as string) || 'Specjalista';
     const image = p.profilowe || p.avatar || p.zdjecieTla;
 
-    const jsonLd: Record<string, unknown> = {
+    const rating = Number(p.avgRating);
+    const reviewsCount = Number(p.reviewsCount);
+    const hasRating = rating > 0 && reviewsCount > 0;
+
+    // Google review snippets (stars) don't support Person as the rated item
+    // ("Invalid object type for field <parent_node>"), so a rated provider is
+    // marked up as LocalBusiness — a marketplace listing, like Yelp/Booksy.
+    return {
         '@context': 'https://schema.org',
-        '@type': 'Person',
+        '@type': hasRating ? 'LocalBusiness' : 'Person',
         name,
         url: `${BASE_URL}/profile/${uid}`,
         ...(image ? { image } : {}),
         ...(p.bio ? { description: String(p.bio).slice(0, 500) } : {}),
+        ...(hasRating ? {
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: rating,
+                reviewCount: reviewsCount,
+                bestRating: 5,
+                worstRating: 1,
+            },
+        } : {}),
     };
-
-    if (p.avgRating && p.reviewsCount) {
-        jsonLd.aggregateRating = {
-            '@type': 'AggregateRating',
-            ratingValue: p.avgRating,
-            reviewCount: p.reviewsCount,
-        };
-    }
-
-    return jsonLd;
 }
