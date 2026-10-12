@@ -34,7 +34,6 @@ import { useSwipeBack } from '../hooks/useSwipeBack';
 import { useBlockedUsers } from '../hooks/useBlockedUsers';
 import { BlockUserModal } from '../components/modals/BlockUserModal';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
-import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 
 interface PublicProfileViewProps {
     provider: ProviderProfile | null;
@@ -141,18 +140,6 @@ const PublicProfileView = ({
 
     useSwipeBack(!galleryOpen && !newsFeedOpen && !certListOpen && !showReviewForm && !reportConfig.isOpen && !profileViewerOpen, onBack);
 
-    // Biały overlay na popstate: przykrywa canvas GPU layer, sticky nav i wszystko inne.
-    // Odpala się tylko dla browser-back / swipe-back (nie dla webNavigate z vt-running).
-    useEffect(() => {
-        const handlePop = () => {
-            if (document.documentElement.classList.contains('vt-running')) return;
-            const overlay = createSafariOverlay();
-            const sdvRoot = document.querySelector('[data-sdv-root]');
-            revealAfterUnmount(overlay, sdvRoot);
-        };
-        window.addEventListener('popstate', handlePop, { capture: true });
-        return () => window.removeEventListener('popstate', handlePop, { capture: true });
-    }, []);
 
     useEffect(() => {
         const updateLimit = () => setVisibleLimit(window.innerWidth < 768 ? 3 : 6);

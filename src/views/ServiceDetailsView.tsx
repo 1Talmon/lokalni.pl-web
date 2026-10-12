@@ -10,7 +10,6 @@ import { useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-quer
 import { apiClient } from '../services/apiClient';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import { ClientPortal } from '../components/ui/ClientPortal';
-import { createSafariOverlay, revealAfterUnmount } from '../utils/safariNavOverlay';
 import { mapApiService, type ApiService } from '../services/serviceService';
 import { CATEGORIES_DATA } from '../data/categories';
 import { isRemoteService as checkIsRemote } from '../utils/serviceUtils';
@@ -289,19 +288,6 @@ const ServiceDetailsView = ({
         }
     };
 
-    // Biały overlay na popstate: przykrywa canvas GPU layer, sticky nav (z-[99999]) i wszystko inne.
-    // flushSync (native) odpala się PO wstawieniu overlaya — pośredni paint jest zasłonięty.
-    // Overlay odpala się tylko dla browser-back / swipe-back (nie dla webNavigate z vt-running).
-    useEffect(() => {
-        const handlePop = () => {
-            if (document.documentElement.classList.contains('vt-running')) return;
-            const overlay = createSafariOverlay();
-            const sdvRoot = document.querySelector('[data-sdv-root]');
-            revealAfterUnmount(overlay, sdvRoot);
-        };
-        window.addEventListener('popstate', handlePop, { capture: true });
-        return () => window.removeEventListener('popstate', handlePop, { capture: true });
-    }, []);
 
     const doBack = useCallback(() => {
         // onBack() → NativeNav.pop() na native (Swift animation) lub webNavigate na web;
