@@ -63,6 +63,8 @@ export const MapView = ({
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: mapsKey ?? '',
+        language: 'pl',
+        region: 'PL',
     });
 
     const mapRef = useRef<google.maps.Map | null>(null);

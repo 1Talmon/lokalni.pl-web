@@ -50,7 +50,7 @@ export async function submitBooking(e: React.FormEvent, deps: BookingSubmitDeps)
                 payload.addressLng = parseFloat(lng as string);
             } else if (payload.address) {
                 try {
-                    const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}`);
+                    const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}${service.city ? `&city=${encodeURIComponent(service.city)}` : ''}`);
                     const geoJson = await geoRes.json();
                     if (geoJson.data?.[0]) {
                         payload.addressLat = geoJson.data[0].lat;

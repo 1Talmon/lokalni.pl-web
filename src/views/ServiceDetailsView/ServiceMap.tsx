@@ -52,6 +52,8 @@ export const ServiceMap = ({ city, address, lat: propLat, lng: propLng, radiusKm
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: (process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY as string | undefined) ?? '',
+        language: 'pl',
+        region: 'PL',
     });
 
     const portalMapRef = useRef<google.maps.Map | null>(null);

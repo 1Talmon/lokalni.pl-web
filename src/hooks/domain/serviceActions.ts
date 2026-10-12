@@ -88,7 +88,7 @@ export async function submitService(rawData: unknown, deps: ServiceSubmitDeps): 
 
         if (payload.address && !payload.addressLat) {
             try {
-                const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}`);
+                const geoRes = await apiClient.get(`/public/address?query=${encodeURIComponent(payload.address)}${payload.city ? `&city=${encodeURIComponent(payload.city)}` : ''}`);
                 const geoJson = await geoRes.json();
                 if (geoJson.data?.[0]) {
                     payload.addressLat = geoJson.data[0].lat;
