@@ -32,7 +32,7 @@ const KNOWN_APP_ROUTES = new Set([
 ]);
 
 // Private, client-only routes: never rendered before the app has loaded (no SEO value, need auth state).
-const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
+export const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
 
 interface AppShellProps {
     children: React.ReactNode;
