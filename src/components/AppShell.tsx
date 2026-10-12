@@ -34,6 +34,8 @@ const KNOWN_APP_ROUTES = new Set([
 // Private, client-only routes: never rendered before the app has loaded (no SEO value, need auth state).
 export const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
 
+const NAV_OVERLAY_DELAY_MS = 400;
+
 interface AppShellProps {
     children: React.ReactNode;
 }
@@ -173,7 +175,15 @@ function AppShellContent({ children }: AppShellProps) {
         ) : null,
     ];
 
-    const showLoadingScreen = !!state.isLoadingApp || !!state.isNavLoading;
+    // Nav overlay only when the transition is slow — a fast one (data prefetched on click) would just
+    // flash a white screen for a few hundred ms.
+    const [slowNav, setSlowNav] = useState(false);
+    useEffect(() => {
+        if (!state.isNavLoading) { setSlowNav(false); return; }
+        const t = setTimeout(() => setSlowNav(true), NAV_OVERLAY_DELAY_MS);
+        return () => clearTimeout(t);
+    }, [state.isNavLoading]);
+    const showLoadingScreen = !!state.isLoadingApp || slowNav;
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
