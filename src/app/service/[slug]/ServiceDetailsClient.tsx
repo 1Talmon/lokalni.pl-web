@@ -13,6 +13,9 @@ import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
 import { beginTrackedNav } from '../../../utils/navRecovery';
 
+// Max time the nav overlay waits for the hero image before revealing the page anyway.
+const HERO_WAIT_MS = 1500;
+
 function DeletedServiceView({ onBack }: { onBack: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] px-8 text-center">
@@ -93,10 +96,21 @@ export default function ServiceDetailsClient() {
     useEffect(() => {
         if (isPending) actions.setNavLoading(true);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Hide the overlay once the hero image is decoded too — otherwise Safari reveals the page with an
+    // empty gallery and the photo pops in a few frames later (the card showed only a thumbnail).
     useEffect(() => {
-        if (!isPending && (service !== undefined || isError) && !state.isLoadingApp) {
-            actions.setNavLoading(false);
-        }
+        if (isPending || (service === undefined && !isError) || state.isLoadingApp) return;
+        const hero = service && !(service as Service & { __deleted?: boolean }).__deleted
+            ? (service.images?.[0] || service.image || service.videos?.[0]?.thumbnailUrl || null)
+            : null;
+        if (!hero) { actions.setNavLoading(false); return; }
+        let done = false;
+        const finish = () => { if (!done) { done = true; actions.setNavLoading(false); } };
+        const img = new Image();
+        img.src = hero;
+        img.decode().then(finish, finish);
+        const t = setTimeout(finish, HERO_WAIT_MS);
+        return () => { done = true; clearTimeout(t); };
     }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Hide SSR static shell once the interactive component has data and will render.
