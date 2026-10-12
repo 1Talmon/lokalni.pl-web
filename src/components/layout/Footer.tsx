@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Facebook, Instagram, Mail, Phone } from 'lucide-react';
+import { Facebook, Instagram, Mail } from 'lucide-react';
 import { OPERATOR } from '@/lib/legal/operator';
 
 const AppleIcon = () => (
@@ -33,8 +33,8 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                         Znajdź sprawdzonych specjalistów w Twojej okolicy. Szybko, bezpiecznie i lokalnie.
                     </p>
                     <div className="flex gap-4">
-                        <a href="#" className="hover:text-[#6366F1] transition-colors"><Facebook size={20} /></a>
-                        <a href="#" className="hover:text-[#6366F1] transition-colors"><Instagram size={20} /></a>
+                        <a href="https://www.facebook.com/profile.php?id=61595107149381" target="_blank" rel="noopener noreferrer" aria-label="MyLokalni na Facebooku" className="hover:text-[#6366F1] transition-colors"><Facebook size={20} /></a>
+                        <a href="https://www.instagram.com/mylokalni/" target="_blank" rel="noopener noreferrer" aria-label="MyLokalni na Instagramie" className="hover:text-[#6366F1] transition-colors"><Instagram size={20} /></a>
                     </div>
                 </div>
 
@@ -75,14 +75,6 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                                 {OPERATOR.email}
                             </a>
                         </li>
-                        {OPERATOR.phone && (
-                            <li>
-                                <a href={`tel:${OPERATOR.phone.replace(/\s/g, '')}`} className="flex items-center gap-3 hover:text-white transition-colors">
-                                    <Phone size={16} className="text-[#6366F1] shrink-0"/>
-                                    {OPERATOR.phone}
-                                </a>
-                            </li>
-                        )}
                     </ul>
                 </div>
             </div>

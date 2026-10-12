@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Users, Target, Heart, Award, Mail, Building2, MapPin, Phone } from 'lucide-react';
+import { Users, Target, Heart, Award, Mail, Building2, MapPin } from 'lucide-react';
 import { BackButton } from '../_components/BackButton';
 import { BASE_URL } from '@/lib/seo-data';
 import { safeJsonLd } from '@/lib/safeJsonLd';
@@ -129,10 +129,6 @@ export default function AboutPage() {
                                     <a href="mailto:mylokalni@gmail.com" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
                                         <Mail size={16} className="text-[#6366F1] shrink-0" />
                                         <span className="text-gray-700">mylokalni@gmail.com</span>
-                                    </a>
-                                    <a href="tel:+48577481340" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
-                                        <Phone size={16} className="text-[#6366F1] shrink-0" />
-                                        <span className="text-gray-700">+48 577 481 340</span>
                                     </a>
                                 </div>
                             </section>

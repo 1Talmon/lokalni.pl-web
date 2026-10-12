@@ -98,6 +98,10 @@ const orgJsonLd = {
         availableLanguage: 'Polish',
         areaServed: 'PL',
     },
+    sameAs: [
+        'https://www.facebook.com/profile.php?id=61595107149381',
+        'https://www.instagram.com/mylokalni/',
+    ],
 };
 
 const websiteJsonLd = {

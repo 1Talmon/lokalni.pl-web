@@ -12,7 +12,7 @@ export const OPERATOR = {
     postalCity: '83-400 Kościerzyna',
     email: 'mylokalni@gmail.com',
     /** Optional — leave null to omit. */
-    phone: '+48 577 481 340' as string | null,
+    phone: null as string | null,
     serviceName: 'MyLokalni.pl',
     website: 'https://mylokalni.pl',
     domain: 'mylokalni.pl',
