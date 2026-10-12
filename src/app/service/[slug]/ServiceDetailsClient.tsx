@@ -1,11 +1,10 @@
 'use client';
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-
-const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { serviceDetailQuery } from '../../../services/serviceService';
+import { apiClient } from '../../../services/apiClient';
+import { mapApiService } from '../../../services/serviceService';
 import { createSlug } from '../../../utils/helpers';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
@@ -69,8 +68,25 @@ export default function ServiceDetailsClient() {
     }, [doNav, actions]);
 
     const { data: service, isPending, isError } = useQuery({
-        ...serviceDetailQuery(publicId),
+        queryKey: ['service', publicId],
+        queryFn: async ({ signal }) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15_000);
+            signal?.addEventListener('abort', () => controller.abort(), { once: true });
+            try {
+                const res = await apiClient.get(`/services/${publicId}`, { signal: controller.signal });
+                if (res.status === 404) return null;
+                if (res.status === 410) return { __deleted: true } as unknown as Service;
+                if (!res.ok) throw new Error(`server_${res.status}`);
+                const json = await res.json();
+                try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
+            } finally {
+                clearTimeout(timeout);
+            }
+        },
         enabled: !!publicId,
+        staleTime: 10 * 60 * 1000,
+        retry: false,
     });
 
     // Show AppShell-level nav loading overlay — only when there's no cached data
@@ -83,9 +99,8 @@ export default function ServiceDetailsClient() {
         }
     }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Hide SSR static shell once the interactive component has data and will render — before paint,
-    // so the shell and the interactive view never show in the same frame.
-    useIsomorphicLayoutEffect(() => {
+    // Hide SSR static shell once the interactive component has data and will render.
+    useEffect(() => {
         if (!isPending && service && !state.isLoadingApp) {
             const shell = document.querySelector('[data-ssr-shell]');
             if (shell instanceof HTMLElement) shell.style.display = 'none';

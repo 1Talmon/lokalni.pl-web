@@ -98,28 +98,6 @@ export function mapApiService(s: ApiService): Service {
     return mapServiceRaw(s as unknown as Record<string, unknown>);
 }
 
-/** React Query options for the service detail page — shared so a card click can prefetch the same query. */
-export const serviceDetailQuery = (publicId: string) => ({
-    queryKey: ['service', publicId] as const,
-    queryFn: async ({ signal }: { signal?: AbortSignal }): Promise<Service | null> => {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15_000);
-        signal?.addEventListener('abort', () => controller.abort(), { once: true });
-        try {
-            const res = await apiClient.get(`/services/${publicId}`, { signal: controller.signal });
-            if (res.status === 404) return null;
-            if (res.status === 410) return { __deleted: true } as unknown as Service;
-            if (!res.ok) throw new Error(`server_${res.status}`);
-            const json = await res.json();
-            try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
-        } finally {
-            clearTimeout(timeout);
-        }
-    },
-    staleTime: 10 * 60 * 1000,
-    retry: false as const,
-});
-
 export const serviceService = {
   async getServices(params: ServicesQuery = {}): Promise<{ data: ReturnType<typeof mapApiService>[]; meta: ServicesMeta }> {
     const qs = new URLSearchParams();

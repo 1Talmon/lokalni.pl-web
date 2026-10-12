@@ -11,7 +11,7 @@ import { usePublicProfile } from './usePublicProfile';
 import { useWebSocket } from './useWebSocket';
 import { authService } from '../services/authService';
 import { notificationService } from '../services/notificationService';
-import { serviceService, mapApiService, serviceDetailQuery, type ApiService } from '../services/serviceService';
+import { serviceService, mapApiService, type ApiService } from '../services/serviceService';
 import { chatService, type ApiChatSession } from '../services/chatService';
 import { apiClient } from '../services/apiClient';
 import { unregisterPushToken, takePendingNavigation, setActiveChatId } from '../services/pushNotificationService';
@@ -461,8 +461,6 @@ export const useAppLogic = () => {
         onServiceClick: (s: Service) => {
             setSelectedService(s);
             setIsNavLoading(true);
-            // Fetch the detail in parallel with the route transition — usually ready when the page mounts
-            if (s.publicId) void queryClient.prefetchQuery(serviceDetailQuery(s.publicId));
             const url = `/service/${createServiceUrl(s.title, s.publicId ?? '')}`;
             beginTrackedNav(url);
             router.push(url);
