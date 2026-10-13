@@ -15,6 +15,9 @@ import { UserProfile, NotificationItem } from '@/types';
 // Strip fills from below the top navbar to the physical screen bottom.
 const STRIP_H = 'calc(100vh - var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))))';
 
+// Max time between popstate and the route render for the back animation to apply.
+const POP_WINDOW_MS = 1000;
+
 interface MainLayoutProps {
     userProfile: UserProfile | null;
     isLoggedIn: boolean;
@@ -79,10 +82,18 @@ export const MainLayout = ({
     const router = useRouter();
     const pathname = usePathname();
 
-    const enterClass = navDirection === 'pop' ? 'page-pop-back' : 'page-enter-forward';
+    // Enter animation is decided once per route. Re-reading navDirection on later renders swapped
+    // page-pop-back → page-enter-forward mid-animation (stale 'pop' left by an earlier back), which
+    // restarts the CSS animation from opacity 0 — Safari showed it as a flash while the loader faded.
+    // A stale 'pop' only counts when the popstate actually just happened.
+    const popAtRef = useRef(0);
+    const enterClass = useMemo(
+        () => navDirection === 'pop' && Date.now() - popAtRef.current < POP_WINDOW_MS ? 'page-pop-back' : 'page-enter-forward',
+        [pathname], // eslint-disable-line react-hooks/exhaustive-deps
+    );
     useEffect(() => { setNavDirection('push'); }, [pathname]);
     useEffect(() => {
-        const onPop = () => setNavDirection('pop');
+        const onPop = () => { popAtRef.current = Date.now(); setNavDirection('pop'); };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
     }, []);
