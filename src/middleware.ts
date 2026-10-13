@@ -117,6 +117,18 @@ export function middleware(request: NextRequest) {
             response.headers.set('Content-Security-Policy', csp);
             return response;
         }
+
+        if (pathname === '/' || pathname === '/wpisy' || pathname.startsWith('/wpis/')) {
+            // Home + posts: rendered on every hit otherwise (~20 ms CPU vs the 10 ms Workers Free
+            // limit → intermittent 503). 5 min at the CF edge; cache is purged after each deploy.
+            const response = NextResponse.next();
+            response.headers.set(
+                'Cache-Control',
+                'public, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400',
+            );
+            response.headers.set('Content-Security-Policy', csp);
+            return response;
+        }
     }
 
     const response = NextResponse.next();

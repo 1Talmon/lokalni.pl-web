@@ -1,0 +1,48 @@
+name: Purge CF cache after deploy
+
+# SSR HTML (/, /service, /profile, landings, /wpis) is cached at the Cloudflare edge by a Cache Rule.
+# After a production deploy that HTML points at JS chunks the new deployment no longer has, so the
+# whole zone cache is purged as soon as CF Pages finishes deploying this commit.
+#
+# Secret CF_CACHE_TOKEN: API token with Account → Cloudflare Pages → Read
+# and Zone (mylokalni.pl) → Cache Purge → Purge.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  ACCOUNT_ID: 428a3e69ace6b5cffc4c35c9675dbc9e
+  ZONE_ID: 441f3f8239226cd94caa0f359a51c36c
+  PROJECT: lokalni-pl-web
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Wait for CF Pages production deploy of this commit
+        if: github.event_name == 'push'
+        env:
+          CF_TOKEN: ${{ secrets.CF_CACHE_TOKEN }}
+        run: |
+          for i in $(seq 1 60); do
+            STATUS=$(curl -sS -H "Authorization: Bearer $CF_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT/deployments?env=production&per_page=5" \
+              | jq -r --arg sha "$GITHUB_SHA" '[.result[] | select(.deployment_trigger.metadata.commit_hash == $sha)][0] | "\(.latest_stage.name)/\(.latest_stage.status)"')
+            echo "attempt $i: $STATUS"
+            [ "$STATUS" = "deploy/success" ] && exit 0
+            case "$STATUS" in */failure|*/canceled) echo "::error::Deploy $STATUS"; exit 1;; esac
+            sleep 20
+          done
+          echo "::error::Deploy not finished in 20 min"; exit 1
+
+      - name: Purge zone cache
+        env:
+          CF_TOKEN: ${{ secrets.CF_CACHE_TOKEN }}
+        run: |
+          curl -sS -X POST -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+            --data '{"purge_everything":true}' | tee out.json
+          jq -e '.success' out.json > /dev/null
