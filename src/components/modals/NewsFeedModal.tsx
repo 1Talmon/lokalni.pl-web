@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { lockScroll, unlockScrollAfter } from '../../utils/scrollLock';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useBottomSheet } from '../../hooks/useBottomSheet';
@@ -89,7 +89,7 @@ export const NewsFeedModal = ({ isOpen, onClose, items, providerName, providerAv
     useEffect(() => {
         if (!isOpen) return;
         lockScroll();
-        return () => { setTimeout(unlockScroll, 250); };
+        return () => unlockScrollAfter(250);
     }, [isOpen]);
 
     useEffect(() => {

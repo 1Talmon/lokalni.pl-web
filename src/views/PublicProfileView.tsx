@@ -217,6 +217,17 @@ const PublicProfileView = ({
         staleTime: 1000 * 60 * 10,
     });
 
+    // Zdjęcia certyfikatów pobierane i dekodowane w tle — w arkuszu "Certyfikaty i kompetencje" są od pierwszej
+    // klatki zamiast szarych kafelków, które dopiero po chwili dostają zdjęcie
+    useEffect(() => {
+        for (const c of certData?.data ?? []) {
+            if (!c.url || c.fileType !== 'image') continue;
+            const img = new window.Image(); // `Image` in this file is next/image
+            img.src = c.url;
+            img.decode().catch(() => {});
+        }
+    }, [certData]);
+
     // allReviews i useEffect muszą być przed null-checkiem — hook nie może być wywoływany warunkowo
     const allReviews = apiReviewsData ?? [];
 

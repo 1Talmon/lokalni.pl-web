@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { lockScroll, unlockScrollAfter } from '../../utils/scrollLock';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBottomSheet } from '../../hooks/useBottomSheet';
@@ -48,7 +48,7 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
     useEffect(() => {
         if (!isOpen) { setSelected(null); return; }
         lockScroll();
-        return () => { setTimeout(unlockScroll, 250); };
+        return () => unlockScrollAfter(250);
     }, [isOpen]);
 
     useEffect(() => {
@@ -155,7 +155,7 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                                     >
                                                         <div className="relative aspect-[4/3] overflow-hidden bg-slate-700">
                                                             {item.image && item.fileType === 'image'
-                                                                ? <img src={item.image} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={item.name} />
+                                                                ? <img src={item.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={item.name} />
                                                                 : <div className="w-full h-full flex items-center justify-center">
                                                                     {item.fileType === 'pdf' ? <FileText size={28} className="text-rose-400/60" /> : <Award size={28} className="text-amber-500/30" />}
                                                                   </div>
