@@ -8,6 +8,7 @@ import { SWIPE_TABS } from '../hooks/useTabSwipe';
 import { useApp } from '../providers/AppProvider';
 import { useBiometricLock } from '../hooks/useBiometricLock';
 import { useNavRecovery } from '../hooks/useNavRecovery';
+import { getNavElapsedMs, getNavTarget } from '../utils/navRecovery';
 import { ToastContainer } from './ui/ToastContainer';
 import { LoadingScreen } from './ui/LoadingScreen';
 import { MainLayout } from './layout/MainLayout';
@@ -33,6 +34,11 @@ const KNOWN_APP_ROUTES = new Set([
 
 // Private, client-only routes: never rendered before the app has loaded (no SEO value, need auth state).
 export const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
+
+// How long a click on a service/profile may wait for the route to commit before the nav overlay shows anyway.
+const NAV_OVERLAY_GRACE_MS = 400;
+// A tracked nav target older than this is stale (abandoned navigation), not a route still on its way.
+const NAV_TARGET_FRESH_MS = 10_000;
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -173,7 +179,19 @@ function AppShellContent({ children }: AppShellProps) {
         ) : null,
     ];
 
-    const showLoadingScreen = !!state.isLoadingApp || !!state.isNavLoading;
+    // The nav overlay shows up in the same commit as the new route, not on click. Safari snapshots the
+    // page for the back-swipe gesture when the URL changes (Next pushes it while committing the route);
+    // an overlay shown on click put a blank loading frame into that snapshot instead of the previous page.
+    // Until the route commits the old page stays as it is; a slow transition still gets the overlay.
+    const navTarget = state.isNavLoading ? getNavTarget() : null;
+    const awaitingRoute = !!navTarget && navTarget !== pathname && getNavElapsedMs() < NAV_TARGET_FRESH_MS;
+    const [slowRoute, setSlowRoute] = useState(false);
+    useEffect(() => {
+        if (!awaitingRoute) { setSlowRoute(false); return; }
+        const t = setTimeout(() => setSlowRoute(true), NAV_OVERLAY_GRACE_MS);
+        return () => clearTimeout(t);
+    }, [awaitingRoute]);
+    const showLoadingScreen = !!state.isLoadingApp || (!!state.isNavLoading && (!awaitingRoute || slowRoute));
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
