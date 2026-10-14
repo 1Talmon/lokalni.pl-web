@@ -218,14 +218,18 @@ const PublicProfileView = ({
     });
 
     // Zdjęcia certyfikatów pobierane i dekodowane w tle — w arkuszu "Certyfikaty i kompetencje" są od pierwszej
-    // klatki zamiast szarych kafelków, które dopiero po chwili dostają zdjęcie
+    // klatki zamiast szarych kafelków, które dopiero po chwili dostają zdjęcie. R2 podaje je z `no-store`, więc
+    // przeglądarka ich nie cache'uje: obiekty trzymane w refie utrzymują obrazek w pamięci strony do ponownego użycia.
+    const certPhotosRef = useRef<HTMLImageElement[]>([]);
     useEffect(() => {
-        for (const c of certData?.data ?? []) {
-            if (!c.url || c.fileType !== 'image') continue;
-            const img = new window.Image(); // `Image` in this file is next/image
-            img.src = c.url;
-            img.decode().catch(() => {});
-        }
+        certPhotosRef.current = (certData?.data ?? [])
+            .filter(c => c.url && c.fileType === 'image')
+            .map(c => {
+                const img = new window.Image(); // `Image` in this file is next/image
+                img.src = c.url!;
+                img.decode().catch(() => {});
+                return img;
+            });
     }, [certData]);
 
     // allReviews i useEffect muszą być przed null-checkiem — hook nie może być wywoływany warunkowo
