@@ -424,7 +424,7 @@ export const CertificateSection = ({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                                    className={`min-h-[76px] flex items-center gap-1 pl-4 pr-2 py-3 rounded-[1.5rem] border bg-white border-indigo-100 shadow-lg shadow-indigo-50/50 transition-all duration-300`}
+                                    className={`min-h-[76px] flex items-center gap-1 pl-4 pr-2 py-3 rounded-[1.5rem] border bg-white border-indigo-100 shadow-lg shadow-indigo-50/50`}
                                 >
                                     <button
                                         type="button"

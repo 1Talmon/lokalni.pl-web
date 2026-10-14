@@ -151,7 +151,7 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         transition={{ delay: idx * 0.06 }}
                                                         onClick={() => setSelected(item)}
-                                                        className="group rounded-2xl overflow-hidden bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 active:scale-[0.97] transition-all text-left"
+                                                        className="group rounded-2xl overflow-hidden bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 transition-colors text-left"
                                                     >
                                                         <div className="relative aspect-[4/3] overflow-hidden bg-slate-700">
                                                             {item.image && item.fileType === 'image'
@@ -189,7 +189,7 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             transition={{ delay: (certs.length + idx) * 0.06 }}
                                                             onClick={() => setSelected(item)}
-                                                            className="group rounded-2xl bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 active:scale-[0.97] transition-all text-left p-4 flex flex-col gap-3"
+                                                            className="group rounded-2xl bg-slate-800 border border-slate-700/50 hover:border-indigo-500/40 transition-colors text-left p-4 flex flex-col gap-3"
                                                         >
                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.verified ? 'bg-emerald-500/15' : 'bg-slate-700'}`}>
                                                                 <CheckCircle size={18} className={item.verified ? 'text-emerald-400' : 'text-slate-500'} />
