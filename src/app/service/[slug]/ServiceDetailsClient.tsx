@@ -1,20 +1,20 @@
 'use client';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../../services/apiClient';
-import { mapApiService } from '../../../services/serviceService';
 import { createSlug } from '../../../utils/helpers';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
 import ServiceDetailsView from '../../../views/ServiceDetailsView';
 import type { Service } from '../../../types';
-import { beginTrackedNav } from '../../../utils/navRecovery';
+import {
+    decodeImage, navigateWhenReady, prepareProfilePage, serviceDetailQuery, serviceHeroUrl,
+} from '../../../utils/navPrepare';
 
-// Max time the nav overlay waits for the hero image before revealing the page anyway.
-const HERO_WAIT_MS = 1500;
+// Runs before paint in the browser; plain effect during SSR (where layout effects only warn)
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function DeletedServiceView({ onBack }: { onBack: () => void }) {
     return (
@@ -62,7 +62,8 @@ export default function ServiceDetailsClient() {
         }
     }, [router]);
 
-    useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
+    // Before paint: without the loading overlay the page would show one frame at the previous page's scroll offset
+    useIsomorphicLayoutEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
     const handleBack = useCallback(() => {
         actions.setNavLoading(false);
@@ -70,26 +71,10 @@ export default function ServiceDetailsClient() {
         doNav();
     }, [doNav, actions]);
 
+    // Usually already cached: a click prefetches it before navigating (navigateWhenReady)
     const { data: service, isPending, isError } = useQuery({
-        queryKey: ['service', publicId],
-        queryFn: async ({ signal }) => {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15_000);
-            signal?.addEventListener('abort', () => controller.abort(), { once: true });
-            try {
-                const res = await apiClient.get(`/services/${publicId}`, { signal: controller.signal });
-                if (res.status === 404) return null;
-                if (res.status === 410) return { __deleted: true } as unknown as Service;
-                if (!res.ok) throw new Error(`server_${res.status}`);
-                const json = await res.json();
-                try { return mapApiService(json.data ?? json); } catch { throw new Error('parse_error'); }
-            } finally {
-                clearTimeout(timeout);
-            }
-        },
+        ...serviceDetailQuery(publicId),
         enabled: !!publicId,
-        staleTime: 10 * 60 * 1000,
-        retry: false,
     });
 
     // Show AppShell-level nav loading overlay — only when there's no cached data
@@ -100,21 +85,14 @@ export default function ServiceDetailsClient() {
     // empty gallery and the photo pops in a few frames later (the card showed only a thumbnail).
     useEffect(() => {
         if (isPending || (service === undefined && !isError) || state.isLoadingApp) return;
-        const hero = service && !(service as Service & { __deleted?: boolean }).__deleted
-            ? (service.images?.[0] || service.image || service.videos?.[0]?.thumbnailUrl || null)
-            : null;
-        if (!hero) { actions.setNavLoading(false); return; }
-        let done = false;
-        const finish = () => { if (!done) { done = true; actions.setNavLoading(false); } };
-        const img = new Image();
-        img.src = hero;
-        img.decode().then(finish, finish);
-        const t = setTimeout(finish, HERO_WAIT_MS);
-        return () => { done = true; clearTimeout(t); };
+        let cancelled = false;
+        void decodeImage(serviceHeroUrl(service)).then(() => { if (!cancelled) actions.setNavLoading(false); });
+        return () => { cancelled = true; };
     }, [isPending, service, isError, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Hide SSR static shell once the interactive component has data and will render.
-    useEffect(() => {
+    // Hide SSR static shell once the interactive component has data and will render — before paint, so the
+    // shell and the interactive view never share a frame (no overlay covers a prepared navigation).
+    useIsomorphicLayoutEffect(() => {
         if (!isPending && service && !state.isLoadingApp) {
             const shell = document.querySelector('[data-ssr-shell]');
             if (shell instanceof HTMLElement) shell.style.display = 'none';
@@ -162,16 +140,12 @@ export default function ServiceDetailsClient() {
         return actions.onServiceClick(svc);
     }, [actions]);
 
-    const handleOpenProfile = useCallback(async () => {
+    const handleOpenProfile = useCallback(() => {
         if (!service) return;
         const uid = service.provider.uid || createSlug(service.provider.name);
-        const url = `/profile/${uid}`;
-        const cached = queryClient.getQueryData(['public-profile', uid]);
-        if (!cached) {
-            beginTrackedNav(url);
-            actions.setNavLoading(true);
-        }
-        router.push(url);
+        actions.setNavLoading(true);
+        // This page stays (top progress bar) until the profile's data and photos are ready
+        navigateWhenReady(router, `/profile/${uid}`, prepareProfilePage(queryClient, uid));
     }, [service, router, actions, queryClient]);
 
     const handleStartChat = useCallback((svc: Parameters<typeof actions.startChat>[0]) => {

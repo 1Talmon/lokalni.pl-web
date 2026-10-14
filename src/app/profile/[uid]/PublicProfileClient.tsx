@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { UserX, ArrowLeft } from 'lucide-react';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
@@ -9,6 +9,9 @@ import { usePublicProfile } from '../../../hooks/usePublicProfile';
 import PublicProfileView from '../../../views/PublicProfileView';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
+
+// Runs before paint in the browser; plain effect during SSR (where layout effects only warn)
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 function DeletedAccountView({ onBack }: { onBack: () => void }) {
     return (
@@ -54,7 +57,8 @@ export default function PublicProfileClient() {
         }
     }, [router]);
 
-    useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
+    // Before paint: without the loading overlay the page would show one frame at the previous page's scroll offset
+    useIsomorphicLayoutEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
     const handleBack = useCallback(() => {
         actions.setNavLoading(false);
@@ -74,8 +78,9 @@ export default function PublicProfileClient() {
         }
     }, [isLoading, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Hide SSR static shell once the interactive component has data and will render.
-    useEffect(() => {
+    // Hide SSR static shell once the interactive component has data and will render — before paint, so the
+    // shell and the interactive view never share a frame (no overlay covers a prepared navigation).
+    useIsomorphicLayoutEffect(() => {
         if (!isLoading && profile && !state.isLoadingApp) {
             const shell = document.querySelector('[data-ssr-shell]');
             if (shell instanceof HTMLElement) shell.style.display = 'none';

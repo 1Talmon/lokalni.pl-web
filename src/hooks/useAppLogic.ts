@@ -26,7 +26,7 @@ import { submitService } from './domain/serviceActions';
 import { startChatWith, sendMessage } from './domain/chatActions';
 import { useToastState } from './domain/useToastState';
 import { useModalState } from './domain/useModalState';
-import { beginTrackedNav } from '../utils/navRecovery';
+import { navigateWhenReady, prepareServicePage } from '../utils/navPrepare';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 
@@ -462,8 +462,8 @@ export const useAppLogic = () => {
             setSelectedService(s);
             setIsNavLoading(true);
             const url = `/service/${createServiceUrl(s.title, s.publicId ?? '')}`;
-            beginTrackedNav(url);
-            router.push(url);
+            // The current page stays (top progress bar) until the offer's data and main photo are ready
+            navigateWhenReady(router, url, prepareServicePage(queryClient, s.publicId ?? ''));
         },
         toggleFavorite: (publicId: string) => {
             if (!isLoggedIn) { router.push('/auth'); return; }

@@ -36,8 +36,10 @@ const KNOWN_APP_ROUTES = new Set([
 // Private, client-only routes: never rendered before the app has loaded (no SEO value, need auth state).
 export const PRIVATE_ROUTE_RE = /^\/(dashboard|booking-form|support|chat|calendar|favorites|zgoda-rodzica)(\/|$)/;
 
-// How long a click on a service/profile may wait for the route to commit before the nav overlay shows anyway.
-const NAV_OVERLAY_GRACE_MS = 1000;
+// A click navigation that has not committed after this long gets the loading overlay (spinner)...
+const NAV_OVERLAY_SLOW_MS = 600;
+// ...which then stays at least this long, so it never just blinks.
+const NAV_OVERLAY_MIN_MS = 400;
 // A tracked nav target older than this is stale (abandoned navigation), not a route still on its way.
 const NAV_TARGET_FRESH_MS = 10_000;
 
@@ -180,22 +182,39 @@ function AppShellContent({ children }: AppShellProps) {
         ) : null,
     ];
 
-    // The nav overlay shows up in the same commit as the new route, not on click. Safari snapshots the
-    // page for the back-swipe gesture when the URL changes (Next pushes it while committing the route);
-    // an overlay shown on click put a blank loading frame into that snapshot instead of the previous page.
-    // Until the route commits the old page stays as it is, with the top progress bar as click feedback
-    // (it finishes by itself on pushState); a slow transition still gets the overlay.
+    // Click navigations to a service/profile (navigateWhenReady) stay quiet: the current page remains, with the
+    // top progress bar (it finishes by itself on pushState), until the new route commits already prepared — no
+    // white overlay. It only shows when that takes longer than NAV_OVERLAY_SLOW_MS, and then stays at least
+    // NAV_OVERLAY_MIN_MS so it never just blinks. Other loads (direct entry, plain links) get it right away.
+    // An overlay shown on click would also land in Safari's back-swipe snapshot, which is taken at pushState.
     const navTarget = state.isNavLoading ? getNavTarget() : null;
     const awaitingRoute = !!navTarget && navTarget !== pathname && getNavElapsedMs() < NAV_TARGET_FRESH_MS;
+    // Whether the current nav started as a quiet click navigation — decided once, when nav loading begins
+    const quietNavRef = useRef<boolean | null>(null);
+    if (!state.isNavLoading) quietNavRef.current = null;
+    else if (quietNavRef.current === null) quietNavRef.current = awaitingRoute;
+
     const topLoader = useTopLoader();
-    const [slowRoute, setSlowRoute] = useState(false);
+    const [slowNav, setSlowNav] = useState(false);
     useEffect(() => {
-        if (!awaitingRoute) { setSlowRoute(false); topLoader.done(); return; }
+        if (!awaitingRoute) { topLoader.done(); return; }
         topLoader.start();
-        const t = setTimeout(() => setSlowRoute(true), NAV_OVERLAY_GRACE_MS);
+        const t = setTimeout(() => setSlowNav(true), NAV_OVERLAY_SLOW_MS);
         return () => clearTimeout(t);
     }, [awaitingRoute]); // eslint-disable-line react-hooks/exhaustive-deps
-    const showLoadingScreen = !!state.isLoadingApp || (!!state.isNavLoading && (!awaitingRoute || slowRoute));
+    useEffect(() => { if (!state.isNavLoading) setSlowNav(false); }, [state.isNavLoading]);
+
+    const navOverlay = !!state.isNavLoading && (!quietNavRef.current || slowNav);
+    const [holdOverlay, setHoldOverlay] = useState(false);
+    const overlayShownAt = useRef(0);
+    useEffect(() => {
+        if (navOverlay) { overlayShownAt.current = Date.now(); setHoldOverlay(true); return; }
+        const left = NAV_OVERLAY_MIN_MS - (Date.now() - overlayShownAt.current);
+        if (left <= 0) { setHoldOverlay(false); return; }
+        const t = setTimeout(() => setHoldOverlay(false), left);
+        return () => clearTimeout(t);
+    }, [navOverlay]);
+    const showLoadingScreen = !!state.isLoadingApp || navOverlay || holdOverlay;
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
