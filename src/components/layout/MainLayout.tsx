@@ -91,6 +91,11 @@ export const MainLayout = ({
         () => navDirection === 'pop' && Date.now() - popAtRef.current < POP_WINDOW_MS ? 'page-pop-back' : 'page-enter-forward',
         [pathname], // eslint-disable-line react-hooks/exhaustive-deps
     );
+    // No enter animation on routes with their own transition. Service/profile open behind the nav loading
+    // overlay, which already fades the page in — animating the page under it is invisible at best, and in
+    // Safari the two concurrent opacity animations rendered the page washed-out for a few frames (a flash).
+    const skipEnterAnim = pathname === '/support' || pathname === '/dashboard' || pathname.startsWith('/chat/')
+        || pathname.startsWith('/service/') || pathname.startsWith('/profile/');
     useEffect(() => { setNavDirection('push'); }, [pathname]);
     useEffect(() => {
         const onPop = () => { popAtRef.current = Date.now(); setNavDirection('pop'); };
@@ -346,7 +351,7 @@ export const MainLayout = ({
                                 <>
                                     <div
                                         key={pathname}
-                                        className={(pathname === '/support' || pathname.startsWith('/chat/') || pathname === '/dashboard') ? '' : enterClass}
+                                        className={skipEnterAnim ? '' : enterClass}
                                         style={hasRouteFooter ? { paddingBottom: 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))' } : undefined}
                                         onAnimationEnd={(e) => {
                                             if (e.currentTarget === e.target) {
