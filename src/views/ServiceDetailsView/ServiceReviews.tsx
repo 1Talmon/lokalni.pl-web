@@ -250,6 +250,7 @@ export const ServiceReviews = memo(({
                                     ) : (
                                         <button
                                             onClick={() => onToggleLike(review.id)}
+                                            disabled={isMine && !isLiked}
                                             aria-pressed={isLiked}
                                             className={`flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all duration-200 active:scale-95 ${isLiked ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
                                         >

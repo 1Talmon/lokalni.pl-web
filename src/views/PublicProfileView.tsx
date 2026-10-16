@@ -296,7 +296,10 @@ const PublicProfileView = ({
                 targetId: String(reportConfig.targetId ?? provider.uid),
                 reason: reasonMap[reason] ?? 'other',
             });
-        } catch {
+            actions.addToast?.('Zgłoszenie wysłane', 'success');
+        } catch (e: unknown) {
+            const msg = (e as { response?: { data?: { error?: string } } }).response?.data?.error;
+            actions.addToast?.(msg ?? 'Błąd wysyłania zgłoszenia', 'error');
             logger.error('Nie udało się wysłać zgłoszenia');
         }
     };
@@ -797,6 +800,7 @@ const PublicProfileView = ({
                                         ) : (
                                             <button
                                                 onClick={() => toggleLike(review.id)}
+                                                disabled={isOwner && !isLiked}
                                                 aria-label={isLiked ? 'Cofnij oznaczenie jako pomocna' : 'Oznacz opinię jako pomocną'}
                                                 aria-pressed={isLiked}
                                                 className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all duration-200 active:scale-95 ${
@@ -866,12 +870,14 @@ const PublicProfileView = ({
 
                 {/* Zgłoś / zablokuj profil */}
                 <div className="mt-10 flex items-center justify-center gap-6">
-                    <button
-                        onClick={() => setReportConfig({ isOpen: true, type: 'profile', targetId: provider.uid })}
-                        className="text-slate-400 hover:text-rose-400 text-[10px] font-bold uppercase tracking-[0.2em] py-3 transition-colors flex items-center justify-center gap-1.5"
-                    >
-                        <Flag size={11} /> Zgłoś profil
-                    </button>
+                    {isLoggedIn && !isOwner && (
+                        <button
+                            onClick={() => setReportConfig({ isOpen: true, type: 'profile', targetId: provider.uid })}
+                            className="text-slate-400 hover:text-rose-400 text-[10px] font-bold uppercase tracking-[0.2em] py-3 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                            <Flag size={11} /> Zgłoś profil
+                        </button>
+                    )}
                     {isLoggedIn && !isOwner && provider.uid && (
                         <button
                             onClick={async () => {

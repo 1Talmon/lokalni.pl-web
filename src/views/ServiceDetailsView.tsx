@@ -562,11 +562,13 @@ const ServiceDetailsView = ({
                                     <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Wróć</span>
                                 </button>
                                 <div className="flex gap-2 items-center">
+                                    {!activeService?.isMine && (
                                     <button onClick={handleFavoriteClick} type="button" aria-label={effectiveFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'} aria-pressed={effectiveFavorite} className="pointer-events-auto p-2.5 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
                                         style={(isReportOpen || isSupportOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
                                     >
                                         <Heart size={20} className={effectiveFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'} />
                                     </button>
+                                    )}
                                     <button onClick={handleShare} type="button" aria-label="Udostępnij" className="pointer-events-auto p-2.5 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none"
                                         style={(isReportOpen || isSupportOpen) ? { opacity: 0.35, filter: 'blur(2px)', pointerEvents: 'none', transition: 'opacity 0.2s, filter 0.2s' } : { transition: 'opacity 0.2s, filter 0.2s' }}
                                     >
@@ -581,9 +583,11 @@ const ServiceDetailsView = ({
                             <ArrowLeft size={13} strokeWidth={3} /> Wróć
                         </button>
                         <div className="flex gap-2">
+                            {!activeService?.isMine && (
                             <button onClick={handleFavoriteClick} type="button" aria-label={effectiveFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'} aria-pressed={effectiveFavorite} className="p-2.5 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none">
                                 <Heart size={20} className={effectiveFavorite ? 'fill-red-500 text-red-500' : 'text-slate-600'} />
                             </button>
+                            )}
                             <button onClick={handleShare} type="button" aria-label="Udostępnij" className="p-2.5 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm hover:bg-white transition-all active:scale-95 focus:outline-none">
                                 <Share2 size={20} className="text-slate-600" />
                             </button>

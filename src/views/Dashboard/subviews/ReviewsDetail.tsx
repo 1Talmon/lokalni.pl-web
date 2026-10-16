@@ -58,7 +58,8 @@ export const ReviewsDetail = ({ onBack }: { onBack: () => void }) => {
     };
 
     const handleOpenReport = (type: 'review' | 'profile') => {
-        const id = String(selectedReview?.userUid ?? selectedReview?.id ?? '');
+        // review → the review's id, profile → its author's uid
+        const id = String((type === 'review' ? selectedReview?.id : selectedReview?.userUid) ?? '');
         reportTargetRef.current = { type: type === 'review' ? 'review' : 'user', id };
         setReportType(type);
         setIsReportOpen(true);

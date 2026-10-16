@@ -36,8 +36,10 @@ export const ModalsManager = ({ state, actions }: ModalsManagerProps) => {
                 reason: REASON_MAP[reason] ?? 'other',
             });
             actions.addToast?.('Zgłoszenie wysłane', 'success');
-        } catch {
-            actions.addToast?.('Błąd wysyłania zgłoszenia', 'error');
+        } catch (e: unknown) {
+            // API explains SELF_REPORT / REPORT_EXISTS in its message
+            const msg = (e as { response?: { data?: { error?: string } } }).response?.data?.error;
+            actions.addToast?.(msg ?? 'Błąd wysyłania zgłoszenia', 'error');
         }
     };
 
