@@ -24,7 +24,7 @@ export const serviceDetailQuery = (publicId: string) => ({
         const timeout = setTimeout(() => controller.abort(), 15_000);
         signal?.addEventListener('abort', () => controller.abort(), { once: true });
         try {
-            const res = await apiClient.get(`/services/${publicId}`, { signal: controller.signal });
+            const res = await apiClient.get(`/services/${publicId}?track=0`, { signal: controller.signal });
             if (res.status === 404) return null;
             if (res.status === 410) return { __deleted: true } as unknown as Service;
             if (!res.ok) throw new Error(`server_${res.status}`);

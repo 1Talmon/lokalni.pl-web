@@ -153,7 +153,7 @@ export const serviceService = {
   },
 
   async getService(publicId: string): Promise<ReturnType<typeof mapApiService>> {
-    const json = await apiClient.getJson<{ data?: ApiService } & ApiService>(`/services/${publicId}`);
+    const json = await apiClient.getJson<{ data?: ApiService } & ApiService>(`/services/${publicId}?track=0`);
     return mapApiService(json.data ?? json);
   },
 

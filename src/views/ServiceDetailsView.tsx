@@ -162,6 +162,13 @@ const ServiceDetailsView = ({
 
     const activeService = service || cachedService;
 
+    // One view per opened screen — fetching service data (prefetch, SSR) never counts; the API dedups per viewer
+    const viewedPublicId = activeService && !activeService.isMine ? activeService.publicId : null;
+    useEffect(() => {
+        if (!viewedPublicId) return;
+        apiClient.post(`/services/${viewedPublicId}/view`, {}).catch(() => {});
+    }, [viewedPublicId]);
+
     const images = useMemo(() => {
         if (!activeService) return [];
         return activeService.images && activeService.images.length > 0

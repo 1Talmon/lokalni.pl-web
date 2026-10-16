@@ -171,7 +171,7 @@ const HomeView = ({
             queryClient.prefetchQuery({
                 queryKey: ['service', publicId],
                 queryFn: async () => {
-                    const res = await apiClient.get(`/services/${publicId}`);
+                    const res = await apiClient.get(`/services/${publicId}?track=0`);
                     if (!res.ok) throw new Error(`server_${res.status}`);
                     const json = await res.json();
                     return mapApiService(json.data ?? json);
