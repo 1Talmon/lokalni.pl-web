@@ -1,25 +1,21 @@
 export const runtime = 'edge';
 
 import type { Metadata } from 'next';
-import { fetchLandingGroups, fetchLatestServices, fetchPosts, categoryLabel } from '@/lib/landings';
-import { homeDescription } from '@/lib/seoText';
+import { fetchLandingGroups, fetchLatestServices, fetchPosts } from '@/lib/landings';
 import { HomeStaticShell } from './_components/HomeStaticShell';
 
 export async function generateMetadata(): Promise<Metadata> {
-    const groups = await fetchLandingGroups().catch(() => []);
-    const description = homeDescription(
-        groups.filter(g => g.type === 'category').map(g => categoryLabel(g.categorySlug) ?? ''),
-        groups.filter(g => g.type === 'city' && g.city).map(g => g.city!),
-    );
+    // fixed copy — a list built from live categories/cities read oddly and skipped towns without a known locative
+    const description = 'Lokalne usługi od młodych z Twojej okolicy. Zarabiaj na tym, co umiesz, albo znajdź kogoś tuż obok – oferty z cenami, opinie, czat i rezerwacja online.';
     const title = 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy';
     // openGraph/twitter replace the layout's objects as a whole — repeat every field, not just description
     return {
         description,
         openGraph: {
             type: 'website', locale: 'pl_PL', siteName: 'MyLokalni.pl', url: '/', title, description,
-            images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MyLokalni.pl – strona główna' }],
+            images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'MyLokalni.pl – strona główna' }],
         },
-        twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
+        twitter: { card: 'summary_large_image', title, description, images: ['/og-default.png'] },
     };
 }
 

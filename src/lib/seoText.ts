@@ -89,15 +89,3 @@ export function profileDescription(name: string, p: Raw, services: { title: stri
 export function postDescription(content: string, authorName: string): string {
     return compose(content, `Wpis: ${authorName}, MyLokalni.pl.`);
 }
-
-// ─── Home ───────────────────────────────────────────────────────────────────
-
-export function homeDescription(categories: string[], cities: string[]): string {
-    const cats = categories.filter(c => c && c !== 'Inne');
-    // Only towns whose locative we know ("w Gdańsku") — never a guessed declension
-    const where = cities.map(c => CITY_LOCATIVE[createSlug(c)]).filter(Boolean).slice(0, 4).join(', ');
-    const lead = cats.length > 0
-        ? `Lokalne usługi od młodych${where ? ` ${inLocative(where)}` : ''} – ${cats.slice(0, 4).join(', ')}.`
-        : 'Lokalne usługi od młodych z Twojej okolicy.';
-    return clip(`${lead} Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok – ceny, opinie i rezerwacja online.`, MAX_DESC);
-}

@@ -43,13 +43,13 @@ export const metadata: Metadata = {
         siteName: 'MyLokalni.pl',
         title: 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy',
         description: 'Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok.',
-        images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MyLokalni.pl' }],
+        images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'MyLokalni.pl' }],
     },
     twitter: {
         card: 'summary_large_image',
         title: 'MyLokalni.pl – lokalne usługi od młodych z Twojej okolicy',
         description: 'Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok.',
-        images: ['/og-image.png'],
+        images: ['/og-default.png'],
     },
     alternates: {
         canonical: BASE_URL,

@@ -1,6 +1,6 @@
 export const BASE_URL = 'https://mylokalni.pl';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.mylokalni.pl/api';
-export const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
+export const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.png`;
 
 /** Maps internal API category names → URL slugs. Must match API `CATEGORY_SLUG` (src/lib/seo.ts).
  *  Current ids first — `categoryIdForSlug` takes the first key; retired ids map to their successor. */
