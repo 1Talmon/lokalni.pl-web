@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/apiClient';
-import { normalizeMediaUrl } from '../utils/normalizeUrl';
+import { normalizeMediaUrl, cardImageUrl } from '../utils/normalizeUrl';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { mapApiService, type ApiService } from '../services/serviceService';
 import { CATEGORIES_DATA } from '../data/categories';
@@ -813,11 +813,19 @@ const ServiceDetailsView = ({
                                             className="group cursor-pointer shrink-0 w-[200px] md:w-[240px] flex flex-col"
                                         >
                                             <div className="relative h-40 md:h-44 rounded-2xl overflow-hidden bg-slate-100 mb-3 shadow-sm shrink-0">
+                                                {/* 200px card: the 400px _thumb variant, lazy — full photo only if the thumb is missing */}
                                                 <img
-                                                    src={svc.image || '/placeholder.svg'}
+                                                    src={cardImageUrl(svc.image) || '/placeholder.svg'}
                                                     alt={svc.title}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                    onError={e => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
+                                                    onError={e => {
+                                                        const img = e.target as HTMLImageElement;
+                                                        const full = normalizeMediaUrl(svc.image);
+                                                        if (full && !img.dataset.fullTried) { img.dataset.fullTried = '1'; img.src = full; }
+                                                        else img.src = '/placeholder.svg';
+                                                    }}
                                                 />
                                                 <div className="absolute bottom-3 left-3">
                                                     <div className="bg-white px-3 py-1 rounded-xl shadow-sm">
