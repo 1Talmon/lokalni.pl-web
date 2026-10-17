@@ -160,6 +160,7 @@ const HomeView = ({
 
     const [showMap, setShowMap] = useState(false);
     const pathname = usePathname();
+    const HeroHeading = pathname === '/' ? 'h1' : 'p';
     useEffect(() => { if (pathname !== '/') setShowMap(false); }, [pathname]);
 
     const [, setHoveredServiceId] = useState<string | null>(null);
@@ -288,9 +289,10 @@ const HomeView = ({
           </div>
 
           <div className="max-w-7xl mx-auto text-center md:text-left relative z-10">
-            <h1 className="text-3xl md:text-6xl font-black mb-3 md:mb-4 leading-tight">
+            {/* HomeView stays mounted (hidden) behind other routes — only "/" may own the page's H1 */}
+            <HeroHeading className="text-3xl md:text-6xl font-black mb-3 md:mb-4 leading-tight">
                 Zarabiaj na tym, co umiesz, <br className="hidden md:block"/> lub znajdź kogoś tuż obok.
-            </h1>
+            </HeroHeading>
             <p className="text-white/90 text-base md:text-lg mb-8">
                 Lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika po montaż rolek.
             </p>

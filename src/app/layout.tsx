@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { OPERATOR } from '@/lib/legal/operator';
 import localFont from 'next/font/local';
 import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
@@ -84,17 +85,21 @@ export const viewport: Viewport = {
 const orgJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${BASE_URL}/#organization`,
     name: 'MyLokalni.pl',
     url: BASE_URL,
+    description: 'Lokalne usługi od młodych z Twojej okolicy – ogłoszenia z cenami, opinie, czat i rezerwacja terminu.',
+    email: OPERATOR.email,
     logo: {
         '@type': 'ImageObject',
-        url: `${BASE_URL}/icons/favicon-96x96.png`,
-        width: 96,
-        height: 96,
+        url: `${BASE_URL}/icons/web-app-manifest-512x512.png`,
+        width: 512,
+        height: 512,
     },
     contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer support',
+        email: OPERATOR.email,
         availableLanguage: 'Polish',
         areaServed: 'PL',
     },

@@ -7,6 +7,7 @@ import { createServiceUrl } from '@/utils/helpers';
 import {
     fetchLanding, servicesOgImage, fetchLandingGroups, landingH1, offersLabel, categoryLabel, categoryIdForSlug,
     type LandingData, type LandingGroup,
+    isIndexableLanding,
 } from '@/lib/landings';
 import { SlugContent } from './_components/SlugContent';
 import { SlugStaticShell } from './_components/SlugStaticShell';
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
         title,
         description: desc,
-        robots: { index: true, follow: true },
+        robots: { index: isIndexableLanding(data.group, data.total), follow: true },
         alternates: { canonical: url },
         openGraph: { title, description: desc, url, siteName: 'MyLokalni.pl', locale: 'pl_PL', type: 'website', images: [{ url: image }] },
         twitter: { card: 'summary_large_image', title, description: desc, images: [image] },

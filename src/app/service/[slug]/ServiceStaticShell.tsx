@@ -85,6 +85,8 @@ export function ServiceStaticShell({ data }: { data: ServiceShellData }) {
                             width={800}
                             height={450}
                             priority
+                            // same URL as the preload and the gallery — /_next/image on Pages re-sent it uncompressed as a 3rd copy
+                            unoptimized
                             sizes="(max-width: 768px) 100vw, 800px"
                             className="w-full aspect-video object-cover rounded-2xl"
                         />

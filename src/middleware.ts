@@ -42,7 +42,16 @@ function buildCsp(): string {
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
+        "frame-ancestors 'none'",
     ].join('; ');
+}
+
+// public/_headers only reaches static assets on Pages — rendered pages get these here
+function applySecurityHeaders(headers: Headers, csp: string) {
+    headers.set('Content-Security-Policy', csp);
+    headers.set('X-Frame-Options', 'DENY');
+    headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self), payment=()');
 }
 
 export function middleware(request: NextRequest) {
@@ -74,14 +83,14 @@ export function middleware(request: NextRequest) {
     if (isSocialBot) {
         if (pathname.startsWith('/service/') || pathname.startsWith('/profile/')) {
             const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
-            res.headers.set('Content-Security-Policy', csp);
+            applySecurityHeaders(res.headers, csp);
             return res;
         }
         // Landing slug pages: /auto-gdansk, /auto, /gdansk etc. (not app routes like /faq — those
         // are plain server pages with og: tags in <head> already)
         if (LANDING_SLUG_RE.test(pathname) && !APP_SEGMENTS.has(pathname.slice(1))) {
             const res = NextResponse.rewrite(new URL(`/og${pathname}`, request.url));
-            res.headers.set('Content-Security-Policy', csp);
+            applySecurityHeaders(res.headers, csp);
             return res;
         }
     }
@@ -103,7 +112,7 @@ export function middleware(request: NextRequest) {
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800',
             );
-            response.headers.set('Content-Security-Policy', csp);
+            applySecurityHeaders(response.headers, csp);
             return response;
         }
 
@@ -114,7 +123,7 @@ export function middleware(request: NextRequest) {
                 'Cache-Control',
                 'public, s-maxage=3600, stale-while-revalidate=1800, stale-if-error=86400',
             );
-            response.headers.set('Content-Security-Policy', csp);
+            applySecurityHeaders(response.headers, csp);
             return response;
         }
 
@@ -126,13 +135,13 @@ export function middleware(request: NextRequest) {
                 'Cache-Control',
                 'public, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400',
             );
-            response.headers.set('Content-Security-Policy', csp);
+            applySecurityHeaders(response.headers, csp);
             return response;
         }
     }
 
     const response = NextResponse.next();
-    response.headers.set('Content-Security-Policy', csp);
+    applySecurityHeaders(response.headers, csp);
     return response;
 }
 

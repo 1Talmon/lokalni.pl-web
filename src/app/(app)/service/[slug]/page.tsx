@@ -4,7 +4,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { createServiceUrl } from '@/utils/helpers';
-import { BASE_URL, API_URL, DEFAULT_OG_IMAGE } from '@/lib/seo-data';
+import { BASE_URL, API_URL, DEFAULT_OG_IMAGE, normalizeMediaUrl } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import ServiceDetailsContent from './ServiceDetailsContent';
@@ -81,9 +81,10 @@ export default async function ServicePage({ params }: Props) {
     if (canonical !== slug) permanentRedirect(`/service/${canonical}`);
     const jsonLdSchemas = buildServiceJsonLd(service, canonical);
 
-    // Hero image for LCP preload — sent in <head> before any body content
-    const heroImage = (service.ogImage || service.image ||
-        (Array.isArray(service.images) ? service.images[0] : null)) as string | null;
+    // LCP preload — the exact URL the page displays (static shell + gallery show the WebP photo).
+    // ogImage is a separate JPEG for social scrapers; preloading it fetched a second, unused image.
+    const heroImage = normalizeMediaUrl((service.image ||
+        (Array.isArray(service.images) ? service.images[0] : null)) as string | null);
 
     return (
         <>

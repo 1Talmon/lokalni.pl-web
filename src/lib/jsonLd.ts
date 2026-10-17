@@ -1,6 +1,9 @@
 import { BASE_URL, CATEGORY_SLUG, KEYWORD_DISPLAY } from './seo-data';
 
 type RawService = Record<string, unknown>;
+
+/** Rating markup only from this many real reviews — a 5.0 from 1–2 reviews reads as self-serving to Google. */
+export const MIN_RATED_REVIEWS = 3;
 type RawProfile = Record<string, unknown>;
 
 export function buildServiceJsonLd(s: RawService, slug: string) {
@@ -16,7 +19,7 @@ export function buildServiceJsonLd(s: RawService, slug: string) {
 
     const isDeleted = s.isDeleted === true || s.status === 'deleted' || s.status === 'inactive';
 
-    const hasRating = Number(s.reviewsCount) > 0 && Number(s.rating) > 0;
+    const hasRating = Number(s.reviewsCount) >= MIN_RATED_REVIEWS && Number(s.rating) > 0;
 
     // Google shows review stars only for supported types (not Service), so a
     // rated offer is marked up as Product. Service-only props are kept just for
@@ -76,7 +79,7 @@ export function buildProfileJsonLd(p: RawProfile, uid: string) {
 
     const rating = Number(p.avgRating);
     const reviewsCount = Number(p.reviewsCount);
-    const hasRating = rating > 0 && reviewsCount > 0;
+    const hasRating = rating > 0 && reviewsCount >= MIN_RATED_REVIEWS;
 
     // Google review snippets (stars) don't support Person as the rated item
     // ("Invalid object type for field <parent_node>"), so a rated provider is

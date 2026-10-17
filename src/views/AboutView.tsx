@@ -1,5 +1,6 @@
 'use client';
 import { ArrowLeft, Users, Target, Heart, Award, Mail, Building2, MapPin } from 'lucide-react';
+import { OPERATOR } from '@/lib/legal/operator';
 import { useRouter } from 'next/navigation';
 
 const AboutView = () => {
@@ -106,11 +107,9 @@ const AboutView = () => {
                             </h3>
                             <div className="bg-gray-50 rounded-2xl border border-gray-100 divide-y divide-gray-100 text-sm">
                                 {[
-                                    { label: 'Pełna nazwa', value: '[PEŁNA NAZWA FIRMY]' },
-                                    { label: 'Forma prawna', value: '[np. Spółka z ograniczoną odpowiedzialnością]' },
-                                    { label: 'NIP', value: '[000-000-00-00]' },
-                                    { label: 'KRS / CEiDG', value: '[0000000000]' },
-                                    { label: 'Organ rejestrowy', value: '[np. Sąd Rejonowy dla m.st. Warszawy, XII Wydział Gospodarczy]' },
+                                    { label: 'Prowadzący', value: OPERATOR.fullName },
+                                    { label: 'Forma prawna', value: 'Działalność nierejestrowana (art. 5 ust. 1 Prawa przedsiębiorców)' },
+                                    { label: 'NIP / REGON / CEIDG', value: 'Nie dotyczy — działalność nierejestrowana' },
                                 ].map(({ label, value }) => (
                                     <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-1 px-5 py-3.5">
                                         <span className="font-semibold text-gray-500 w-44 shrink-0">{label}</span>
@@ -121,11 +120,11 @@ const AboutView = () => {
                             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                                 <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
                                     <MapPin size={16} className="text-[#6366F1] shrink-0"/>
-                                    <span className="text-gray-700">ul. Prosta 1<br/>00-000 Warszawa</span>
+                                    <span className="text-gray-700">{OPERATOR.street}<br />{OPERATOR.postalCity}</span>
                                 </div>
-                                <a href="mailto:mylokalni@gmail.com" className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
+                                <a href={`mailto:${OPERATOR.email}`} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 hover:border-indigo-200 transition-colors">
                                     <Mail size={16} className="text-[#6366F1] shrink-0"/>
-                                    <span className="text-gray-700">mylokalni@gmail.com</span>
+                                    <span className="text-gray-700">{OPERATOR.email}</span>
                                 </a>
                             </div>
                         </section>
@@ -135,7 +134,7 @@ const AboutView = () => {
                             <h4 className="font-bold text-indigo-900 mb-2">Chcesz dowiedzieć się więcej?</h4>
                             <p className="text-indigo-700 text-sm mb-6">Nasz zespół chętnie odpowie na Twoje pytania.</p>
                             <a 
-                                href="mailto:mylokalni@gmail.com" 
+                                href={`mailto:${OPERATOR.email}`} 
                                 className="inline-flex items-center gap-2 bg-[#6366F1] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4F46E5] transition-colors active:scale-95"
                             >
                                 <Mail size={18}/>

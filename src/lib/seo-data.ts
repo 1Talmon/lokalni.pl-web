@@ -84,6 +84,9 @@ export const CITY_SLUG: Record<string, string> = Object.fromEntries(
 );
 
 /** Locative case — used in "Usługi w <locative>" */
+/** "w Gdańsku" / "we Wrocławiu" — Polish uses "we" before w/f + consonant (we Wrocławiu, we Włocławku). */
+export const inLocative = (loc: string) => `${/^[wf][^aąeęioóuy]/i.test(loc) ? 'we' : 'w'} ${loc}`;
+
 export const CITY_LOCATIVE: Record<string, string> = {
     warszawa: 'Warszawie', krakow: 'Krakowie', wroclaw: 'Wrocławiu',
     poznan: 'Poznaniu', gdansk: 'Gdańsku', lodz: 'Łodzi',

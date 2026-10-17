@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { API_URL, CATEGORY_SLUG, CITY_LOCATIVE, KEYWORD_DISPLAY } from './seo-data';
+import { API_URL, CATEGORY_SLUG, CITY_LOCATIVE, KEYWORD_DISPLAY, inLocative } from './seo-data';
 import { mapServiceRaw } from './mappers/serviceMapper';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
 import { polishPlural } from '../utils/helpers';
@@ -74,6 +74,13 @@ function mapPost<T extends PublicPost>(p: T): T {
     };
 }
 
+/**
+ * Thin-page guard: a landing listing 1 offer duplicates the offer page (and its city/category sibling),
+ * so it stays reachable but `noindex, follow` and out of the sitemap until it has enough offers.
+ */
+export const MIN_INDEXABLE_OFFERS: Record<LandingType, number> = { category: 2, city: 2, 'category-city': 3 };
+export const isIndexableLanding = (g: Pick<LandingGroup, 'type' | 'count'>, total = g.count) => total >= MIN_INDEXABLE_OFFERS[g.type];
+
 export const fetchLandingGroups = cache(async (): Promise<LandingGroup[]> => {
     const json = await getJson<{ data: LandingGroup[] }>('/public/landings');
     return json?.data ?? [];
@@ -131,7 +138,7 @@ export function categoryLabel(categorySlug: string | null): string | null {
 export function cityPhrase(g: Pick<LandingGroup, 'city' | 'citySlug'>): string {
     if (!g.city || !g.citySlug) return '';
     const loc = CITY_LOCATIVE[g.citySlug];
-    return loc ? `w ${loc}` : `– ${g.city}`;
+    return loc ? inLocative(loc) : `– ${g.city}`;
 }
 
 export function landingH1(g: LandingGroup): string {

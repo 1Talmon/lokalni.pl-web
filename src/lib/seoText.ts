@@ -1,4 +1,4 @@
-import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_LOCATIVE } from './seo-data';
+import { CATEGORY_SLUG, KEYWORD_DISPLAY, CITY_LOCATIVE, inLocative } from './seo-data';
 import { createSlug, polishPlural } from '../utils/helpers';
 
 // Titles and meta descriptions (the snippet under the title in Google) built only from real data:
@@ -31,7 +31,7 @@ const reviewsLabel = (n: number) => `${n} ${polishPlural(n, 'opinia', 'opinie', 
 
 function locative(city: string): string {
     const loc = CITY_LOCATIVE[createSlug(city)];
-    return loc ? `w ${loc}` : `– ${city}`;
+    return loc ? inLocative(loc) : `– ${city}`;
 }
 
 // ─── Service ────────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ export function homeDescription(categories: string[], cities: string[]): string 
     // Only towns whose locative we know ("w Gdańsku") — never a guessed declension
     const where = cities.map(c => CITY_LOCATIVE[createSlug(c)]).filter(Boolean).slice(0, 4).join(', ');
     const lead = cats.length > 0
-        ? `Lokalne usługi od młodych${where ? ` w ${where}` : ''} – ${cats.slice(0, 4).join(', ')}.`
+        ? `Lokalne usługi od młodych${where ? ` ${inLocative(where)}` : ''} – ${cats.slice(0, 4).join(', ')}.`
         : 'Lokalne usługi od młodych z Twojej okolicy.';
     return clip(`${lead} Zarabiaj na tym, co umiesz, lub znajdź kogoś tuż obok – ceny, opinie i rezerwacja online.`, MAX_DESC);
 }
