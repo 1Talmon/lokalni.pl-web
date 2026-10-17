@@ -40,7 +40,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const name = buildProfileName(profile);
     const title = name;
     const url = `${BASE_URL}/profile/${uid}`;
-    const image = ((profile.ogAvatar || profile.profilowe || profile.avatar) as string | undefined) ?? DEFAULT_OG_IMAGE;
+    // ogAvatar = the API's 1200×630 share JPEG; the raw avatar is a square WebP (size unknown here)
+    const ogAvatar = profile.ogAvatar as string | undefined;
+    const rawAvatar = (profile.profilowe || profile.avatar) as string | undefined;
+    const image = ogAvatar || rawAvatar || DEFAULT_OG_IMAGE;
+    const isWide = !!ogAvatar || !rawAvatar; // _og.jpg and the default image are both 1200×630
+    // Declared size must match the file — Facebook/Messenger drop a preview whose og:image size is wrong
+    const ogImage = isWide ? { url: image, width: 1200, height: 630 } : { url: image };
     // Index only profiles with real public content (offers or posts) — an empty account is a thin page
     const [services, posts] = await Promise.all([
         fetchProviderServices(uid).catch(() => null),
@@ -59,13 +65,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description: bio,
             url,
             type: 'profile',
-            ...(image ? { images: [{ url: image, width: 800, height: 800 }] } : {}),
+            images: [ogImage],
         },
         twitter: {
-            card: 'summary',
+            card: isWide ? 'summary_large_image' : 'summary',
             title: `${name}`,
             description: bio,
-            ...(image ? { images: [image] } : {}),
+            images: [image],
         },
     };
 }

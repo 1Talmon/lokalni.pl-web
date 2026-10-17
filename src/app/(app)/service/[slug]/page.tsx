@@ -61,7 +61,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             description,
             url,
             type: 'website',
-            ...(image ? { images: [{ url: image, width: 1200, height: 630 }] } : {}),
+            // 1200×630 only for the share JPEG / default image — a raw photo's size is unknown (wrong size = no preview)
+            images: [service.ogImage || image === DEFAULT_OG_IMAGE ? { url: image, width: 1200, height: 630 } : { url: image }],
         },
         twitter: {
             card: 'summary_large_image',
