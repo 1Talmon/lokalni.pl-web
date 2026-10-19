@@ -86,6 +86,13 @@ const request = async (endpoint: string, options: RequestInit = {}): Promise<Res
         }
     }
 
+    // maintenance mode (panel): let the banner explain why changes are refused
+    if (response.status === 503 && typeof window !== 'undefined') {
+        response.clone().json().then((b: { code?: string; error?: string }) => {
+            if (b?.code === 'MAINTENANCE') window.dispatchEvent(new CustomEvent('mylokalni:maintenance', { detail: b.error }));
+        }).catch(() => {});
+    }
+
     return response;
 };
 

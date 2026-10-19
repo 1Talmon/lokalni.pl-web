@@ -23,6 +23,7 @@ const GrafikView        = dynamic(() => import('../views/GrafikView'),          
 const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });
 
 const CookieBanner      = dynamic(() => import('./ui/CookieBanner'),          { ssr: false });
+const MaintenanceBanner = dynamic(() => import('./ui/MaintenanceBanner').then(m => m.MaintenanceBanner), { ssr: false });
 const TourOverlay       = dynamic(() => import('./tour/TourOverlay').then(m => ({ default: m.TourOverlay })),   { ssr: false });
 
 const SWIPE_TAB_SET = new Set(SWIPE_TABS);
@@ -282,6 +283,7 @@ function AppShellContent({ children }: AppShellProps) {
                 )}
 
                 <CookieBanner />
+                <MaintenanceBanner />
                 {showTour && <TourOverlay onDone={() => { localStorage.setItem('tour_seen', '1'); setShowTour(false); }} />}
                 {locked && <AppLock onVerify={verify} verifying={verifying} />}
             </div>
