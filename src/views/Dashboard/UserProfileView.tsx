@@ -150,36 +150,39 @@ export const UserProfileView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs only on user change; isAppLoading in deps would cause loop
     }, [user]);
 
-    // Own smooth scroll instead of scrollIntoView({ behavior: 'smooth' }): the native one fixes
-    // its target at the start, so when the page shifts mid-scroll (tab swap) it stops short —
-    // in WKWebView a few px. Here the target is re-measured every frame → one motion, exact landing.
+    // Native smooth scroll: WebKit runs it on the scrolling thread, so it stays at full frame rate while
+    // React mounts the new tab. (A JS loop calling scrollTo every frame shares the main thread with that
+    // render and dropped to ~30 fps on iOS.) The nav sits above the swapped content, so its position rarely
+    // moves; if the page above still settles mid-scroll, one gentle correction runs when the scroll ends.
     const navScrollTokenRef = useRef(0);
     const smoothScrollToNav = (el: HTMLElement) => {
         const token = ++navScrollTokenRef.current;
-        const cancel = () => { navScrollTokenRef.current++; };
-        window.addEventListener('touchstart', cancel, { once: true, passive: true });
-        window.addEventListener('wheel', cancel, { once: true, passive: true });
-        const cleanup = () => {
-            window.removeEventListener('touchstart', cancel);
-            window.removeEventListener('wheel', cancel);
-        };
         const targetY = () => {
             const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
             const maxY = document.documentElement.scrollHeight - window.innerHeight;
             return Math.max(0, Math.min(window.scrollY + el.getBoundingClientRect().top - margin, maxY));
         };
-        const startY = window.scrollY;
-        const duration = Math.min(650, Math.max(300, 250 + Math.abs(targetY() - startY) * 0.4));
-        const t0 = performance.now();
-        const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-        const step = (now: number) => {
-            if (token !== navScrollTokenRef.current) return cleanup();
-            const t = Math.min(1, (now - t0) / duration);
-            window.scrollTo(0, startY + (targetY() - startY) * ease(t));
-            if (t < 1) requestAnimationFrame(step);
-            else cleanup();
+        const cancel = () => { navScrollTokenRef.current++; };
+        window.addEventListener('touchstart', cancel, { once: true, passive: true });
+        window.addEventListener('wheel', cancel, { once: true, passive: true });
+        let settled = false;
+        const settle = () => {
+            if (settled) return;
+            settled = true;
+            window.removeEventListener('touchstart', cancel);
+            window.removeEventListener('wheel', cancel);
+            window.removeEventListener('scrollend', settle);
+            if (token !== navScrollTokenRef.current) return; // the user took over, or a newer tap
+            const y = targetY();
+            if (Math.abs(window.scrollY - y) > 2) window.scrollTo({ top: y, behavior: 'smooth' });
         };
-        requestAnimationFrame(step);
+        window.scrollTo({ top: targetY(), behavior: 'smooth' });
+        if ('onscrollend' in window) {
+            window.addEventListener('scrollend', settle);
+            setTimeout(settle, 1200); // scrollend never fires if the page was already in place
+        } else {
+            setTimeout(settle, 700);
+        }
     };
 
     const scrollToNav = () => {
