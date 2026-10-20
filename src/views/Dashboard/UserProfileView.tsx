@@ -7,7 +7,7 @@ import {
     Eye, Layout, LogOut, Copy,
     Tag, Megaphone, Sparkles, Gift, Check, Loader2, Trash2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { readNavState } from '../../utils/navState';
 import { useSwipeBack } from '@/hooks/useSwipeBack';
@@ -47,12 +47,6 @@ import { tokenUtils } from '@/utils/tokenUtils';
 // DEFINICJA TYPU DLA TABÓW I WIDOKÓW
 type ActiveTab = 'dashboard' | 'services' | 'orders' | 'posts' | 'settings';
 type DetailView = 'none' | 'earnings' | 'reviews' | 'analytics';
-
-/** Keeps a dashboard tab mounted once visited; hidden tabs are display:none (no rebuild on switch). */
-const TabPane = ({ show, mounted, children }: { show: boolean; mounted: boolean; children: React.ReactNode }) => {
-    if (!mounted && !show) return null;
-    return <div className={show ? 'dash-pane' : undefined} style={show ? undefined : { display: 'none' }}>{children}</div>;
-};
 
 export const UserProfileView = ({
                                     user, isLoggedIn, myServices, onLogout, onAvatarChange, onAddService, onEditService, onDeleteService, addToast, onBookingAction, onReschedule, onUpgrade, onOpenChat, onOpenSupport, onOpenTicket
@@ -156,49 +150,36 @@ export const UserProfileView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs only on user change; isAppLoading in deps would cause loop
     }, [user]);
 
-    // Native smooth scroll: WebKit runs it on the scrolling thread, so it stays at full frame rate while
-    // React mounts the new tab. (A JS loop calling scrollTo every frame shares the main thread with that
-    // render and dropped to ~30 fps on iOS.) The nav sits above the swapped content, so its position rarely
-    // moves; if the page above still settles mid-scroll, one gentle correction runs when the scroll ends.
-    // tabs that have been mounted once (kept alive, see TabPane); the others join in the background
-    const [mountedTabs, setMountedTabs] = useState<Set<ActiveTab>>(() => new Set([activeTab]));
-    useEffect(() => {
-        setMountedTabs(prev => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)));
-    }, [activeTab]);
-    useEffect(() => {
-        const t = setTimeout(() => setMountedTabs(new Set<ActiveTab>(['dashboard', 'orders', 'services', 'posts', 'settings'])), 1200);
-        return () => clearTimeout(t);
-    }, []);
-
+    // Own smooth scroll instead of scrollIntoView({ behavior: 'smooth' }): the native one fixes
+    // its target at the start, so when the page shifts mid-scroll (tab swap) it stops short —
+    // in WKWebView a few px. Here the target is re-measured every frame → one motion, exact landing.
     const navScrollTokenRef = useRef(0);
     const smoothScrollToNav = (el: HTMLElement) => {
         const token = ++navScrollTokenRef.current;
+        const cancel = () => { navScrollTokenRef.current++; };
+        window.addEventListener('touchstart', cancel, { once: true, passive: true });
+        window.addEventListener('wheel', cancel, { once: true, passive: true });
+        const cleanup = () => {
+            window.removeEventListener('touchstart', cancel);
+            window.removeEventListener('wheel', cancel);
+        };
         const targetY = () => {
             const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
             const maxY = document.documentElement.scrollHeight - window.innerHeight;
             return Math.max(0, Math.min(window.scrollY + el.getBoundingClientRect().top - margin, maxY));
         };
-        const cancel = () => { navScrollTokenRef.current++; };
-        window.addEventListener('touchstart', cancel, { once: true, passive: true });
-        window.addEventListener('wheel', cancel, { once: true, passive: true });
-        let settled = false;
-        const settle = () => {
-            if (settled) return;
-            settled = true;
-            window.removeEventListener('touchstart', cancel);
-            window.removeEventListener('wheel', cancel);
-            window.removeEventListener('scrollend', settle);
-            if (token !== navScrollTokenRef.current) return; // the user took over, or a newer tap
-            const y = targetY();
-            if (Math.abs(window.scrollY - y) > 2) window.scrollTo({ top: y, behavior: 'smooth' });
+        const startY = window.scrollY;
+        const duration = Math.min(650, Math.max(300, 250 + Math.abs(targetY() - startY) * 0.4));
+        const t0 = performance.now();
+        const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        const step = (now: number) => {
+            if (token !== navScrollTokenRef.current) return cleanup();
+            const t = Math.min(1, (now - t0) / duration);
+            window.scrollTo(0, startY + (targetY() - startY) * ease(t));
+            if (t < 1) requestAnimationFrame(step);
+            else cleanup();
         };
-        window.scrollTo({ top: targetY(), behavior: 'smooth' });
-        if ('onscrollend' in window) {
-            window.addEventListener('scrollend', settle);
-            setTimeout(settle, 1200); // scrollend never fires if the page was already in place
-        } else {
-            setTimeout(settle, 700);
-        }
+        requestAnimationFrame(step);
     };
 
     const scrollToNav = () => {
@@ -640,6 +621,11 @@ export const UserProfileView = ({
         }
     };
 
+    const listVariants: Variants = {
+        hidden: { opacity: 0, y: 6 },
+        visible: { opacity: 1, y: 0 },
+        exit: { opacity: 0 }
+    };
 
     if (!isLoggedIn || !user) return null;
 
@@ -896,67 +882,69 @@ export const UserProfileView = ({
 
                     <div className="lg:col-span-9 lg:self-start w-full relative flex flex-col overflow-hidden">
                         <div className="relative w-full min-h-[85vh]">
-                            {/* Visited tabs stay mounted and are only shown/hidden: switching doesn't rebuild the section,
-                                refetch its data or reload its images (that rebuild made the swap stutter on iOS). The rest
-                                mount in the background shortly after the dashboard opens. .dash-pane fades in on the
-                                compositor every time a pane becomes visible. */}
-                            <div className="w-full flex-grow flex flex-col">
-                                <TabPane show={activeTab === 'dashboard' && detailView === 'none'} mounted={mountedTabs.has('dashboard')}>
-                                    <DashboardHome servicesCount={myServices.length} onNavigate={handleTabChange} onOpenDetail={handleOpenDetail} user={user} addToast={addToast} />
-                                </TabPane>
-                                {activeTab === 'dashboard' && detailView !== 'none' && (
-                                    <div key={detailView} className="dash-pane">
-                                    {detailView === 'earnings' && <EarningsDetail onBack={handleBackToDashboard} user={user} addToast={addToast} />}
-                                    {detailView === 'reviews' && <ReviewsDetail onBack={handleBackToDashboard} />}
-                                    {detailView === 'analytics' && <AnalyticsDetail onBack={handleBackToDashboard} />}
-                                    </div>
-                                )}
-                                <TabPane show={activeTab === 'services'} mounted={mountedTabs.has('services')}>
-                                    <ServicesSection myServices={myServices} onAddService={onAddService} onEditService={onEditService} setServiceToDelete={onDeleteService} addToast={addToast} />
-                                </TabPane>
-                                <TabPane show={activeTab === 'orders'} mounted={mountedTabs.has('orders')}>
-                                    <ReservationsSection key={`${navState.current?.bookingTab ?? ''}-${searchParams.get('bookingId') ?? ''}`} isLoggedIn={isLoggedIn} initialTab={navState.current?.bookingTab} initialBookingId={searchParams.get('bookingId') ? Number(searchParams.get('bookingId')) : undefined} onBookingAction={onBookingAction} onReschedule={onReschedule} addToast={addToast} onOpenChat={onOpenChat} />
-                                </TabPane>
-                                <TabPane show={activeTab === 'posts'} mounted={mountedTabs.has('posts')}>
-                                    <PremiumGate isPremium={isPremium} onUpgrade={() => setShowPlusModal(true)} featureName="Aktualności (Posty)" mode="overlay">
-                                        <PostsSection newPostContent={newPostContent} setNewPostContent={setNewPostContent} posts={posts} onPublish={handlePublishPost} onDeletePost={handleDeletePost} onUpdatePost={handleUpdatePost} isLoggedIn={isLoggedIn} userData={userData} />
-                                    </PremiumGate>
-                                </TabPane>
-                                <TabPane show={activeTab === 'settings'} mounted={mountedTabs.has('settings')}>
-                                    <div>
-                                        <SettingsSection
-                                            isChangingPassword={isChangingPassword}
-                                            setIsChangingPassword={setIsChangingPassword}
-                                            passwordData={passwordData}
-                                            setPasswordData={setPasswordData}
-                                            handlePasswordChange={handlePasswordChange}
-                                            isPasswordLoading={isPasswordLoading}
-                                            hasPasswordMethod={hasPasswordMethod}
-                                            currentPhone={currentPhone}
-                                            onPhoneChange={handlePhoneChange}
-                                            onRequestDeletion={handleRequestAccountDeletion}
-                                            isDeletingAccount={isDeletingAccount}
-                                            isPremium={isPremium}
-                                            onUpgradeToPremium={() => setShowPlusModal(true)}
-                                            hasBio={hasBio}
-                                            hasSocial={hasSocial}
-                                            hasPhone={hasPhone}
-                                            userData={userData}
-                                            addToast={addToast}
-                                            certificates={certificates}
-                                            isCertsLoading={isCertsLoading}
-                                            onCertAdd={handleAddCertificate}
-                                            onCertUpdateName={handleUpdateCertificateName}
-                                            onCertDelete={handleDeleteCertificate}
-                                            onOpenSupport={onOpenSupport}
-                                            onOpenTicket={onOpenTicket}
-                                        />
-                                        <button onClick={onLogout} className="lg:hidden w-full mt-6 p-4 bg-red-50 text-red-500 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                                            <LogOut size={20}/> Wyloguj się
-                                        </button>
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab + detailView}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
+                                    variants={listVariants}
+                                    transition={{ duration: 0.2 }}
+                                    className="w-full flex-grow flex flex-col"
+                                >
+                                        <div className="w-full h-full">
+                                            {activeTab === 'dashboard' && (
+                                                <>
+                                                    {detailView === 'none' && <DashboardHome servicesCount={myServices.length} onNavigate={handleTabChange} onOpenDetail={handleOpenDetail} user={user} addToast={addToast} />}
+                                                    {detailView === 'earnings' && <EarningsDetail onBack={handleBackToDashboard} user={user} addToast={addToast} />}
+                                                    {detailView === 'reviews' && <ReviewsDetail onBack={handleBackToDashboard} />}
+                                                    {detailView === 'analytics' && <AnalyticsDetail onBack={handleBackToDashboard} />}
+                                                </>
+                                            )}
+                                            {activeTab === 'services' && <ServicesSection myServices={myServices} onAddService={onAddService} onEditService={onEditService} setServiceToDelete={onDeleteService} addToast={addToast} />}
+                                            {activeTab === 'orders' && <ReservationsSection isLoggedIn={isLoggedIn} initialTab={navState.current?.bookingTab} initialBookingId={searchParams.get('bookingId') ? Number(searchParams.get('bookingId')) : undefined} onBookingAction={onBookingAction} onReschedule={onReschedule} addToast={addToast} onOpenChat={onOpenChat} />}
+                                            {activeTab === 'posts' && (
+                                                <PremiumGate isPremium={isPremium} onUpgrade={() => setShowPlusModal(true)} featureName="Aktualności (Posty)" mode="overlay">
+                                                    <PostsSection newPostContent={newPostContent} setNewPostContent={setNewPostContent} posts={posts} onPublish={handlePublishPost} onDeletePost={handleDeletePost} onUpdatePost={handleUpdatePost} isLoggedIn={isLoggedIn} userData={userData} />
+                                                </PremiumGate>
+                                            )}
+                                            {activeTab === 'settings' && (
+                                                <div>
+                                                    <SettingsSection
+                                                        isChangingPassword={isChangingPassword}
+                                                        setIsChangingPassword={setIsChangingPassword}
+                                                        passwordData={passwordData}
+                                                        setPasswordData={setPasswordData}
+                                                        handlePasswordChange={handlePasswordChange}
+                                                        isPasswordLoading={isPasswordLoading}
+                                                        hasPasswordMethod={hasPasswordMethod}
+                                                        currentPhone={currentPhone}
+                                                        onPhoneChange={handlePhoneChange}
+                                                        onRequestDeletion={handleRequestAccountDeletion}
+                                                        isDeletingAccount={isDeletingAccount}
+                                                        isPremium={isPremium}
+                                                        onUpgradeToPremium={() => setShowPlusModal(true)}
+                                                        hasBio={hasBio}
+                                                        hasSocial={hasSocial}
+                                                        hasPhone={hasPhone}
+                                                        userData={userData}
+                                                        addToast={addToast}
+                                                        certificates={certificates}
+                                                        isCertsLoading={isCertsLoading}
+                                                        onCertAdd={handleAddCertificate}
+                                                        onCertUpdateName={handleUpdateCertificateName}
+                                                        onCertDelete={handleDeleteCertificate}
+                                                        onOpenSupport={onOpenSupport}
+                                                        onOpenTicket={onOpenTicket}
+                                                    />
+                                                    <button onClick={onLogout} className="lg:hidden w-full mt-6 p-4 bg-red-50 text-red-500 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                                                        <LogOut size={20}/> Wyloguj się
+                                                    </button>
                                                 </div>
-                                </TabPane>
-                            </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>

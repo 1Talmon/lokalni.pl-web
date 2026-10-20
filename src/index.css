@@ -34,24 +34,3 @@ html {
     transform: translateX(100%);
   }
 }
-/* Dashboard tab switch: kept-alive panes replay their entrance every time they become visible
-   (display:none → block restarts CSS animations of the pane and everything inside it).
-   The pane fades in; its blocks (header, tiles, cards, sections) glide up one after another with a
-   soft overshoot. Opacity + transform only → runs on the compositor, smooth on iOS. */
-.dash-pane { animation: dash-pane-fade 200ms ease-out both; }
-.dash-pane > * > * { animation: dash-item-in 420ms cubic-bezier(0.22, 1.15, 0.36, 1) both; }
-.dash-pane > * > *:nth-child(2) { animation-delay: 45ms; }
-.dash-pane > * > *:nth-child(3) { animation-delay: 90ms; }
-.dash-pane > * > *:nth-child(4) { animation-delay: 135ms; }
-.dash-pane > * > *:nth-child(5) { animation-delay: 180ms; }
-.dash-pane > * > *:nth-child(6) { animation-delay: 225ms; }
-.dash-pane > * > *:nth-child(7) { animation-delay: 270ms; }
-.dash-pane > * > *:nth-child(8) { animation-delay: 315ms; }
-.dash-pane > * > *:nth-child(n + 9) { animation-delay: 360ms; }
-@keyframes dash-pane-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes dash-item-in {
-  from { opacity: 0; transform: translate3d(0, 16px, 0); }
-  60%  { opacity: 1; }
-  to   { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) { .dash-pane, .dash-pane > * > * { animation: none; } }
