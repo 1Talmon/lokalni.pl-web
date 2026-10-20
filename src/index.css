@@ -34,3 +34,8 @@ html {
     transform: translateX(100%);
   }
 }
+/* Dashboard tab switch: kept-alive panes fade in each time they become visible (display:none → block
+   restarts the animation). Opacity only, so it runs on the compositor — smooth on iOS. */
+.dash-pane { animation: dash-pane-in 180ms ease-out both; }
+@keyframes dash-pane-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dash-pane { animation: none; } }
