@@ -625,8 +625,10 @@ export const UserProfileView = ({
     };
 
     const listVariants: Variants = {
-        hidden: { opacity: 0, y: 6 },
-        visible: { opacity: 1, y: 0 },
+        // opacity only: the browser animates it on the compositor; a `y` shift ran in JS on the main
+        // thread, competing with the scroll to the tab bar (dropped frames on iOS)
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
         exit: { opacity: 0 }
     };
 
@@ -800,7 +802,7 @@ export const UserProfileView = ({
 
                 {/* --- TAB NAV --- */}
                 <div ref={mobileNavRef} className="lg:hidden mb-6" style={{ scrollMarginTop: 'calc(var(--total-nav-h, calc(var(--nav-content-h, 73px) + env(safe-area-inset-top, 0px))) + 8px)' }}>
-                    <div className="bg-white/95 backdrop-blur-sm shadow-sm border border-gray-100 rounded-3xl p-1.5">
+                    <div className="bg-white/95 shadow-sm border border-gray-100 rounded-3xl p-1.5">
                         <div className="flex w-full overflow-x-auto no-scrollbar gap-1.5 items-center">
                             {(['dashboard', 'orders', 'services', 'posts'] as ActiveTab[]).map(tab => {
                                 const labels: Record<ActiveTab, string> = {
