@@ -314,7 +314,7 @@ export const MainLayout = ({
                                     className="scrollbar-hide"
                                     style={{
                                         height: '100%',
-                                        overflowX: hideNavigation ? 'hidden' : 'scroll',
+                                        overflowX: (hideNavigation || !isLoggedIn) ? 'hidden' : 'scroll',
                                         overflowY: 'hidden',
                                         display: 'flex',
                                         scrollSnapType: 'x mandatory',
