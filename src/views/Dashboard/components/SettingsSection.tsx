@@ -174,7 +174,7 @@ export const SettingsSection = ({
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-sm font-black text-gray-900">{isPremium ? 'Plus jest aktywny' : 'Plus nieaktywny'}</p>
-                                    <p className="text-xs text-gray-500 font-medium">{isPremium ? 'Subskrypcja, rezygnacja, karta i faktury' : 'Wyróżnienie, grafik, certyfikaty i aktualności'}</p>
+                                    <p className="text-xs text-gray-500 font-medium">{isPremium ? 'Status i zarządzanie subskrypcją' : 'Wyróżnienie, grafik, certyfikaty i aktualności'}</p>
                                 </div>
                             </div>
                             <button onClick={() => onUpgradeToPremium?.()} className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-black bg-gray-900 text-white hover:bg-gray-800 active:scale-95 transition-all">
