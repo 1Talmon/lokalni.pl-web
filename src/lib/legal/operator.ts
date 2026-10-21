@@ -22,8 +22,8 @@ export const operatorAddress = () => `${OPERATOR.street}, ${OPERATOR.postalCity}
 
 /** Dates shown on the documents (ISO). Bump both when the text changes. */
 export const LEGAL_DATES = {
-    termsEffective: '2026-10-16',
-    privacyUpdated: '2026-10-02',
+    termsEffective: '2026-10-21',
+    privacyUpdated: '2026-10-21',
 } as const;
 
 export const formatLegalDate = (iso: string) =>
