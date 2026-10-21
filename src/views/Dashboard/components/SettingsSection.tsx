@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import type { UserProfile, ToastType } from '../../../types';
-import { LifeBuoy, FileText, Ban, Trash2, ChevronDown } from 'lucide-react';
+import { LifeBuoy, FileText, Ban, Trash2, ChevronDown, Sparkles } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PremiumGate } from '../../../components/premium/PremiumGate';
 import { apiClient } from '../../../services/apiClient';
@@ -163,6 +163,25 @@ export const SettingsSection = ({
             <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm overflow-visible">
 
                 <div className="space-y-12">
+
+                    {/* Plus — status i zarządzanie subskrypcją (anulowanie, karta, faktury) */}
+                    <div>
+                        <SectionHeader title="MyLokalni Plus" />
+                        <div className="flex items-center justify-between gap-4 bg-amber-50/60 border border-amber-100 rounded-2xl px-5 py-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shrink-0">
+                                    <Sparkles size={16} className="text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-black text-gray-900">{isPremium ? 'Plus jest aktywny' : 'Plus nieaktywny'}</p>
+                                    <p className="text-xs text-gray-500 font-medium">{isPremium ? 'Subskrypcja, rezygnacja, karta i faktury' : 'Wyróżnienie, grafik, certyfikaty i aktualności'}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => onUpgradeToPremium?.()} className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-black bg-gray-900 text-white hover:bg-gray-800 active:scale-95 transition-all">
+                                {isPremium ? 'Zarządzaj' : 'Zobacz Plus'}
+                            </button>
+                        </div>
+                    </div>
 
                     {/* GRUPA 2: Biografia */}
                     <div>

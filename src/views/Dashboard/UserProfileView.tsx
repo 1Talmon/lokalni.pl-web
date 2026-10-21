@@ -840,9 +840,10 @@ export const UserProfileView = ({
                                     <Sparkles size={16} className="shrink-0" /> Kup MyLokalni Plus
                                 </button>
                             ) : (
-                                <div className="flex items-center gap-2 px-5 py-2 text-xs font-black text-amber-600">
-                                    <Sparkles size={13} /> MyLokalni Plus aktywny
-                                </div>
+                                <button onClick={() => setShowPlusModal(true)} className="flex items-center justify-between gap-2 px-5 py-2.5 rounded-2xl text-xs font-black text-amber-600 hover:bg-amber-50 transition-all">
+                                    <span className="flex items-center gap-2"><Sparkles size={13} /> MyLokalni Plus aktywny</span>
+                                    <span className="text-[11px] text-amber-500/80 font-bold">Zarządzaj ›</span>
+                                </button>
                             )}
                             <button onClick={onLogout} className="flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all"><LogOut size={20}/> <span>Wyloguj</span></button>
                         </nav>

@@ -19,11 +19,11 @@ interface PremiumUpgradeModalProps {
 }
 
 const BENEFITS = [
-    { icon: Calendar, text: 'Grafik pracy i zarządzanie dostępnością' },
-    { icon: Award,    text: 'Certyfikaty i kompetencje na profilu' },
-    { icon: Megaphone,text: 'Aktualności dla obserwujących klientów' },
-    { icon: Image,    text: 'Własne zdjęcie tła na profilu publicznym' },
-    { icon: Star,     text: 'Wyróżnienie w wynikach wyszukiwania' },
+    { icon: Calendar, text: 'Grafik pracy i zarządzanie dostępnością', short: 'Grafik pracy' },
+    { icon: Award,    text: 'Certyfikaty i kompetencje na profilu', short: 'Certyfikaty' },
+    { icon: Megaphone,text: 'Aktualności dla obserwujących klientów', short: 'Aktualności' },
+    { icon: Image,    text: 'Własne zdjęcie tła na profilu publicznym', short: 'Własne tło profilu' },
+    { icon: Star,     text: 'Wyróżnienie w wynikach wyszukiwania', short: 'Wyróżnienie w wynikach' },
 ];
 
 export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgradeModalProps) => {
@@ -43,6 +43,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
     const showStripe = !!stripeCfg && (
         (stripeCfg.enabled && stripeCfg.plans.length > 0) || (stripeCfg.isPremium && (stripeCfg.premiumSource === 'stripe' || stripeCfg.premiumSource === 'apple'))
     );
+    const compact = showStripe && !(stripeCfg?.isPremium && stripeCfg.premiumSource !== 'trial' && stripeCfg.premiumSource !== 'admin');
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
 
     useEffect(() => {
@@ -101,7 +102,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                     <motion.div
                         {...sheetDragProps}
                         onClick={e => e.stopPropagation()}
-                        className="pointer-events-auto w-full md:max-w-md max-h-[92dvh] overflow-y-auto overscroll-contain bg-slate-900 md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl"
+                        className="pointer-events-auto w-full md:max-w-[440px] max-h-[94dvh] flex flex-col overflow-hidden bg-slate-900 md:rounded-[2rem] rounded-t-[2rem] shadow-2xl"
                     >
                         <BottomSheetHandle onPointerDown={startDrag} dark />
                         <div
@@ -114,10 +115,11 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                             </button>
                         </div>
 
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {/* Hero */}
-                        <div className="px-8 pb-8 pt-2 text-center">
-                            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-amber-500/30">
-                                <Sparkles size={28} className="text-white" />
+                        <div className={`px-8 text-center ${compact ? 'pb-5 pt-0' : 'pb-8 pt-2'}`}>
+                            <div className={`${compact ? 'w-12 h-12 mb-3 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30`}>
+                                <Sparkles size={compact ? 22 : 28} className="text-white" />
                             </div>
                             <h2 className="text-2xl font-black text-white tracking-tight mb-2">
                                 MyLokalni Plus
@@ -128,6 +130,15 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                         </div>
 
                         {/* Benefity */}
+                        {compact ? (
+                            <div className="px-6 mb-5 flex flex-wrap justify-center gap-1.5">
+                                {BENEFITS.map(({ icon: Icon, text, short }) => (
+                                    <span key={text} className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-slate-300">
+                                        <Icon size={12} className="text-amber-400" /> {short}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : (
                         <div className="px-6 space-y-3 mb-6">
                             {BENEFITS.map(({ icon: Icon, text }) => (
                                 <div key={text} className="flex items-center gap-3">
@@ -139,6 +150,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                                 </div>
                             ))}
                         </div>
+                        )}
 
                         {/* Stan konta + CTA */}
                         <div className="px-6 pb-8" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 2rem)' }}>
@@ -204,6 +216,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                                     </p>
                                 </>
                             )}
+                        </div>
                         </div>
                     </motion.div>
                 </div>
