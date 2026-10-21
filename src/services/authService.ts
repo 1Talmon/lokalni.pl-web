@@ -30,6 +30,9 @@ interface RawUserPayload {
     rekomendacje?: unknown[];
     confidential?: boolean;
     isPremium?: boolean;
+    premiumExpiresAt?: string;
+    premiumTrialUsed?: boolean;
+    premiumSource?: 'apple' | 'trial' | 'admin' | 'stripe' | null;
     facebook?: string | null;
     instagram?: string | null;
     tiktok?: string | null;
@@ -319,6 +322,9 @@ export const authService = {
             rekomendacje: (userData.rekomendacje as { tytul: string; opis: string; napisPrzycisku: string; akcja: string }[]) || [],
             confidential: userData.confidential || false,
             isPremium: userData.isPremium,
+            premiumExpiresAt: userData.premiumExpiresAt ?? undefined,
+            premiumTrialUsed: userData.premiumTrialUsed ?? false,
+            premiumSource: userData.premiumSource ?? null,
             facebook: userData.facebook ?? null,
             instagram: userData.instagram ?? null,
             tiktok: userData.tiktok ?? null,

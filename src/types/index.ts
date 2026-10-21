@@ -21,6 +21,7 @@ export interface UserProfile {
   premiumExpiresAt?: string
   /** Darmowy miesiąc Plus już wykorzystany na tym koncie (z GET /users/me). */
   premiumTrialUsed?: boolean
+  premiumSource?: 'apple' | 'trial' | 'admin' | 'stripe' | null
   facebook?: string | null
   instagram?: string | null
   tiktok?: string | null

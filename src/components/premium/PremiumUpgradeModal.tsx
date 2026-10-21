@@ -6,9 +6,11 @@ import { X, Check, Loader2, Sparkles, Calendar, Award, Image, Megaphone, Star } 
 import { useBottomSheet } from '../../hooks/useBottomSheet';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../services/apiClient';
 import { useMyProfile } from '../../hooks/useMyProfile';
+import { getStripeConfig } from '../../services/stripeBilling';
+import { WebSubscriptionPanel } from './WebSubscriptionPanel';
 
 interface PremiumUpgradeModalProps {
     isOpen: boolean;
@@ -36,6 +38,11 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
     const activeUntil = me?.premiumExpiresAt
         ? new Date(me.premiumExpiresAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })
         : null;
+    // Paid Plus on the website (Stripe) — shown only when sales are switched on or a subscription already exists
+    const { data: stripeCfg } = useQuery({ queryKey: ['stripe-config'], queryFn: getStripeConfig, enabled: isOpen, staleTime: 30_000, retry: false });
+    const showStripe = !!stripeCfg && (
+        (stripeCfg.enabled && stripeCfg.plans.length > 0) || (stripeCfg.isPremium && (stripeCfg.premiumSource === 'stripe' || stripeCfg.premiumSource === 'apple'))
+    );
     const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
 
     useEffect(() => {
@@ -94,7 +101,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                     <motion.div
                         {...sheetDragProps}
                         onClick={e => e.stopPropagation()}
-                        className="pointer-events-auto w-full md:max-w-md bg-slate-900 md:rounded-[2.5rem] rounded-t-[2.5rem] overflow-hidden shadow-2xl"
+                        className="pointer-events-auto w-full md:max-w-md max-h-[92dvh] overflow-y-auto overscroll-contain bg-slate-900 md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl"
                     >
                         <BottomSheetHandle onPointerDown={startDrag} dark />
                         <div
@@ -135,7 +142,9 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
 
                         {/* Stan konta + CTA */}
                         <div className="px-6 pb-8" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 2rem)' }}>
-                            {plusActive && !done ? (
+                            {showStripe && stripeCfg && !done ? (
+                                <WebSubscriptionPanel config={stripeCfg} />
+                            ) : plusActive && !done ? (
                                 <>
                                     <div className="bg-white/5 rounded-2xl p-4 mb-4 text-center">
                                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Twój status</p>
