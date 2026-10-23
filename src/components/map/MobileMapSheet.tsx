@@ -171,13 +171,16 @@ const MobileListSheet = ({ services, onServiceClick, onHandleDown }: {
     const n = services.length;
     return (
         <div style={{ background: '#fff', fontFamily: F }} onClick={e => e.stopPropagation()}>
-            <BottomSheetHandle onPointerDown={onHandleDown} />
-            <div style={{ padding: '4px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', letterSpacing: '-.02em' }}>
-                        {n} {n === 1 ? 'oferta' : n < 5 ? 'oferty' : 'ofert'} na mapie
-                    </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>Przesuń mapę, aby zaktualizować</p>
+            {/* the whole top strip grabs the sheet — same as the service and cluster cards */}
+            <div style={{ touchAction: 'none', cursor: 'grab' }} onPointerDown={onHandleDown}>
+                <BottomSheetHandle onPointerDown={onHandleDown} />
+                <div style={{ padding: '4px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', letterSpacing: '-.02em' }}>
+                            {n} {n === 1 ? 'oferta' : n < 5 ? 'oferty' : 'ofert'} na mapie
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9ca3af' }}>Przesuń mapę, aby zaktualizować</p>
+                    </div>
                 </div>
             </div>
             {n > 0 && (
