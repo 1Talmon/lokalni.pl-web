@@ -89,20 +89,20 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
                     const save = savings(p);
                     return (
                         <button key={p.plan} onClick={() => setSelected(p.plan)}
-                            className={`w-full text-left rounded-2xl px-4 py-3 border-2 transition-all active:scale-[0.98] ${on ? 'border-amber-400 bg-amber-400/10' : 'border-white/10 bg-white/5'}`}>
+                            className={`w-full text-left rounded-2xl px-4 py-3 border-[1.5px] transition-all active:scale-[0.98] ${on ? 'border-violet-400 bg-violet-400/10' : 'border-white/10 bg-white/5'}`}>
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="text-[15px] font-black text-white flex items-center gap-2">
                                         {p.plan === 'yearly' ? 'Rocznie' : 'Miesięcznie'}
-                                        {save && <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900 rounded-full px-2 py-0.5">−{save}%</span>}
+                                        {save && <span className="text-[10px] font-black uppercase tracking-wider border border-violet-300/50 bg-violet-400/15 text-violet-200 rounded-full px-2 py-0.5">−{save}%</span>}
                                     </p>
                                     <p className="text-[12px] text-slate-400 font-medium mt-0.5">
                                         {trial ? `${config.trialDays} dni za darmo, potem ` : ''}{pln(p.amount, p.currency)} / {per(p.interval)}
-                                        {perMonth(p.amount, p.currency, p.interval) && <span className="text-amber-300/90"> · ok. {perMonth(p.amount, p.currency, p.interval)} / mies.</span>}
+                                        {perMonth(p.amount, p.currency, p.interval) && <span className="text-violet-200/90"> · ok. {perMonth(p.amount, p.currency, p.interval)} / mies.</span>}
                                     </p>
                                 </div>
-                                <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-amber-400 bg-amber-400' : 'border-white/30'}`}>
-                                    {on && <Check size={14} strokeWidth={3} className="text-slate-900" />}
+                                <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-violet-400 bg-violet-500' : 'border-white/30'}`}>
+                                    {on && <Check size={14} strokeWidth={3} className="text-white" />}
                                 </span>
                             </div>
                         </button>
@@ -111,7 +111,7 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
             </div>
 
             <label className="flex items-start gap-2.5 text-left mb-4 cursor-pointer">
-                <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-0.5 w-4 h-4 accent-amber-400 shrink-0" />
+                <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-0.5 w-4 h-4 accent-violet-400 shrink-0" />
                 <span className="text-[11px] text-slate-400 leading-relaxed">
                     Akceptuję <Link href="/regulamin" className="text-slate-200 underline">Regulamin</Link> i żądam rozpoczęcia świadczenia usługi Plus przed upływem
                     14-dniowego terminu na odstąpienie od umowy. Przyjmuję do wiadomości, że w razie odstąpienia zapłacę za okres, w którym korzystałem z Plus.
@@ -119,7 +119,7 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
             </label>
 
             <button onClick={() => current && go(() => startCheckout(current.plan))} disabled={!current || !consent || busy}
-                className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 shadow-xl shadow-amber-500/30 disabled:opacity-50">
+                className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-xl shadow-indigo-500/40 disabled:opacity-50">
                 {busy ? <><Loader2 size={20} className="animate-spin" /> Przechodzę do płatności…</>
                     : trial ? <><Sparkles size={18} /> Wypróbuj {config.trialDays} dni za darmo</>
                     : <><Sparkles size={18} /> Subskrybuj za {current ? `${pln(current.amount, current.currency)} / ${per(current.interval)}` : ''}</>}

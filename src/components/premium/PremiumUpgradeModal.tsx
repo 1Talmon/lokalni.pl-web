@@ -118,7 +118,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {/* Hero */}
                         <div className={`px-8 text-center cursor-grab active:cursor-grabbing ${compact ? 'pb-3 pt-0' : 'pb-8 pt-2'}`} style={{ touchAction: 'none' }} onPointerDown={startDrag}>
-                            <div className={`${compact ? 'w-11 h-11 mb-2 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30`}>
+                            <div className={`${compact ? 'w-11 h-11 mb-2 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/40`}>
                                 <Sparkles size={compact ? 20 : 28} className="text-white" />
                             </div>
                             <h2 className={`font-black text-white tracking-tight ${compact ? 'text-xl mb-1' : 'text-2xl mb-2'}`}>
@@ -134,7 +134,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                             <div className="px-6 mb-3 flex flex-wrap justify-center gap-1.5">
                                 {BENEFITS.map(({ icon: Icon, text, short }) => (
                                     <span key={text} className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-slate-300">
-                                        <Icon size={12} className="text-amber-400" /> {short}
+                                        <Icon size={12} className="text-violet-300" /> {short}
                                     </span>
                                 ))}
                             </div>
@@ -142,11 +142,11 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                         <div className="px-6 space-y-3 mb-6">
                             {BENEFITS.map(({ icon: Icon, text }) => (
                                 <div key={text} className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-2xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                                        <Icon size={15} className="text-amber-400" />
+                                    <div className="w-8 h-8 rounded-2xl bg-violet-400/15 flex items-center justify-center shrink-0">
+                                        <Icon size={15} className="text-violet-300" />
                                     </div>
                                     <span className="text-slate-300 text-sm font-medium">{text}</span>
-                                    <Check size={15} className="text-amber-400 shrink-0 ml-auto" />
+                                    <Check size={15} className="text-white/30 shrink-0 ml-auto" />
                                 </div>
                             ))}
                         </div>
@@ -197,7 +197,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                                     <button
                                         onClick={handleClaim}
                                         disabled={loading || done || meLoading}
-                                        className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 shadow-xl shadow-amber-500/30 hover:from-amber-300 hover:to-amber-400 disabled:opacity-80"
+                                        className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-xl shadow-indigo-500/40 hover:from-violet-400 hover:to-indigo-400 disabled:opacity-80"
                                     >
                                         {done ? (
                                             <><Check size={20} strokeWidth={3} /> Plus aktywowane!</>

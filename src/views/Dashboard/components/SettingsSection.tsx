@@ -167,9 +167,9 @@ export const SettingsSection = ({
                     {/* Plus — status i zarządzanie subskrypcją (anulowanie, karta, faktury) */}
                     <div>
                         <SectionHeader title="MyLokalni Plus" />
-                        <div className="flex items-center justify-between gap-4 bg-amber-50/60 border border-amber-100 rounded-2xl px-5 py-4">
+                        <div className="flex items-center justify-between gap-4 bg-violet-50/60 border border-violet-100 rounded-2xl px-5 py-4">
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shrink-0">
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center shrink-0">
                                     <Sparkles size={16} className="text-white" />
                                 </div>
                                 <div className="min-w-0">

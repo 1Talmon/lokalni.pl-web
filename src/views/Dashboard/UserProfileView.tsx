@@ -836,13 +836,13 @@ export const UserProfileView = ({
                             <NavBtn active={activeTab === 'settings'} onClick={() => handleTabChange('settings')} icon={<Settings size={20}/>} label="Ustawienia" badge={settingsBadge} />
                             <div className="h-px bg-gray-100 my-1" />
                             {!isPremium ? (
-                                <button onClick={() => setShowPlusModal(true)} className="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-black bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all shadow-md shadow-amber-100">
+                                <button onClick={() => setShowPlusModal(true)} className="flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-black bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-400 hover:to-indigo-400 active:scale-95 transition-all shadow-md shadow-indigo-100">
                                     <Sparkles size={16} className="shrink-0" /> Kup MyLokalni Plus
                                 </button>
                             ) : (
-                                <button onClick={() => setShowPlusModal(true)} className="flex items-center justify-between gap-2 px-5 py-2.5 rounded-2xl text-xs font-black text-amber-600 hover:bg-amber-50 transition-all">
+                                <button onClick={() => setShowPlusModal(true)} className="flex items-center justify-between gap-2 px-5 py-2.5 rounded-2xl text-xs font-black text-violet-600 hover:bg-violet-50 transition-all">
                                     <span className="flex items-center gap-2"><Sparkles size={13} /> MyLokalni Plus aktywny</span>
-                                    <span className="text-[11px] text-amber-500/80 font-bold">Zarządzaj ›</span>
+                                    <span className="text-[11px] text-violet-500/80 font-bold">Zarządzaj ›</span>
                                 </button>
                             )}
                             <button onClick={onLogout} className="flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all"><LogOut size={20}/> <span>Wyloguj</span></button>
