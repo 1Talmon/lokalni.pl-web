@@ -12,6 +12,9 @@ import { startCheckout, openBillingPortal, type StripeConfig } from '../../servi
 
 const pln = (amount: number, currency: string) =>
     new Intl.NumberFormat('pl-PL', { style: 'currency', currency: currency.toUpperCase() }).format(amount);
+/** "ok. 1,92 zł / mies." under the yearly price — same line as in the iPhone app */
+const perMonth = (amount: number, currency: string, interval: string) =>
+    interval === 'year' ? pln(amount / 12, currency) : null;
 const per = (interval: string) => (interval === 'year' ? 'rok' : 'miesiąc');
 const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }) : null);
 
@@ -80,13 +83,13 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
                     Plus jest aktywny{config.premiumExpiresAt ? ` do ${date(config.premiumExpiresAt)}` : ''}. Możesz już teraz włączyć subskrypcję.
                 </p>
             )}
-            <div className="space-y-2.5 mb-4">
+            <div className="space-y-2 mb-3">
                 {plans.map(p => {
                     const on = p.plan === selected;
                     const save = savings(p);
                     return (
                         <button key={p.plan} onClick={() => setSelected(p.plan)}
-                            className={`w-full text-left rounded-2xl p-4 border-2 transition-all active:scale-[0.98] ${on ? 'border-amber-400 bg-amber-400/10' : 'border-white/10 bg-white/5'}`}>
+                            className={`w-full text-left rounded-2xl px-4 py-3 border-2 transition-all active:scale-[0.98] ${on ? 'border-amber-400 bg-amber-400/10' : 'border-white/10 bg-white/5'}`}>
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="text-[15px] font-black text-white flex items-center gap-2">
@@ -95,6 +98,7 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
                                     </p>
                                     <p className="text-[12px] text-slate-400 font-medium mt-0.5">
                                         {trial ? `${config.trialDays} dni za darmo, potem ` : ''}{pln(p.amount, p.currency)} / {per(p.interval)}
+                                        {perMonth(p.amount, p.currency, p.interval) && <span className="text-amber-300/90"> · ok. {perMonth(p.amount, p.currency, p.interval)} / mies.</span>}
                                     </p>
                                 </div>
                                 <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-amber-400 bg-amber-400' : 'border-white/30'}`}>
@@ -120,16 +124,17 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
                     : trial ? <><Sparkles size={18} /> Wypróbuj {config.trialDays} dni za darmo</>
                     : <><Sparkles size={18} /> Subskrybuj za {current ? `${pln(current.amount, current.currency)} / ${per(current.interval)}` : ''}</>}
             </button>
+            <p className="text-center text-[12px] text-slate-300 font-semibold mt-2">Anulujesz w każdej chwili w ustawieniach konta.</p>
             {error && <p className="text-center text-[12px] text-rose-400 mt-3 font-semibold">{error}</p>}
 
             {current && (
-                <p className="text-center text-[10.5px] text-slate-500 mt-3 leading-relaxed">
+                <p className="text-center text-[11px] text-slate-400 mt-2 leading-snug">
                     {trial ? `Przez ${config.trialDays} dni nic nie płacisz — podajesz tylko kartę. Potem s` : 'S'}ubskrypcja odnawia się automatycznie
                     za {pln(current.amount, current.currency)} / {per(current.interval)}, dopóki jej nie anulujesz. Anulujesz w każdej chwili w ustawieniach
                     konta (Plus → Zarządzaj subskrypcją); Plus działa wtedy do końca opłaconego okresu. Płatność obsługuje Stripe — nie widzimy danych Twojej karty.
                 </p>
             )}
-            <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-semibold text-slate-400">
+            <div className="flex items-center justify-center gap-4 mt-2 text-[11px] font-semibold text-slate-400">
                 <Link href="/regulamin" className="hover:text-white">Regulamin</Link>
                 <Link href="/polityka-prywatnosci" className="hover:text-white">Prywatność</Link>
             </div>

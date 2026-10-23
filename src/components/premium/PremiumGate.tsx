@@ -1,5 +1,7 @@
 'use client';
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getStripeConfig } from '../../services/stripeBilling';
 import { Sparkles, Lock } from 'lucide-react';
 import { PremiumUpgradeModal } from './PremiumUpgradeModal';
 
@@ -18,7 +20,13 @@ interface PremiumGateProps {
 }
 
 /** Inline prompt — mały blok z przyciskiem otwierającym modal bezpośrednio */
-const InlinePrompt = ({ featureName, onOpen }: { featureName?: string; onOpen: () => void }) => (
+/** Plus sold on the website (Stripe): the 30 days need a card, so the gates don't promise "no charges". */
+const useStripeSales = () => {
+    const { data } = useQuery({ queryKey: ['stripe-config'], queryFn: getStripeConfig, staleTime: 30_000, retry: false });
+    return !!data && data.enabled && data.plans.length > 0;
+};
+
+const InlinePrompt = ({ featureName, onOpen, paid }: { featureName?: string; onOpen: () => void; paid: boolean }) => (
     <div className="flex flex-col items-center justify-center flex-1 px-6 text-center py-16">
         <div className="w-14 h-14 bg-amber-50 border-2 border-amber-100 rounded-3xl flex items-center justify-center mb-4">
             <Lock size={22} className="text-amber-500" />
@@ -27,7 +35,7 @@ const InlinePrompt = ({ featureName, onOpen }: { featureName?: string; onOpen: (
             {featureName ? `${featureName}` : 'Funkcja'} wymaga MyLokalni Plus
         </h3>
         <p className="text-sm text-gray-400 font-medium mb-5 max-w-[240px] leading-relaxed">
-            Dostępne bezpłatnie przez 30 dni — bez żadnych opłat.
+            {paid ? 'Subskrypcja Plus – anulujesz w każdej chwili.' : 'Dostępne bezpłatnie przez 30 dni — bez żadnych opłat.'}
         </p>
         <button
             onClick={onOpen}
@@ -47,6 +55,7 @@ export const PremiumGate = ({
     featureName,
 }: PremiumGateProps) => {
     const [modalOpen, setModalOpen] = useState(false);
+    const paid = useStripeSales();
 
     const handleSuccess = () => {
         setModalOpen(false);
@@ -77,7 +86,7 @@ export const PremiumGate = ({
                                     {featureName ? `${featureName} wymaga` : 'Wymaga'} MyLokalni Plus
                                 </p>
                                 <p className="text-sm text-gray-500 font-medium mt-1">
-                                    Bezpłatnie przez 30 dni.
+                                    {paid ? 'Subskrypcja Plus – anulujesz w każdej chwili.' : 'Bezpłatnie przez 30 dni.'}
                                 </p>
                             </div>
                             <button
@@ -100,7 +109,7 @@ export const PremiumGate = ({
 
     return (
         <>
-            <InlinePrompt featureName={featureName} onOpen={() => setModalOpen(true)} />
+            <InlinePrompt featureName={featureName} onOpen={() => setModalOpen(true)} paid={paid} />
             <PremiumUpgradeModal
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}

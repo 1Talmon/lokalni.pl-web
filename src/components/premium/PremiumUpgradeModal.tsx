@@ -19,11 +19,11 @@ interface PremiumUpgradeModalProps {
 }
 
 const BENEFITS = [
+    { icon: Star,     text: 'Wyższe miejsce w wynikach i odznaka Plus', short: 'Wyżej w wynikach + odznaka' },
     { icon: Calendar, text: 'Grafik pracy i zarządzanie dostępnością', short: 'Grafik pracy' },
-    { icon: Award,    text: 'Certyfikaty i kompetencje na profilu', short: 'Certyfikaty' },
-    { icon: Megaphone,text: 'Aktualności dla obserwujących klientów', short: 'Aktualności' },
     { icon: Image,    text: 'Własne zdjęcie tła na profilu publicznym', short: 'Własne tło profilu' },
-    { icon: Star,     text: 'Wyróżnienie w wynikach wyszukiwania', short: 'Wyróżnienie w wynikach' },
+    { icon: Megaphone,text: 'Aktualności dla obserwujących klientów', short: 'Aktualności' },
+    { icon: Award,    text: 'Certyfikaty i kompetencje na profilu', short: 'Certyfikaty' },
 ];
 
 export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgradeModalProps) => {
@@ -117,21 +117,21 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
 
                         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {/* Hero */}
-                        <div className={`px-8 text-center ${compact ? 'pb-5 pt-0' : 'pb-8 pt-2'}`}>
-                            <div className={`${compact ? 'w-12 h-12 mb-3 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30`}>
-                                <Sparkles size={compact ? 22 : 28} className="text-white" />
+                        <div className={`px-8 text-center ${compact ? 'pb-3 pt-0' : 'pb-8 pt-2'}`}>
+                            <div className={`${compact ? 'w-11 h-11 mb-2 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30`}>
+                                <Sparkles size={compact ? 20 : 28} className="text-white" />
                             </div>
-                            <h2 className="text-2xl font-black text-white tracking-tight mb-2">
+                            <h2 className={`font-black text-white tracking-tight ${compact ? 'text-xl mb-1' : 'text-2xl mb-2'}`}>
                                 MyLokalni Plus
                             </h2>
-                            <p className="text-slate-400 text-sm font-medium leading-relaxed">
-                                Wyróżnij się spośród innych wykonawców i zdobywaj więcej klientów.
+                            <p className={`text-slate-400 font-medium leading-relaxed ${compact ? 'text-[13px]' : 'text-sm'}`}>
+                                Bądź wyżej w wynikach i łatwiej zdobywaj klientów.
                             </p>
                         </div>
 
                         {/* Benefity */}
                         {compact ? (
-                            <div className="px-6 mb-5 flex flex-wrap justify-center gap-1.5">
+                            <div className="px-6 mb-3 flex flex-wrap justify-center gap-1.5">
                                 {BENEFITS.map(({ icon: Icon, text, short }) => (
                                     <span key={text} className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-slate-300">
                                         <Icon size={12} className="text-amber-400" /> {short}
