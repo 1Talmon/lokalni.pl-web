@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { MapPin, X, Star, ArrowLeft, Plus, Minus, Globe2, ChevronRight } from 'lucide-react';
 import { BottomSheetHandle } from '../ui/BottomSheetHandle';
+import { shouldCloseSheet } from '../../hooks/useBottomSheet';
 import type { Service } from '../../types';
 import type { SelectedMarker } from './types';
 
@@ -51,7 +52,7 @@ const ServiceCard = ({ svc, onServiceClick, onClose, onHandleDown }: {
         style={{ background: '#fff', fontFamily: F }}
         onClick={e => e.stopPropagation()}
     >
-        <BottomSheetHandle onPointerDown={onHandleDown} compact />
+        <BottomSheetHandle onPointerDown={onHandleDown} />
 
         <div style={{ position: 'relative', margin: '0 14px 0', borderRadius: 18, overflow: 'hidden', height: 190 }}>
             <Image src={svc.image} alt="" fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, 400px" />
@@ -119,7 +120,7 @@ const ClusterCard = ({ item, onServiceClick, onClose, onHandleDown }: {
                 style={{ touchAction: 'none', flexShrink: 0, cursor: 'grab' }}
                 onPointerDown={onHandleDown}
             >
-                <BottomSheetHandle onPointerDown={onHandleDown} compact />
+                <BottomSheetHandle onPointerDown={onHandleDown} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 16px 12px', borderBottom: '1px solid #f3f4f6' }}>
                     <div>
                         <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{city !== 'Inne' ? city : 'Różne lokalizacje'}</p>
@@ -170,7 +171,7 @@ const MobileListSheet = ({ services, onServiceClick, onHandleDown }: {
     const n = services.length;
     return (
         <div style={{ background: '#fff', fontFamily: F }} onClick={e => e.stopPropagation()}>
-            <BottomSheetHandle onPointerDown={onHandleDown} compact />
+            <BottomSheetHandle onPointerDown={onHandleDown} />
             <div style={{ padding: '4px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', letterSpacing: '-.02em' }}>
@@ -229,7 +230,7 @@ const MobileOverlay = ({ selectedItem, onServiceClick, onClose: _onClose, onDese
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.4 }}
             dragMomentum={false}
-            onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) onDeselect(); }}
+            onDragEnd={(_, info) => { if (shouldCloseSheet(info)) onDeselect(); }}
             style={{ background: '#fff', borderRadius: '2rem 2rem 0 0', overflow: 'hidden', boxShadow: '0 -8px 40px rgba(0,0,0,.16)' }}
         >
             {selectedItem.type === 'service'
@@ -497,7 +498,7 @@ export const MobileMapSheet = ({ services, onServiceClick, location, onClose }: 
                 dragConstraints={{ top: 0, bottom: 0 }}
                 dragElastic={{ top: 0, bottom: 0.25 }}
                 dragMomentum={false}
-                onDragEnd={(_, info) => { if (info.offset.y > 90 || info.velocity.y > 500) onClose(); }}
+                onDragEnd={(_, info) => { if (shouldCloseSheet(info)) onClose(); }}
                 className="w-full md:w-[92vw] md:max-w-5xl flex flex-col rounded-t-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl"
                 style={{ height: '92dvh', maxHeight: '92dvh', background: '#fff' }}
                 onClick={e => e.stopPropagation()}
@@ -508,7 +509,7 @@ export const MobileMapSheet = ({ services, onServiceClick, location, onClose }: 
                     style={{ touchAction: 'none' }}
                     onPointerDown={e => dragControls.start(e)}
                 >
-                    <BottomSheetHandle compact />
+                    <BottomSheetHandle />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 8px', fontFamily: F }}>
                         <div>
                             <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>Mapa ofert</p>
@@ -597,7 +598,7 @@ export const MobileMapSheet = ({ services, onServiceClick, location, onClose }: 
                                     dragConstraints={{ top: 0, bottom: 0 }}
                                     dragElastic={{ top: 0, bottom: 0.4 }}
                                     dragMomentum={false}
-                                    onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) setListSheetVisible(false); }}
+                                    onDragEnd={(_, info) => { if (shouldCloseSheet(info)) setListSheetVisible(false); }}
                                     style={{ boxShadow: '0 -8px 40px rgba(0,0,0,.16)', borderRadius: '2rem 2rem 0 0', overflow: 'hidden', background: '#fff' }}
                                 >
                                     <MobileListSheet

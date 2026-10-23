@@ -117,7 +117,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
 
                         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {/* Hero */}
-                        <div className={`px-8 text-center ${compact ? 'pb-3 pt-0' : 'pb-8 pt-2'}`}>
+                        <div className={`px-8 text-center cursor-grab active:cursor-grabbing ${compact ? 'pb-3 pt-0' : 'pb-8 pt-2'}`} style={{ touchAction: 'none' }} onPointerDown={startDrag}>
                             <div className={`${compact ? 'w-11 h-11 mb-2 rounded-2xl' : 'w-16 h-16 mb-5 rounded-3xl'} bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/30`}>
                                 <Sparkles size={compact ? 20 : 28} className="text-white" />
                             </div>

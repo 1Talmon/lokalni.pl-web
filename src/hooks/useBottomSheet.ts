@@ -1,6 +1,14 @@
 import { useRef, useEffect, useLayoutEffect, useCallback, type PointerEvent } from 'react';
 import { useMotionValue, animate, useTransform, useDragControls, type PanInfo } from 'framer-motion';
 
+/** One definition of "the user dragged this sheet away" — shared by every bottom sheet (also the map's own ones). */
+export const SHEET_CLOSE_OFFSET = 80;
+export const SHEET_CLOSE_VELOCITY = 400;
+export const shouldCloseSheet = (info: PanInfo): boolean => {
+    const close = info.offset.y > SHEET_CLOSE_OFFSET || info.velocity.y > SHEET_CLOSE_VELOCITY;
+    return close;
+};
+
 export const useBottomSheet = (onClose: () => void, isOpen?: boolean) => {
     const dragControls = useDragControls();
     const y = useMotionValue(window.innerHeight);
@@ -37,9 +45,7 @@ export const useBottomSheet = (onClose: () => void, isOpen?: boolean) => {
     }, [y]);
 
     const onDragEnd = useCallback((_: unknown, info: PanInfo) => {
-        if (info.offset.y > 80 || info.velocity.y > 400) {
-            triggerClose(info.velocity.y);
-        }
+        if (shouldCloseSheet(info)) triggerClose(info.velocity.y);
         // else: dragTransition spring handles snap-back to y=0
     }, [triggerClose]);
 

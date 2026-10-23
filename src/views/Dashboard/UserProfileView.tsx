@@ -973,7 +973,7 @@ export const UserProfileView = ({
                             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl overflow-hidden"
                             onClick={e => e.stopPropagation()}
                         >
-                                <BottomSheetHandle onPointerDown={startAvatarDrag} compact />
+                                <BottomSheetHandle onPointerDown={startAvatarDrag} />
                                 <div className="px-4" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 1.5rem)' }}>
                                     <p
                                         className="text-center text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4 cursor-grab active:cursor-grabbing"

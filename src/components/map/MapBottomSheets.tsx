@@ -28,7 +28,7 @@ export const ServiceBottomSheet = ({
             style={{ ...SHEET_STYLE, padding: '0 16px 24px', y }}
             onClick={(e) => e.stopPropagation()}
         >
-            <BottomSheetHandle onPointerDown={startDrag} compact />
+            <BottomSheetHandle onPointerDown={startDrag} />
             <div
                 onPointerDown={startDrag}
                 style={{ display: 'flex', gap: 14, alignItems: 'flex-start', touchAction: 'none', cursor: 'grab' }}
@@ -96,7 +96,7 @@ export const ClusterBottomSheet = ({
             style={{ ...SHEET_STYLE, paddingBottom: 24, y }}
             onClick={(e) => e.stopPropagation()}
         >
-            <BottomSheetHandle onPointerDown={startDrag} compact />
+            <BottomSheetHandle onPointerDown={startDrag} />
             <div
                 onPointerDown={startDrag}
                 style={{

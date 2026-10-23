@@ -1,12 +1,15 @@
 interface Props {
     onPointerDown?: (e: React.PointerEvent) => void;
     dark?: boolean;
-    compact?: boolean;
 }
 
-export const BottomSheetHandle = ({ onPointerDown, dark, compact }: Props) => (
+/**
+ * The one grab handle for every bottom sheet. 44 px touch zone (Apple's minimum), no size variants:
+ * a sheet that really can't spare the space should say why next to its own markup.
+ */
+export const BottomSheetHandle = ({ onPointerDown, dark }: Props) => (
     <div
-        className={`flex justify-center touch-none select-none${compact ? ' pt-2 pb-2.5' : ' pt-4 pb-5'}${onPointerDown ? ' cursor-grab active:cursor-grabbing' : ''}`}
+        className={`flex justify-center items-center h-11 touch-none select-none${onPointerDown ? ' cursor-grab active:cursor-grabbing' : ''}`}
         onPointerDown={onPointerDown}
     >
         <div className={`w-12 h-1.5 rounded-full ${dark ? 'bg-white/25' : 'bg-gray-300'}`} />

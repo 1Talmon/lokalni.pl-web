@@ -1446,7 +1446,7 @@ export const ChatModal = ({
                                     style={{ boxShadow: '0 -4px 32px rgba(0,0,0,0.1)' }}
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <BottomSheetHandle onPointerDown={startDeleteDrag} compact />
+                                    <BottomSheetHandle onPointerDown={startDeleteDrag} />
                                     <button
                                         onClick={() => { handleToggleLike(deleteMenu.msgId); setDeleteMenu(null); }}
                                         className="w-full flex items-center gap-3.5 px-6 py-3 text-[15px] font-[600] text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
