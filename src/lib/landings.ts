@@ -75,10 +75,10 @@ function mapPost<T extends PublicPost>(p: T): T {
 }
 
 /**
- * Thin-page guard: a landing listing 1 offer duplicates the offer page (and its city/category sibling),
- * so it stays reachable but `noindex, follow` and out of the sitemap until it has enough offers.
+ * A landing is indexed and in the sitemap as soon as it lists at least one offer (owner's decision 26.10.2026:
+ * early local visibility matters more than the thin-page risk). Empty landings stay `noindex, follow`.
  */
-export const MIN_INDEXABLE_OFFERS: Record<LandingType, number> = { category: 2, city: 2, 'category-city': 3 };
+export const MIN_INDEXABLE_OFFERS: Record<LandingType, number> = { category: 1, city: 1, 'category-city': 1 };
 export const isIndexableLanding = (g: Pick<LandingGroup, 'type' | 'count'>, total = g.count) => total >= MIN_INDEXABLE_OFFERS[g.type];
 
 export const fetchLandingGroups = cache(async (): Promise<LandingGroup[]> => {
