@@ -55,7 +55,7 @@ export default function SafetyPage() {
                                     <UserCheck size={18} /> Potwierdzone konta
                                 </h3>
                                 <p className="text-sm leading-relaxed mb-4 text-gray-600">
-                                    Dbamy o to, aby społeczność Lokalnych była rzetelna. Każdy użytkownik potwierdza adres e-mail przed aktywacją konta. Nie sprawdzamy tożsamości ani kwalifikacji – dlatego przy każdym profilu pokazujemy fakty: potwierdzony e-mail, liczbę zrealizowanych rezerwacji i opinie wystawione tylko po rezerwacji. Numer telefonu nie jest widoczny na profilu, chyba że sam zdecydujesz się go pokazać.
+                                    Dbamy o to, aby społeczność Lokalnych była rzetelna. Każdy użytkownik potwierdza adres e-mail przed aktywacją konta. Nie sprawdzamy tożsamości ani kwalifikacji – dlatego przy każdym profilu pokazujemy fakty: liczbę zrealizowanych rezerwacji i opinie wystawione tylko po rezerwacji. Numer telefonu nie jest widoczny na profilu, chyba że sam zdecydujesz się go pokazać.
                                 </p>
                                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
                                     <p className="text-sm text-blue-800 font-medium">

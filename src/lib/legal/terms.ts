@@ -120,7 +120,7 @@ export const TERMS: LegalDocumentData = {
                         'główne parametry decydujące o kolejności wyświetlania Ogłoszeń opisuje §11.',
                     ],
                 },
-                { type: 'p', text: '4. Operator nie weryfikuje tożsamości, kwalifikacji, uprawnień ani doświadczenia Usługodawców. Certyfikaty publikowane są na odpowiedzialność Usługodawcy i nie są przez Operatora sprawdzane. Informacje przy Profilu („E-mail potwierdzony”, liczba zrealizowanych Rezerwacji, Opinie, data dołączenia) wynikają wyłącznie z danych w Serwisie; „E-mail potwierdzony” oznacza tylko, że Użytkownik potwierdził adres e-mail. Klient powinien samodzielnie ocenić Usługodawcę, w szczególności przy usługach wymagających uprawnień.' },
+                { type: 'p', text: '4. Operator nie weryfikuje tożsamości, kwalifikacji, uprawnień ani doświadczenia Usługodawców. Certyfikaty publikowane są na odpowiedzialność Usługodawcy i nie są przez Operatora sprawdzane. Informacje przy Profilu (liczba zrealizowanych Rezerwacji, Opinie, data dołączenia) wynikają wyłącznie z danych w Serwisie. Klient powinien samodzielnie ocenić Usługodawcę, w szczególności przy usługach wymagających uprawnień.' },
             ],
         },
         {

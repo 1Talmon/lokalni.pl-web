@@ -65,7 +65,7 @@ const AboutView = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[
                                     { title: "Transparentność", desc: "Jasne zasady współpracy bez ukrytych kosztów." },
-                                    { title: "Bezpieczeństwo", desc: "Potwierdzony e-mail, opinie tylko po rezerwacji i szybkie zgłaszanie nadużyć." },
+                                    { title: "Bezpieczeństwo", desc: "Opinie tylko po rezerwacji, jasne zasady i szybkie zgłaszanie nadużyć." },
                                     { title: "Lokalność", desc: "Skupienie na budowaniu relacji w Twoim sąsiedztwie." },
                                     { title: "Szybkość", desc: "Intuicyjny proces znajdowania wykonawców." }
                                 ].map((item, i) => (

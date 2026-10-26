@@ -153,9 +153,6 @@ export function ProfileHeader({
 
                             {/* Tagi statusu */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                    <CheckCircle size={11} /> E-mail potwierdzony
-                                </span>
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors ${
                                     isActiveNow ? "bg-green-50 text-green-700 border-green-100" : "bg-slate-50 text-slate-500 border-slate-100"
                                 }`}>
