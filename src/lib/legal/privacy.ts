@@ -121,7 +121,7 @@ export const PRIVACY: LegalDocumentData = {
                         'sprostowania danych (art. 16 RODO) – większość danych poprawisz sam w ustawieniach Konta,',
                         'usunięcia danych (art. 17 RODO) – w tym przez usunięcie Konta,',
                         'ograniczenia przetwarzania (art. 18 RODO),',
-                        'przenoszenia danych, które nam przekazałeś, w ustrukturyzowanym formacie (art. 20 RODO) – plik z „Pobierz moje dane” ma format JSON,',
+                        'przenoszenia danych, które nam przekazałeś, w ustrukturyzowanym formacie (art. 20 RODO) – „Pobierz moje dane” daje plik ZIP z czytelną stroną (HTML) i tymi samymi danymi w formacie JSON,',
                         '**sprzeciwu** wobec przetwarzania opartego na prawnie uzasadnionym interesie (art. 21 RODO), w tym wobec przypomnień o uzupełnieniu Profilu,',
                         'cofnięcia zgody w dowolnym momencie (np. na lokalizację lub powiadomienia – w ustawieniach urządzenia), bez wpływu na zgodność z prawem przetwarzania przed jej cofnięciem,',
                         'wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, uodo.gov.pl).',
