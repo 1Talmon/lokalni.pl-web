@@ -500,7 +500,7 @@ const PublicProfileView = ({
                                 </span>
                             </div>
 
-                            <div className="flex-1 min-h-[140px] flex flex-col justify-center">
+                            <div className={`flex-1 min-h-[140px] flex flex-col ${!isFeedPending && feed.length > 1 ? 'justify-start' : 'justify-center'}`}>
                                 {isFeedPending ? (
                                     <div className="space-y-5">
                                         {[0, 1].map((i) => (
