@@ -46,6 +46,8 @@ export interface UserProfile {
   web?: string
   profilowe?: string
   socialLinks?: { fb?: string; ig?: string; tt?: string; web?: string }
+  newsletter?: boolean            // zgoda na newsletter (opt-in)
+  newsletterAvailable?: boolean   // false dla osób poniżej 16 lat
 }
 
 export interface Review {

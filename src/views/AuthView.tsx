@@ -40,7 +40,7 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
         phoneInputRef, codeInputsRef, googleButtonRef,
         email, password, confirmPassword, firstName, lastName, phoneNumber,
         showPassword, setShowPassword, verificationCode,
-        acceptTerms,
+        acceptTerms, acceptNewsletter, setAcceptNewsletter,
         termsError, firstNameError, lastNameError, passwordError, confirmPasswordError, phoneError, emailError,
         apiError, setApiError, apiSuccess,
         isLoading, resendTimer, isResending, socialNeedsName,
@@ -274,6 +274,16 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
+                                        {dateOfBirth && !isMinor && (
+                                            <label className="flex items-start gap-3 cursor-pointer">
+                                                <div className="relative flex items-center pt-0.5">
+                                                    <input type="checkbox" checked={acceptNewsletter} onChange={(e) => setAcceptNewsletter(e.target.checked)}
+                                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:bg-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 outline-none" />
+                                                    <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
+                                                </div>
+                                                <span className="text-sm leading-tight text-gray-600">Chcę otrzymywać e-mailem newsletter MyLokalni: nowości w serwisie, porady i informacje o promocjach MyLokalni. Zgodę mogę wycofać w każdej chwili. <span className="text-gray-400">(dobrowolne)</span></span>
+                                            </label>
+                                        )}
                                         <p className="text-xs text-gray-500 leading-relaxed">
                                             Klikając „Kontynuuj”, akceptujesz <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> i potwierdzasz, że zapoznałeś się z <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Polityką prywatności</Link>.
                                         </p>
@@ -541,6 +551,16 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                     Akceptuję <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> i potwierdzam, że zapoznałem się z <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Polityką prywatności</Link>
                                                 </span>
                                             </label>
+                                            {!isMinor && (
+                                                <label className="flex items-start gap-3 cursor-pointer">
+                                                    <div className="relative flex items-center pt-0.5">
+                                                        <input type="checkbox" checked={acceptNewsletter} onChange={(e) => setAcceptNewsletter(e.target.checked)}
+                                                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:bg-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 outline-none" />
+                                                        <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
+                                                    </div>
+                                                    <span className="text-sm leading-tight text-gray-600">Chcę otrzymywać e-mailem newsletter MyLokalni: nowości w serwisie, porady i informacje o promocjach MyLokalni. Zgodę mogę wycofać w każdej chwili. <span className="text-gray-400">(dobrowolne)</span></span>
+                                                </label>
+                                            )}
                                         </div>
                                     </motion.div>
                                 )}

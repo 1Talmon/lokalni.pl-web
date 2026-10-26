@@ -51,6 +51,7 @@ export const PRIVACY: LegalDocumentData = {
                         ['Pakiet Plus – okres bezpłatny i subskrypcja', 'data aktywacji i wygaśnięcia Plus; przy subskrypcji: plan, status, daty okresu rozliczeniowego i próbnego, identyfikatory klienta i subskrypcji u operatora płatności (Stripe) lub transakcji w App Store, data złożenia żądania rozpoczęcia świadczenia; nie otrzymujemy pełnych danych karty', 'art. 6 ust. 1 lit. b RODO – wykonanie umowy', 'do usunięcia Konta; dane rozliczeniowe – jak w wierszu niżej'],
                         ['Rozliczenia i obowiązki podatkowe przy płatnym Plus', 'imię i nazwisko lub nazwa, e-mail, kraj i adres rozliczeniowy, kwota, data i identyfikator płatności, dokumenty sprzedaży', 'art. 6 ust. 1 lit. c RODO – przepisy podatkowe i rachunkowe', '5 lat od końca roku, w którym powstał obowiązek podatkowy'],
                         ['Powiadomienia e-mail i push związane z Kontem (np. nowa wiadomość, Rezerwacja, przypomnienie)', 'e-mail, token urządzenia do powiadomień', 'art. 6 ust. 1 lit. b RODO; powiadomienia push – po Twojej zgodzie systemowej', 'token – do wylogowania lub usunięcia Konta'],
+                        ['Newsletter – tylko jeśli się na niego zapiszesz (osobny, dobrowolny checkbox przy rejestracji albo przełącznik w Ustawieniach; od 16 lat)', 'e-mail, imię, data i miejsce zapisu (rejestracja, Ustawienia), treść i wersja zgody, adres IP i informacja o przeglądarce w chwili zapisu lub wypisania, historia zapisów i wypisań', 'art. 6 ust. 1 lit. a RODO – Twoja zgoda; wysyłka e-mailem za zgodą zgodnie z art. 398 PKE', 'do wycofania zgody; historię zgód przechowujemy, by móc wykazać, że zgoda była – jak w ostatnim wierszu tabeli'],
                         ['Przypomnienia o uzupełnieniu Profilu i wskazówki dotyczące korzystania z Serwisu', 'e-mail, stan uzupełnienia Profilu', 'art. 6 ust. 1 lit. f RODO – rozwój Serwisu; sprzeciw zgłosisz jednym kliknięciem (link „Wypisz się” w każdej takiej wiadomości)', 'do sprzeciwu lub usunięcia Konta'],
                         ['Moderacja, zgłoszenia, odwołania i blokowanie Użytkowników (DSA)', 'treść zgłoszenia, dane zgłaszającego, zgłoszona Treść, decyzja i uzasadnienie, lista zablokowanych osób; zgłaszający otrzymuje e-mailem potwierdzenie przyjęcia zgłoszenia', 'art. 6 ust. 1 lit. c RODO (obowiązki z DSA) oraz lit. f (bezpieczeństwo Użytkowników)', 'do 3 lat od zamknięcia sprawy, a lista blokad – do jej zdjęcia lub usunięcia Konta'],
                         ['Bezpieczeństwo, zapobieganie nadużyciom, wykrywanie błędów', 'adres IP, logi zdarzeń (np. logowania, zmiana hasła, usunięcie Konta), informacje techniczne o błędach', 'art. 6 ust. 1 lit. f RODO – bezpieczeństwo Serwisu', 'do 12 miesięcy'],
@@ -58,14 +59,14 @@ export const PRIVACY: LegalDocumentData = {
                         ['Wykazanie, że przestrzegamy przepisów, i ochrona naszych praw w razie sporu', 'tylko dane potrzebne do wyjaśnienia konkretnej sprawy (np. korespondencja, historia Rezerwacji, dowód zgody rodzica)', 'art. 6 ust. 1 lit. f RODO', 'nie dłużej niż przez okres przedawnienia wynikający z przepisów'],
                     ],
                 },
-                { type: 'p', text: 'Nie prowadzimy marketingu na rzecz podmiotów trzecich, nie wyświetlamy reklam, nie korzystamy z narzędzi analitycznych ani reklamowych podmiotów zewnętrznych (np. Google Analytics, Meta Pixel), nie wysyłamy newslettera i **nie sprzedajemy danych osobowych**.' },
+                { type: 'p', text: 'Nie prowadzimy marketingu na rzecz podmiotów trzecich, nie wyświetlamy reklam, nie korzystamy z narzędzi analitycznych ani reklamowych podmiotów zewnętrznych (np. Google Analytics, Meta Pixel) i **nie sprzedajemy danych osobowych**. Newsletter wysyłamy wyłącznie osobom, które się na niego zapisały – możesz się z niego wypisać w każdej chwili w Ustawieniach konta albo linkiem w każdym newsletterze.' },
             ],
         },
         {
             id: 'dobrowolnosc',
             title: 'Czy musisz podać dane',
             blocks: [
-                { type: 'p', text: 'Podanie danych jest dobrowolne, ale bez danych wskazanych w pierwszym wierszu tabeli w §3 (przy rejestracji adresem e-mail: e-mail, hasło, imię, nazwisko i numer telefonu; przy logowaniu przez Google, Facebook lub Apple – data urodzenia) nie da się założyć Konta. Osoby poniżej 16 lat podają też datę urodzenia i adres e-mail rodzica lub opiekuna. Pozostałe dane (zdjęcie, opis, lokalizacja, linki) są opcjonalne – bez nich niektóre funkcje mogą być niedostępne.' },
+                { type: 'p', text: 'Podanie danych jest dobrowolne, ale bez danych wskazanych w pierwszym wierszu tabeli w §3 (przy rejestracji adresem e-mail: e-mail, hasło, imię, nazwisko i numer telefonu; przy logowaniu przez Google, Facebook lub Apple – data urodzenia) nie da się założyć Konta. Osoby poniżej 16 lat podają też datę urodzenia i adres e-mail rodzica lub opiekuna. Pozostałe dane (zdjęcie, opis, lokalizacja, linki) są opcjonalne – bez nich niektóre funkcje mogą być niedostępne. Zgoda na newsletter jest całkowicie dobrowolna i nie ma wpływu na korzystanie z Serwisu.' },
             ],
         },
         {
@@ -80,7 +81,7 @@ export const PRIVACY: LegalDocumentData = {
                     rows: [
                         ['dostawcy infrastruktury serwerowej i sieciowej', 'serwery, przekazywanie ruchu, sieć CDN, ochrona przed atakami, hosting serwisu, przechowywanie plików (zdjęcia, nagrania, Certyfikaty, pliki z Czatu)', 'Polska i inne państwa UE; możliwy transfer do USA'],
                         ['dostawcy przechowywania kopii zapasowych', 'zaszyfrowane kopie zapasowe w niezależnych lokalizacjach', 'UE'],
-                        ['dostawca wysyłki wiadomości e-mail', 'wysyłka wiadomości e-mail z Serwisu', 'USA'],
+                        ['dostawca wysyłki wiadomości e-mail', 'wysyłka wiadomości e-mail z Serwisu, w tym newslettera', 'USA'],
                         ['dostawcy usług powiadomień push', 'dostarczanie powiadomień na urządzenia', 'UE i USA'],
                         ['dostawcy narzędzi diagnostycznych i monitoringu', 'wykrywanie błędów aplikacji, monitorowanie działania serwerów, logi techniczne (mogą zawierać adres IP)', 'UE i Wielka Brytania'],
                         ['operator płatności (Stripe Payments Europe, Ltd., Irlandia)', 'obsługa płatności za subskrypcję Plus w serwisie internetowym: formularz płatności, dane karty, odnowienia, dokumenty płatności, panel zarządzania subskrypcją; w zakresie zapobiegania oszustwom i obowiązków prawnych operatora płatności Stripe działa jako odrębny administrator', 'UE; możliwy transfer do USA'],
@@ -123,7 +124,7 @@ export const PRIVACY: LegalDocumentData = {
                         'ograniczenia przetwarzania (art. 18 RODO),',
                         'przenoszenia danych, które nam przekazałeś, w ustrukturyzowanym formacie (art. 20 RODO) – „Pobierz moje dane” daje plik ZIP z czytelną stroną (HTML) i tymi samymi danymi w formacie JSON,',
                         '**sprzeciwu** wobec przetwarzania opartego na prawnie uzasadnionym interesie (art. 21 RODO), w tym wobec przypomnień o uzupełnieniu Profilu,',
-                        'cofnięcia zgody w dowolnym momencie (np. na lokalizację lub powiadomienia – w ustawieniach urządzenia), bez wpływu na zgodność z prawem przetwarzania przed jej cofnięciem,',
+                        'cofnięcia zgody w dowolnym momencie, bez wpływu na zgodność z prawem przetwarzania przed jej cofnięciem – newsletter: Ustawienia → Prywatność → „Newsletter e-mail” albo link „Wypisz się” w każdym newsletterze; lokalizacja i powiadomienia: ustawienia urządzenia,',
                         'wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, uodo.gov.pl).',
                     ],
                 },

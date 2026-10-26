@@ -48,6 +48,8 @@ interface RawUserPayload {
     addressCity?: string;
     address_postal?: string;
     addressPostal?: string;
+    newsletter?: boolean;
+    newsletterAvailable?: boolean;
 }
 
 interface RawAuthPayload extends RawUserPayload {
@@ -183,11 +185,11 @@ export const authService = {
     },
 
     // --- DOKOŃCZENIE REJESTRACJI SOCIAL (DOB) ---
-    async completeSocialLogin(tempToken: string, dateOfBirth: string, parentalEmail?: string, name?: { firstName: string; lastName: string }): Promise<{ success: boolean; parentalConsentRequired?: boolean; childEmail?: string } | AuthSuccessResult> {
+    async completeSocialLogin(tempToken: string, dateOfBirth: string, parentalEmail?: string, name?: { firstName: string; lastName: string }, zgodaNewsletter?: boolean): Promise<{ success: boolean; parentalConsentRequired?: boolean; childEmail?: string } | AuthSuccessResult> {
         const response = await fetch(`${API_URL}/auth/social/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail, ...(name ? { firstName: name.firstName, lastName: name.lastName } : {}) }),
+            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail, ...(name ? { firstName: name.firstName, lastName: name.lastName } : {}), ...(zgodaNewsletter ? { zgodaNewsletter: true } : {}) }),
             credentials: 'include',
         });
         const result: RawAuthPayload = await response.json();
@@ -334,6 +336,8 @@ export const authService = {
             zdjecieTla: userData.zdjecieTla ?? null,
             unregisteredActivityEnabled: userData.unregistered_activity_enabled ?? userData.unregisteredActivityEnabled ?? false,
             accountType: (userData.accountType ?? userData.account_type) === 'business' ? 'business' : 'private',
+            newsletter: userData.newsletter === true,
+            newsletterAvailable: userData.newsletterAvailable !== false,
             addressStreet: userData.address_street ?? userData.addressStreet ?? '',
             addressCity: userData.address_city ?? userData.addressCity ?? '',
             addressPostal: userData.address_postal ?? userData.addressPostal ?? '',

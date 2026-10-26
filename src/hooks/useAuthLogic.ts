@@ -91,6 +91,8 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     const [showPassword, setShowPassword] = useState(false);
     const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
     const [acceptTerms, setAcceptTerms] = useState(false);
+    // osobna, dobrowolna zgoda marketingowa (16+), domyślnie odznaczona
+    const [acceptNewsletter, setAcceptNewsletter] = useState(false);
     const [termsError, setTermsError] = useState(false);
     const [firstNameError, setFirstNameError] = useState('');
     const [lastNameError, setLastNameError] = useState('');
@@ -454,7 +456,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
                 email: email.trim(), password: password.trim(),
                 imie: firstName.trim(), nazwisko: lastName.trim(),
                 telefon: formattedPhone, zgodaRegulamin: acceptTerms,
-                zgodaNewsletter: false, kodPolecajacy: referralCode.trim() || undefined,
+                zgodaNewsletter: acceptNewsletter && !isMinor, kodPolecajacy: referralCode.trim() || undefined,
                 dateOfBirth: dateOfBirth || undefined,
                 parentalEmail: parentalEmail.trim() || undefined,
             });
@@ -481,6 +483,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
             const result = await authService.completeSocialLogin(
                 socialDobToken, dateOfBirth, parentalEmail || undefined,
                 socialNeedsName ? { firstName: firstName.trim(), lastName: lastName.trim() } : undefined,
+                acceptNewsletter && !isMinor,
             );
             if ((result as { parentalConsentRequired?: boolean }).parentalConsentRequired) {
                 setSocialChildEmail((result as { childEmail?: string }).childEmail ?? '');
@@ -675,7 +678,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         // Fields
         email, setEmail, password, setPassword, confirmPassword, firstName, lastName, phoneNumber,
         showPassword, setShowPassword, verificationCode,
-        acceptTerms, setAcceptTerms,
+        acceptTerms, setAcceptTerms, acceptNewsletter, setAcceptNewsletter,
         // Errors
         termsError, firstNameError, lastNameError, passwordError, confirmPasswordError, phoneError, emailError,
         apiError, setApiError, apiSuccess,

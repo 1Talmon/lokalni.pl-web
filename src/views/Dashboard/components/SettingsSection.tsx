@@ -13,6 +13,7 @@ import { SocialSection } from './Settings/SocialSection';
 import { CertificateSection, type CertEntry } from './Settings/CertificateSection';
 import { BlockedUsersSection } from './Settings/BlockedUsersSection';
 import { DataExportRow } from './Settings/DataExportRow';
+import { NewsletterRow } from './Settings/NewsletterRow';
 import { SettingsRow, SettingsToggle } from './Settings/SettingsRow';
 import { settingsActionClass } from './Settings/settingsStyles';
 import { BioSection } from './Settings/BioSection';
@@ -397,6 +398,9 @@ export const SettingsSection = ({
                         <SettingsRow icon={Ban} title="Zablokowani użytkownicy" description="Te osoby nie mogą do Ciebie pisać ani wysyłać próśb o rezerwację." />
                         <div className="mt-4">
                             <BlockedUsersSection addToast={addToast} />
+                        </div>
+                        <div className="mt-5">
+                            <NewsletterRow enabled={userData?.newsletter === true} available={userData?.newsletterAvailable !== false} addToast={addToast} />
                         </div>
                         <div className="mt-5">
                             <DataExportRow addToast={addToast} />
