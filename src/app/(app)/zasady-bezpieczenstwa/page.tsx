@@ -5,7 +5,7 @@ import { BASE_URL } from '@/lib/seo-data';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 
 const title = 'Zasady bezpieczeństwa';
-const description = 'Zasady bezpiecznego korzystania z MyLokalni.pl – weryfikacja specjalistów, ochrona danych, zgłaszanie nadużyć.';
+const description = 'Zasady bezpiecznego korzystania z MyLokalni.pl – potwierdzone konta, ochrona danych, zgłaszanie nadużyć.';
 const url = `${BASE_URL}/zasady-bezpieczenstwa`;
 
 export const metadata: Metadata = {
@@ -52,10 +52,10 @@ export default function SafetyPage() {
 
                             <section>
                                 <h3 className="text-sm uppercase tracking-widest font-bold text-[#6366F1] mb-6 flex items-center gap-2">
-                                    <UserCheck size={18} /> Weryfikacja użytkowników
+                                    <UserCheck size={18} /> Potwierdzone konta
                                 </h3>
                                 <p className="text-sm leading-relaxed mb-4 text-gray-600">
-                                    Dbamy o to, aby społeczność Lokalnych była rzetelna. Każdy użytkownik przechodzi weryfikację adresu e-mail przed aktywacją konta. Numer telefonu podawany jest dobrowolnie i nie jest publicznie widoczny na stronie profilu.
+                                    Dbamy o to, aby społeczność Lokalnych była rzetelna. Każdy użytkownik potwierdza adres e-mail przed aktywacją konta. Nie sprawdzamy tożsamości ani kwalifikacji – dlatego przy każdym profilu pokazujemy fakty: potwierdzony e-mail, liczbę zrealizowanych rezerwacji i opinie wystawione tylko po rezerwacji. Numer telefonu nie jest widoczny na profilu, chyba że sam zdecydujesz się go pokazać.
                                 </p>
                                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
                                     <p className="text-sm text-blue-800 font-medium">

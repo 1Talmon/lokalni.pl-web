@@ -1,7 +1,7 @@
 'use client';
 import { ClientPortal } from '../../components/ui/ClientPortal';
 import {
-    ArrowLeft, MapPin, Star, ShieldCheck,
+    ArrowLeft, MapPin, Star,
     MessageCircle, Calendar, CheckCircle, Share2,
 } from 'lucide-react';
 import { ProviderProfile, Service } from '../../types';
@@ -149,13 +149,6 @@ export function ProfileHeader({
                             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
                                 <h1 className="text-2xl md:text-[28px] font-black text-slate-900 tracking-tight leading-tight">{fullName}</h1>
                                 {providerIsPremium && <PlusBadge />}
-                                <div className="relative group/shield cursor-help">
-                                    <ShieldCheck size={22} className="text-indigo-500 fill-indigo-50 shrink-0" />
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-xl opacity-0 group-hover/shield:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">
-                                        Adres e-mail potwierdzony
-                                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
-                                    </div>
-                                </div>
                             </div>
                             {provider?.accountType && (
                                 <p className="text-xs text-slate-500 -mt-1 mb-2">
@@ -165,6 +158,9 @@ export function ProfileHeader({
 
                             {/* Tagi statusu */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                    <CheckCircle size={11} /> E-mail potwierdzony
+                                </span>
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-colors ${
                                     isActiveNow ? "bg-green-50 text-green-700 border-green-100" : "bg-slate-50 text-slate-500 border-slate-100"
                                 }`}>
@@ -183,19 +179,19 @@ export function ProfileHeader({
                                     <span className="text-sm font-black text-slate-900">
                                         {(provider.avgRating ?? 0) > 0 ? Number(provider.avgRating).toFixed(1) : '–'}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 font-semibold">({provider.reviewsCount ?? 0})</span>
+                                    <span className="text-[10px] text-slate-400 font-semibold">({provider.reviewsCount ?? 0} {polishPlural(provider.reviewsCount ?? 0, 'opinia', 'opinie', 'opinii')})</span>
                                 </div>
                                 <div className="w-px h-3 bg-slate-200" />
                                 <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
                                     <CheckCircle size={12} className="text-indigo-400" />
-                                    <span>{provider.reviewsCount ?? 0} {polishPlural(provider.reviewsCount ?? 0, 'realizacja', 'realizacje', 'realizacji')}</span>
+                                    <span>{provider.completedBookings ?? 0} {polishPlural(provider.completedBookings ?? 0, 'zrealizowana rezerwacja', 'zrealizowane rezerwacje', 'zrealizowanych rezerwacji')}</span>
                                 </div>
                                 <div className="w-px h-3 bg-slate-200" />
                                 <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
                                     <Calendar size={12} className="text-slate-400" />
                                     <span>{provider.joinedAt
-                                        ? `od ${new Date(provider.joinedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
-                                        : provider.joinedYear ? `od ${provider.joinedYear}` : '–'
+                                        ? `na MyLokalni od ${new Date(provider.joinedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+                                        : provider.joinedYear ? `na MyLokalni od ${provider.joinedYear}` : '–'
                                     }</span>
                                 </div>
                             </div>

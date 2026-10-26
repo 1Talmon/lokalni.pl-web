@@ -120,7 +120,7 @@ export const TERMS: LegalDocumentData = {
                         'główne parametry decydujące o kolejności wyświetlania Ogłoszeń opisuje §11.',
                     ],
                 },
-                { type: 'p', text: '4. Operator nie weryfikuje tożsamości, kwalifikacji, uprawnień ani doświadczenia Usługodawców. Certyfikaty publikowane są na odpowiedzialność Usługodawcy i nie są przez Operatora sprawdzane. Oznaczenie przy Profilu dotyczy wyłącznie potwierdzonego adresu e-mail. Klient powinien samodzielnie ocenić Usługodawcę, w szczególności przy usługach wymagających uprawnień.' },
+                { type: 'p', text: '4. Operator nie weryfikuje tożsamości, kwalifikacji, uprawnień ani doświadczenia Usługodawców. Certyfikaty publikowane są na odpowiedzialność Usługodawcy i nie są przez Operatora sprawdzane. Informacje przy Profilu („E-mail potwierdzony”, liczba zrealizowanych Rezerwacji, Opinie, data dołączenia) wynikają wyłącznie z danych w Serwisie; „E-mail potwierdzony” oznacza tylko, że Użytkownik potwierdził adres e-mail. Klient powinien samodzielnie ocenić Usługodawcę, w szczególności przy usługach wymagających uprawnień.' },
             ],
         },
         {
@@ -174,14 +174,14 @@ export const TERMS: LegalDocumentData = {
                     ],
                 },
                 { type: 'p', text: '4. Sekcja ofert polecanych na stronie głównej jest dobierana według kategorii, które Użytkownik przeglądał (ok. 35%), tego, czy Ogłoszenie było już ostatnio oglądane (ok. 30%), oraz ocen, popularności i pakietu Plus (ok. 35%).' },
-                { type: 'p', text: '5. **Pakiet Plus wpływa na kolejność wyświetlania** w zakresie opisanym w ust. 3 i 4. Plus jest dostępny jako płatna subskrypcja lub w okresie bezpłatnym na zasadach §12 – na takich samych warunkach dla wszystkich Usługodawców. Poza tym Operator nie przyjmuje od Usługodawców żadnych płatności ani innych korzyści za wyższą pozycję w wynikach i nie traktuje odmiennie Ogłoszeń prowadzonych przez siebie lub podmioty z nim powiązane.' },
+                { type: 'p', text: '5. **Pakiet Plus wpływa na kolejność wyświetlania** w zakresie opisanym w ust. 3 i 4. Ogłoszenia Usługodawców z Plus są w wynikach wyszukiwania, na stronie głównej i na mapie wyraźnie oznaczone jako „Plus · wyróżnienie”, a nad wynikami widnieje informacja, że jest to płatne wyróżnienie. Plus jest dostępny jako płatna subskrypcja lub w okresie bezpłatnym na zasadach §12 – na takich samych warunkach dla wszystkich Usługodawców. Poza tym Operator nie przyjmuje od Usługodawców żadnych płatności ani innych korzyści za wyższą pozycję w wynikach i nie traktuje odmiennie Ogłoszeń prowadzonych przez siebie lub podmioty z nim powiązane.' },
             ],
         },
         {
             id: 'plus',
             title: 'Pakiet Plus',
             blocks: [
-                { type: 'p', text: '1. Plus to pakiet dodatkowych funkcji dla Usługodawców obejmujący w szczególności: grafik pracy i zarządzanie dostępnością terminów, Certyfikaty na Profilu, Aktualności dla obserwujących, własne zdjęcie tła Profilu oraz wyróżnienie w wynikach wyszukiwania zgodnie z §11.' },
+                { type: 'p', text: '1. Plus to pakiet dodatkowych funkcji dla Usługodawców obejmujący w szczególności: grafik pracy i zarządzanie dostępnością terminów, Certyfikaty na Profilu, Aktualności dla obserwujących, własne zdjęcie tła Profilu oraz wyróżnienie w wynikach wyszukiwania zgodnie z §11 (wyższa pozycja w sortowaniu „Polecane”, sortowanie „Plus najpierw” i oznaczenie „Plus · wyróżnienie”). Plus nie oznacza weryfikacji Usługodawcy ani jego usług przez Operatora.' },
                 { type: 'p', text: '2. Plus jest **płatną subskrypcją** odnawianą automatycznie. Ceny (kwoty brutto, zawierające ewentualne podatki): **14,99 zł za miesiąc** albo **99,99 zł za rok**. Aktualna cena i okres rozliczeniowy są zawsze pokazywane przed zakupem.' },
                 { type: 'p', text: `3. Plus można kupić: (a) w aplikacji na iPhone’a – przez App Store; sprzedawcą i podmiotem pobierającym płatność jest wtedy Apple, a do płatności, odnowień, anulowania i zwrotów stosuje się warunki App Store; (b) w serwisie internetowym ${OPERATOR.domain} – kartą płatniczą lub inną metodą dostępną w formularzu płatności, za pośrednictwem operatora płatności Stripe; stroną umowy jest wtedy Operator. Na jednym Koncie może być aktywna tylko jedna płatna subskrypcja Plus.` },
                 { type: 'p', text: '4. **Okres próbny**: przy pierwszym zakupie subskrypcji na danym Koncie może przysługiwać **30 dni bez opłat**, jeżeli informacja o nim jest wyświetlana przed zakupem. W serwisie internetowym wymaga on podania danych karty; jeżeli subskrypcja nie zostanie anulowana przed końcem okresu próbnego, po jego upływie pobierana jest pierwsza opłata. W App Store o dostępności okresu próbnego decyduje Apple (m.in. przysługuje on raz na Apple ID).' },

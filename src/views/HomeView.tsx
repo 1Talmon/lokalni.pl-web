@@ -1,5 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { Search, Filter, ArrowUpDown, MapPin, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
@@ -474,6 +475,11 @@ const HomeView = ({
                       <span style={{ willChange: 'transform' }} className={`relative transition-colors ${showOnlineOnly ? 'text-green-700' : 'text-gray-500'}`}>Zdalnie</span>
                   </button>
               </div>
+              {/* Oznaczenie płatnego wyróżnienia w wynikach (u.p.n.p.r., zał. pkt 11a) */}
+              <p className="mt-3 text-[11px] md:text-xs text-gray-400 leading-snug">
+                  Oferty oznaczone <span className="font-bold text-violet-600">✦ Plus</span> to płatne wyróżnienie – są wyżej w sortowaniu „Polecane”.{' '}
+                  <Link href="/regulamin#ranking" className="underline hover:text-gray-600">Jak ustalamy kolejność</Link>
+              </p>
           </div>
 
           {/* LISTA WYNIKÓW - KRÓL RESPONSYWNOŚCI (ZERO LAGÓW) */}

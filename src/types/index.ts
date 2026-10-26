@@ -86,6 +86,7 @@ export interface ProviderProfile {
   isPremium?: boolean   // Czy wykonawca ma aktywne premium
   isVerified?: boolean  // Czy wykonawca jest zweryfikowany
   accountType?: 'private' | 'business' // oświadczenie Usługodawcy (art. 12a u.p.k.)
+  completedBookings?: number // zrealizowane Rezerwacje (status completed/reviewed)
   deleted?: boolean
   joinedAt?: string | null
   avgRating?: number

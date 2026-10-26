@@ -21,6 +21,7 @@ interface PublicProfileResponse {
   joinedAt?: string | null;
   isPremium?: boolean;
   accountType?: 'private' | 'business';
+  completedBookings?: number;
   zdjecieTla?: string | null;
   facebook?: string | null;
   instagram?: string | null;
@@ -54,6 +55,7 @@ export const usePublicProfile = (uid: string | undefined) => {
     deleted: data.deleted ?? false,
     isPremium: data.isPremium ?? false,
     accountType: data.accountType,
+    completedBookings: data.completedBookings ?? 0,
     zdjecieTla: data.zdjecieTla ?? null,
     servicesCount: data.servicesCount ?? 0,
     email: data.email,

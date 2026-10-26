@@ -19,7 +19,7 @@ interface PremiumUpgradeModalProps {
 }
 
 const BENEFITS = [
-    { icon: Star,     text: 'Wyższe miejsce w wynikach i odznaka Plus', short: 'Wyżej w wynikach + odznaka' },
+    { icon: Star,     text: 'Wyróżnienie w wynikach: wyżej w sortowaniu „Polecane” i oznaczenie Plus', short: 'Wyróżnienie w wynikach' },
     { icon: Calendar, text: 'Grafik pracy i zarządzanie dostępnością', short: 'Grafik pracy' },
     { icon: Image,    text: 'Własne zdjęcie tła na profilu publicznym', short: 'Własne tło profilu' },
     { icon: Megaphone,text: 'Aktualności dla obserwujących klientów', short: 'Aktualności' },
@@ -125,7 +125,7 @@ export const PremiumUpgradeModal = ({ isOpen, onClose, onSuccess }: PremiumUpgra
                                 MyLokalni Plus
                             </h2>
                             <p className={`text-slate-400 font-medium leading-relaxed ${compact ? 'text-[13px]' : 'text-sm'}`}>
-                                Bądź wyżej w wynikach i łatwiej zdobywaj klientów.
+                                Wyróżnij swoje oferty w wynikach i pokaż klientom więcej o sobie.
                             </p>
                         </div>
 
