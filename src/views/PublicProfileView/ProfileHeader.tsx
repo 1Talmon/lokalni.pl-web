@@ -168,21 +168,21 @@ export function ProfileHeader({
                             </div>
 
                             {/* Mini stats */}
-                            <div className="flex items-center justify-center md:justify-start gap-4 mt-3">
-                                <div className="flex items-center gap-1">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1.5 mt-3">
+                                <div className="flex items-center gap-1 whitespace-nowrap">
                                     <Star size={13} className="fill-amber-400 text-amber-400" />
                                     <span className="text-sm font-black text-slate-900">
                                         {(provider.avgRating ?? 0) > 0 ? Number(provider.avgRating).toFixed(1) : '–'}
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-semibold">({provider.reviewsCount ?? 0} {polishPlural(provider.reviewsCount ?? 0, 'opinia', 'opinie', 'opinii')})</span>
                                 </div>
-                                <div className="w-px h-3 bg-slate-200" />
-                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
+                                <div className="hidden sm:block w-px h-3 bg-slate-200" />
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold whitespace-nowrap">
                                     <CheckCircle size={12} className="text-indigo-400" />
                                     <span>{provider.completedBookings ?? 0} {polishPlural(provider.completedBookings ?? 0, 'zrealizowana rezerwacja', 'zrealizowane rezerwacje', 'zrealizowanych rezerwacji')}</span>
                                 </div>
-                                <div className="w-px h-3 bg-slate-200" />
-                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold">
+                                <div className="hidden sm:block w-px h-3 bg-slate-200" />
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold whitespace-nowrap">
                                     <Calendar size={12} className="text-slate-400" />
                                     <span>{provider.joinedAt
                                         ? `na MyLokalni od ${new Date(provider.joinedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
