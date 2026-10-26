@@ -439,9 +439,8 @@ const PublicProfileView = ({
                                 {provider.description || "Ten wykonawca jeszcze nie dodał opisu. Napisz wiadomość, aby dowiedzieć się więcej o oferowanych usługach."}
                             </p>
                             {provider?.accountType && (
-                                <p className="mt-4 text-sm text-slate-500">
-                                    <span className="font-semibold text-slate-700">Usługodawca: {provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}</span>
-                                    <span className="text-slate-400"> (wg oświadczenia Usługodawcy)</span>
+                                <p className="mt-3 text-xs text-slate-400">
+                                    {provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'} · wg oświadczenia Usługodawcy
                                 </p>
                             )}
                             <div className="mt-5 pt-4 border-t border-slate-50 flex items-center gap-2">
@@ -497,11 +496,11 @@ const PublicProfileView = ({
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Aktualności</span>
                                 <span className="ml-auto text-[9px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
-                                    {!isFeedPending && <>{feed.length} wpisów <ChevronRight size={10} /></>}
+                                    {!isFeedPending && <>{feed.length} {polishPlural(feed.length, 'wpis', 'wpisy', 'wpisów')} <ChevronRight size={10} /></>}
                                 </span>
                             </div>
 
-                            <div className="h-[140px] flex flex-col justify-center">
+                            <div className="flex-1 min-h-[140px] flex flex-col justify-center">
                                 {isFeedPending ? (
                                     <div className="space-y-5">
                                         {[0, 1].map((i) => (
@@ -545,34 +544,29 @@ const PublicProfileView = ({
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="space-y-5">
-                                        {feed.slice(0, 2).map((item) => (
-                                            <div key={`${item.type}-${item.id}`} className={`relative pl-5 border-l ${
-                                                item.type === 'realizacja' ? 'border-emerald-500/50' : 'border-indigo-500/50'
-                                            }`}>
-                                                <div className={`absolute left-[-4px] top-1.5 w-2 h-2 rounded-full ${
-                                                    item.type === 'realizacja' ? 'bg-emerald-400 ring-4 ring-emerald-400/20' : 'bg-indigo-400 ring-4 ring-indigo-400/20'
-                                                }`} />
-                                                <span className={`text-[9px] font-black block mb-1.5 uppercase tracking-widest ${item.type === 'realizacja' ? 'text-emerald-400' : 'text-indigo-400'}`}>
-                                                    {item.date}
-                                                </span>
-                                                {item.type === 'post' ? (
-                                                    <p className="text-[13px] text-slate-400 leading-relaxed line-clamp-2">{item.content}</p>
+                                    <ul className="divide-y divide-slate-800/80">
+                                        {feed.slice(0, 4).map((item) => (
+                                            <li key={`${item.type}-${item.id}`} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                                                {item.image ? (
+                                                    <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-slate-800">
+                                                        <Image src={item.image} width={44} height={44} className="w-full h-full object-cover" alt="" />
+                                                    </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-3">
-                                                        {(item.image) && (
-                                                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                                                                <Image src={item.image} width={48} height={48} className="w-full h-full object-cover" alt="" />
-                                                            </div>
-                                                        )}
-                                                        <p className="text-[13px] text-slate-400 leading-relaxed line-clamp-2">
-                                                            Wykonano: <span className="text-slate-300">{item.serviceName}</span>
-                                                        </p>
+                                                    <div className={`w-11 h-11 rounded-xl shrink-0 flex items-center justify-center ${item.type === 'realizacja' ? 'bg-emerald-500/10' : 'bg-indigo-500/10'}`}>
+                                                        {item.type === 'realizacja' ? <CheckCircle size={18} className="text-emerald-400" /> : <Send size={16} className="text-indigo-400" />}
                                                     </div>
                                                 )}
-                                            </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[14px] text-slate-200 font-semibold leading-snug line-clamp-1">
+                                                        {item.type === 'realizacja' ? item.serviceName : item.content}
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                                        {item.type === 'realizacja' ? 'Wykonana usługa' : 'Wpis'} · {item.date}
+                                                    </p>
+                                                </div>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 )}
                             </div>
 

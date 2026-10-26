@@ -683,9 +683,8 @@ const ServiceDetailsView = ({
                                     {activeService.description || 'Brak opisu.'}
                                 </p>
                                 {activeService.provider?.accountType && activeService.type !== 'request' && (
-                                    <p className="mt-5 pt-4 border-t border-slate-100 text-sm text-slate-500">
-                                        <span className="font-semibold text-slate-700">Usługodawca: {activeService.provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}</span>
-                                        <span className="text-slate-400"> (wg oświadczenia Usługodawcy)</span>
+                                    <p className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
+                                        Usługodawca: {activeService.provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'} · wg oświadczenia Usługodawcy
                                     </p>
                                 )}
                             </div>
