@@ -452,15 +452,15 @@ const HomeView = ({
                   <h2 className="text-lg md:text-3xl font-bold text-gray-900 leading-tight">
                       {location && !showOnlineOnly ? `Wyniki: ${location}` : 'Polecane usługi'}
                   </h2>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="relative flex items-center gap-1 shrink-0">
                       {/* Zasady kolejności i oznaczenia „Promowane” (u.p.n.p.r. art. 6 ust. 3 i zał. pkt 11a) */}
-                      <div className="relative shrink-0">
+                      <div className="shrink-0">
                           <button type="button" onClick={() => setRankingInfoOpen(o => !o)} aria-label="Jak ustalamy kolejność ofert" aria-expanded={rankingInfoOpen}
                               className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
                               <Info size={17} />
                           </button>
                           {rankingInfoOpen && (
-                              <div className="absolute right-0 top-11 z-30 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 text-xs text-gray-600 leading-relaxed">
+                              <div className="absolute right-0 top-12 z-30 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-2xl shadow-xl p-4 text-xs text-gray-600 leading-relaxed">
                                   Kolejność „Polecane” zależy głównie od ocen i liczby zrealizowanych rezerwacji. Oferty oznaczone <span className="font-bold text-violet-600">✦ Promowane</span> należą do Usługodawców z płatnym pakietem Plus, który podnosi ich pozycję.
                                   <Link href="/regulamin#ranking" className="block mt-2 font-semibold text-[#6366F1] hover:underline">Zasady kolejności w Regulaminie</Link>
                               </div>
