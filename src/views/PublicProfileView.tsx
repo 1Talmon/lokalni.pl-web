@@ -438,6 +438,12 @@ const PublicProfileView = ({
                             <p className="text-slate-600 text-[14px] leading-relaxed flex-1">
                                 {provider.description || "Ten wykonawca jeszcze nie dodał opisu. Napisz wiadomość, aby dowiedzieć się więcej o oferowanych usługach."}
                             </p>
+                            {provider?.accountType && (
+                                <p className="mt-4 text-sm text-slate-500">
+                                    <span className="font-semibold text-slate-700">Usługodawca: {provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}</span>
+                                    <span className="text-slate-400"> (wg oświadczenia Usługodawcy)</span>
+                                </p>
+                            )}
                             <div className="mt-5 pt-4 border-t border-slate-50 flex items-center gap-2">
                                 {[
                                     { label: "Facebook", href: providerData.facebook, hover: "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100",

@@ -150,11 +150,6 @@ export function ProfileHeader({
                                 <h1 className="text-2xl md:text-[28px] font-black text-slate-900 tracking-tight leading-tight">{fullName}</h1>
                                 {providerIsPremium && <PlusBadge />}
                             </div>
-                            {provider?.accountType && (
-                                <p className="text-xs text-slate-500 -mt-1 mb-2">
-                                    {provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}<span className="text-slate-400"> · wg oświadczenia Usługodawcy</span>
-                                </p>
-                            )}
 
                             {/* Tagi statusu */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">

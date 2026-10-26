@@ -30,7 +30,7 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                         MyLokalni<span className="text-[#6366F1]">.</span>
                     </div>
                     <p className="text-sm opacity-60 leading-relaxed">
-                        Znajdź sprawdzonych specjalistów w Twojej okolicy. Szybko, bezpiecznie i lokalnie.
+                        Znajdź specjalistów w Twojej okolicy – z opiniami po prawdziwych rezerwacjach. Szybko, bezpiecznie i lokalnie.
                     </p>
                     <div className="flex gap-4">
                         <a href="https://www.facebook.com/profile.php?id=61595107149381" target="_blank" rel="noopener noreferrer" aria-label="MyLokalni na Facebooku" className="hover:text-[#6366F1] transition-colors"><Facebook size={20} /></a>

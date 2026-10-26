@@ -54,7 +54,7 @@ export const InviteView = () => {
                     {/* Features */}
                     <div className="px-8 py-6 space-y-4">
                         {[
-                            { icon: <MapPin size={16} />, text: 'Znajdź sprawdzonych wykonawców w swojej okolicy' },
+                            { icon: <MapPin size={16} />, text: 'Znajdź wykonawców w swojej okolicy – z opiniami po rezerwacjach' },
                             { icon: <Star size={16} />, text: 'Oceny i opinie od prawdziwych klientów' },
                             { icon: <ShieldCheck size={16} />, text: 'Bezpieczny kontakt i rezerwacje online' },
                         ].map(({ icon, text }) => (
