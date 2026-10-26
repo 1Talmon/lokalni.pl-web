@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import type { UserProfile, ToastType } from '../../../types';
-import { LifeBuoy, FileText, Ban, Trash2, ChevronDown, Sparkles } from 'lucide-react';
+import { LifeBuoy, FileText, Ban, Trash2, ChevronDown, Sparkles, Briefcase } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PremiumGate } from '../../../components/premium/PremiumGate';
 import { apiClient } from '../../../services/apiClient';
@@ -328,6 +328,26 @@ export const SettingsSection = ({
                                 )}
                             </div>
                         )}
+                    </div>
+
+                    {/* STATUS USŁUGODAWCY — art. 12a ustawy o prawach konsumenta: Klient widzi, czy oferujesz usługi jako przedsiębiorca */}
+                    <div>
+                        <SectionHeader title="Status Usługodawcy" />
+                        <SettingsRow
+                            icon={Briefcase}
+                            title="Świadczę usługi jako przedsiębiorca"
+                            description={userData?.accountType === 'business'
+                                ? 'Przy Twoich ogłoszeniach i na profilu klienci widzą: „Przedsiębiorca”. Obowiązują Cię wtedy przepisy o ochronie konsumentów (m.in. prawo odstąpienia).'
+                                : 'Przy Twoich ogłoszeniach i na profilu klienci widzą: „Osoba prywatna”. Włącz, jeśli masz firmę lub świadczysz usługi zawodowo (także w ramach działalności nierejestrowanej).'}
+                            action={
+                                <SettingsToggle
+                                    enabled={userData?.accountType === 'business'}
+                                    onToggle={() => dgMutation.mutate({ accountType: userData?.accountType === 'business' ? 'private' : 'business' })}
+                                    disabled={dgMutation.isPending}
+                                    label="Świadczę usługi jako przedsiębiorca"
+                                />
+                            }
+                        />
                     </div>
 
                     {/* GRUPA 4b: DZIAŁALNOŚĆ NIEREJESTROWANA */}

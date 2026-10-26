@@ -669,6 +669,11 @@ const ServiceDetailsView = ({
                                             {(activeService?.bookings ?? 0) > 0 && ` · ${activeService!.bookings} ${activeService!.bookings === 1 ? 'zlecenie' : activeService!.bookings < 5 ? 'zlecenia' : 'zleceń'}`}
                                             {isUserActive && ' · Aktywny teraz'}
                                         </p>
+                                        {activeService?.provider?.accountType && (
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                {activeService?.provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}<span className="text-slate-400"> · wg oświadczenia Usługodawcy</span>
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <button onClick={() => onStartChat(activeService)} className="w-full sm:w-auto px-6 py-3 mt-4 border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors">

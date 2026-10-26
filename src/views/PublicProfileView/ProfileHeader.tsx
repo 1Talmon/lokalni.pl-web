@@ -152,11 +152,16 @@ export function ProfileHeader({
                                 <div className="relative group/shield cursor-help">
                                     <ShieldCheck size={22} className="text-indigo-500 fill-indigo-50 shrink-0" />
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-bold rounded-xl opacity-0 group-hover/shield:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">
-                                        Profil zweryfikowany
+                                        Adres e-mail potwierdzony
                                         <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
                                     </div>
                                 </div>
                             </div>
+                            {provider?.accountType && (
+                                <p className="text-xs text-slate-500 -mt-1 mb-2">
+                                    {provider.accountType === 'business' ? 'Przedsiębiorca' : 'Osoba prywatna'}<span className="text-slate-400"> · wg oświadczenia Usługodawcy</span>
+                                </p>
+                            )}
 
                             {/* Tagi statusu */}
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">

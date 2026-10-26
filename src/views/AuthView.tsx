@@ -274,6 +274,9 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
+                                        <p className="text-xs text-gray-500 leading-relaxed">
+                                            Klikając „Kontynuuj”, akceptujesz <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> i potwierdzasz, że zapoznałeś się z <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Polityką prywatności</Link>.
+                                        </p>
                                     </motion.div>
                 ) : authMode === 'forgot-password' ? (
                                     <motion.div key="forgot-password-fields" variants={pageVariants} initial="initial" animate="animate" exit="exit">
@@ -521,7 +524,7 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                                 <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
                                                             </div>
                                                             <span className={`text-sm leading-tight ${ageConfirmationError ? 'text-red-500 font-medium' : 'text-gray-600'}`}>
-                                                                Potwierdzam, że mam ukończone 13 lat
+                                                                Potwierdzam, że mam ukończone 16 lat (młodsi – podaj datę urodzenia)
                                                             </span>
                                                         </label>
                                                     </motion.div>
@@ -535,7 +538,7 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                     <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
                                                 </div>
                                                 <span className={`text-sm leading-tight ${termsError ? 'text-red-500 font-medium' : 'text-gray-600'}`}>
-                                                    Akceptuję <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> oraz <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Politykę Prywatności</Link>
+                                                    Akceptuję <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> i potwierdzam, że zapoznałem się z <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Polityką prywatności</Link>
                                                 </span>
                                             </label>
                                         </div>

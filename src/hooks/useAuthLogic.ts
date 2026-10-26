@@ -563,7 +563,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
                 const lastErr = fe.lastName?.[0]; if (lastErr) setLastNameError(lastErr);
                 const passErr = fe.password?.[0]; if (passErr) setPasswordError(passErr);
             }
-            if (!acceptTerms) { setApiError('Musisz zaakceptować Regulamin i Politykę Prywatności'); setTermsError(true); hasError = true; }
+            if (!acceptTerms) { setApiError('Musisz zaakceptować Regulamin'); setTermsError(true); hasError = true; }
             else { setTermsError(false); }
             if (dateOfBirth) {
                 const age = calculateAge(dateOfBirth);

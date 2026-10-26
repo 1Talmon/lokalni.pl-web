@@ -20,6 +20,7 @@ interface PublicProfileResponse {
   joinedYear?: number | null;
   joinedAt?: string | null;
   isPremium?: boolean;
+  accountType?: 'private' | 'business';
   zdjecieTla?: string | null;
   facebook?: string | null;
   instagram?: string | null;
@@ -52,6 +53,7 @@ export const usePublicProfile = (uid: string | undefined) => {
     is_me: false,
     deleted: data.deleted ?? false,
     isPremium: data.isPremium ?? false,
+    accountType: data.accountType,
     zdjecieTla: data.zdjecieTla ?? null,
     servicesCount: data.servicesCount ?? 0,
     email: data.email,

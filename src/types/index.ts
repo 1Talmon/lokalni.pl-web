@@ -85,6 +85,7 @@ export interface ProviderProfile {
   is_me?: boolean
   isPremium?: boolean   // Czy wykonawca ma aktywne premium
   isVerified?: boolean  // Czy wykonawca jest zweryfikowany
+  accountType?: 'private' | 'business' // oświadczenie Usługodawcy (art. 12a u.p.k.)
   deleted?: boolean
   joinedAt?: string | null
   avgRating?: number

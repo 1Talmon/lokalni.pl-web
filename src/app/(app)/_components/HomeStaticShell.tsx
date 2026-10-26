@@ -48,7 +48,7 @@ export function HomeStaticShell({ services, totalServices, groups, posts }: Prop
                             {services.map((s, i) => <StaticServiceCard key={s.publicId} s={s} priority={i < 4} />)}
                         </div>
                         {providers > 0 && (
-                            <p className="text-sm text-gray-500 mt-3">Oferty dodali zweryfikowani użytkownicy serwisu – każda z nich ma własną stronę z opisem, ceną i opiniami.</p>
+                            <p className="text-sm text-gray-500 mt-3">Oferty dodali użytkownicy serwisu – każda z nich ma własną stronę z opisem, ceną i opiniami.</p>
                         )}
                     </section>
                 )}

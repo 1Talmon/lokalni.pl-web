@@ -23,6 +23,7 @@ export function mapServiceRaw(s: Record<string, unknown>): Service {
             avatar: normalizeMediaUrl(p.profilowe as string | null) ?? '',
             responseRate: '100%',
             isPremium: Boolean(p.isPremium),
+            accountType: p.accountType === 'business' || p.accountType === 'private' ? p.accountType : undefined,
         },
         address: (s.address as string) ?? undefined,
         image: normalizeMediaUrl(s.image as string | null) ?? '',

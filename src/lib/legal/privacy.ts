@@ -39,9 +39,9 @@ export const PRIVACY: LegalDocumentData = {
                     type: 'table',
                     head: ['Cel', 'Dane', 'Podstawa prawna', 'Jak długo'],
                     rows: [
-                        ['Założenie i prowadzenie Konta, logowanie, bezpieczeństwo Konta (m.in. weryfikacja dwuetapowa)', 'e-mail, hasło (wyłącznie w postaci skrótu), imię i nazwisko, data urodzenia, identyfikatory kont Google / Facebook / Apple, numer telefonu, jeżeli go podasz', 'art. 6 ust. 1 lit. b RODO – wykonanie umowy', 'do usunięcia Konta'],
-                        ['Weryfikacja wieku i zgoda rodzica dla osób w wieku 13–15 lat', 'data urodzenia, e-mail rodzica lub opiekuna, data potwierdzenia zgody', 'art. 6 ust. 1 lit. c w zw. z art. 8 RODO; art. 6 ust. 1 lit. f (wykazanie zgody)', 'do usunięcia Konta dziecka, a dowód zgody – do upływu przedawnienia roszczeń'],
-                        ['Publiczny Profil, Ogłoszenia, Certyfikaty, Aktualności', 'imię, zdjęcie, opis, kategorie, ceny, miejscowość lub obszar działania, zdjęcia i nagrania, skany Certyfikatów, linki do mediów społecznościowych, telefon i e-mail – jeżeli zdecydujesz się je pokazać', 'art. 6 ust. 1 lit. b RODO', 'do usunięcia danej Treści lub Konta'],
+                        ['Założenie i prowadzenie Konta, logowanie, bezpieczeństwo Konta (m.in. weryfikacja dwuetapowa)', 'e-mail, hasło (wyłącznie w postaci skrótu), imię i nazwisko, numer telefonu (wymagany przy rejestracji adresem e-mail), data urodzenia (podawana przy logowaniu przez Google, Facebook lub Apple oraz przez osoby poniżej 16 lat) albo oświadczenie o ukończeniu 16 lat, identyfikatory kont Google / Facebook / Apple', 'art. 6 ust. 1 lit. b RODO – wykonanie umowy', 'do usunięcia Konta'],
+                        ['Weryfikacja wieku i zgoda rodzica dla osób w wieku 13–15 lat', 'data urodzenia, e-mail rodzica lub opiekuna, data potwierdzenia zgody', 'art. 6 ust. 1 lit. c w zw. z art. 8 RODO; art. 6 ust. 1 lit. f (wykazanie zgody)', 'do usunięcia Konta dziecka; dowód zgody – jak w ostatnim wierszu tabeli'],
+                        ['Publiczny Profil, Ogłoszenia, Certyfikaty, Aktualności', 'imię, zdjęcie, opis, status Usługodawcy („Osoba prywatna” albo „Przedsiębiorca” – według Twojego oświadczenia), kategorie, ceny, miejscowość lub obszar działania, zdjęcia i nagrania (przy zapisie co do zasady usuwamy z plików metadane, np. lokalizację GPS), skany Certyfikatów, linki do mediów społecznościowych, telefon i e-mail – jeżeli zdecydujesz się je pokazać', 'art. 6 ust. 1 lit. b RODO', 'do usunięcia danej Treści lub Konta'],
                         ['Wyszukiwanie usług w pobliżu', 'wskazana miejscowość lub lokalizacja urządzenia (tylko po zgodzie systemowej, wyłącznie podczas korzystania z aplikacji)', 'art. 6 ust. 1 lit. b RODO; dostęp do lokalizacji urządzenia – Twoja zgoda systemowa (art. 399 PKE)', 'lokalizacja urządzenia nie jest zapisywana na serwerze – służy do jednorazowego wyszukania (współrzędne przekazujemy dostawcy usług lokalizacyjnych wyłącznie w celu ustalenia nazwy miejscowości)'],
                         ['Rezerwacje, kalendarz i przypomnienia', 'dane stron, usługa, data i godzina, adres wykonania usługi i jego współrzędne, notatki, status', 'art. 6 ust. 1 lit. b RODO', 'do usunięcia Konta; po usunięciu – w formie zanonimizowanej. Współrzędne adresu ustalamy przez dostawcę usług lokalizacyjnych; wynik przechowujemy w pamięci podręcznej bez powiązania z Kontem – do 12 miesięcy'],
                         ['Czat', 'treść wiadomości, zdjęcia, nagrania, pliki, daty, informacja o odczytaniu', 'art. 6 ust. 1 lit. b RODO', 'do usunięcia Konta; wiadomości wysłane innym osobom pozostają w ich rozmowach jako wiadomości „Usuniętego Użytkownika” (art. 6 ust. 1 lit. f – interes rozmówcy)'],
@@ -51,21 +51,21 @@ export const PRIVACY: LegalDocumentData = {
                         ['Pakiet Plus – okres bezpłatny i subskrypcja', 'data aktywacji i wygaśnięcia Plus; przy subskrypcji: plan, status, daty okresu rozliczeniowego i próbnego, identyfikatory klienta i subskrypcji u operatora płatności (Stripe) lub transakcji w App Store, data złożenia żądania rozpoczęcia świadczenia; nie otrzymujemy pełnych danych karty', 'art. 6 ust. 1 lit. b RODO – wykonanie umowy', 'do usunięcia Konta; dane rozliczeniowe – jak w wierszu niżej'],
                         ['Rozliczenia i obowiązki podatkowe przy płatnym Plus', 'imię i nazwisko lub nazwa, e-mail, kraj i adres rozliczeniowy, kwota, data i identyfikator płatności, dokumenty sprzedaży', 'art. 6 ust. 1 lit. c RODO – przepisy podatkowe i rachunkowe', '5 lat od końca roku, w którym powstał obowiązek podatkowy'],
                         ['Powiadomienia e-mail i push związane z Kontem (np. nowa wiadomość, Rezerwacja, przypomnienie)', 'e-mail, token urządzenia do powiadomień', 'art. 6 ust. 1 lit. b RODO; powiadomienia push – po Twojej zgodzie systemowej', 'token – do wylogowania lub usunięcia Konta'],
-                        ['Przypomnienia o uzupełnieniu Profilu i wskazówki dotyczące korzystania z Serwisu', 'e-mail, stan uzupełnienia Profilu', 'art. 6 ust. 1 lit. f RODO – rozwój Serwisu; możesz w każdej chwili wnieść sprzeciw', 'do sprzeciwu lub usunięcia Konta'],
-                        ['Moderacja, zgłoszenia, odwołania i blokowanie Użytkowników (DSA)', 'treść zgłoszenia, dane zgłaszającego, zgłoszona Treść, decyzja i uzasadnienie, lista zablokowanych osób', 'art. 6 ust. 1 lit. c RODO (obowiązki z DSA) oraz lit. f (bezpieczeństwo Użytkowników)', 'do 3 lat od zamknięcia sprawy, a lista blokad – do jej zdjęcia lub usunięcia Konta'],
+                        ['Przypomnienia o uzupełnieniu Profilu i wskazówki dotyczące korzystania z Serwisu', 'e-mail, stan uzupełnienia Profilu', 'art. 6 ust. 1 lit. f RODO – rozwój Serwisu; sprzeciw zgłosisz jednym kliknięciem (link „Wypisz się” w każdej takiej wiadomości)', 'do sprzeciwu lub usunięcia Konta'],
+                        ['Moderacja, zgłoszenia, odwołania i blokowanie Użytkowników (DSA)', 'treść zgłoszenia, dane zgłaszającego, zgłoszona Treść, decyzja i uzasadnienie, lista zablokowanych osób; zgłaszający otrzymuje e-mailem potwierdzenie przyjęcia zgłoszenia', 'art. 6 ust. 1 lit. c RODO (obowiązki z DSA) oraz lit. f (bezpieczeństwo Użytkowników)', 'do 3 lat od zamknięcia sprawy, a lista blokad – do jej zdjęcia lub usunięcia Konta'],
                         ['Bezpieczeństwo, zapobieganie nadużyciom, wykrywanie błędów', 'adres IP, logi zdarzeń (np. logowania, zmiana hasła, usunięcie Konta), informacje techniczne o błędach', 'art. 6 ust. 1 lit. f RODO – bezpieczeństwo Serwisu', 'do 12 miesięcy'],
-                        ['Obsługa zapytań i reklamacji', 'dane z korespondencji', 'art. 6 ust. 1 lit. b, c lub f RODO', 'do zakończenia sprawy, następnie do upływu przedawnienia roszczeń'],
-                        ['Ustalenie, dochodzenie lub obrona roszczeń', 'dane niezbędne do wykazania okoliczności sprawy', 'art. 6 ust. 1 lit. f RODO', 'do upływu przedawnienia roszczeń'],
+                        ['Obsługa zapytań i reklamacji', 'dane z korespondencji', 'art. 6 ust. 1 lit. b, c lub f RODO', 'do zakończenia sprawy; później – jak w wierszu niżej'],
+                        ['Wykazanie, że przestrzegamy przepisów, i ochrona naszych praw w razie sporu', 'tylko dane potrzebne do wyjaśnienia konkretnej sprawy (np. korespondencja, historia Rezerwacji, dowód zgody rodzica)', 'art. 6 ust. 1 lit. f RODO', 'nie dłużej niż przez okres przedawnienia wynikający z przepisów'],
                     ],
                 },
-                { type: 'p', text: 'Nie prowadzimy marketingu na rzecz podmiotów trzecich, nie wyświetlamy reklam, nie korzystamy z narzędzi analitycznych ani reklamowych podmiotów zewnętrznych (np. Google Analytics, Meta Pixel) i **nie sprzedajemy danych osobowych**.' },
+                { type: 'p', text: 'Nie prowadzimy marketingu na rzecz podmiotów trzecich, nie wyświetlamy reklam, nie korzystamy z narzędzi analitycznych ani reklamowych podmiotów zewnętrznych (np. Google Analytics, Meta Pixel), nie wysyłamy newslettera i **nie sprzedajemy danych osobowych**.' },
             ],
         },
         {
             id: 'dobrowolnosc',
             title: 'Czy musisz podać dane',
             blocks: [
-                { type: 'p', text: 'Podanie danych jest dobrowolne, ale bez adresu e-mail (lub konta Google, Facebook albo Apple), imienia i daty urodzenia nie da się założyć Konta. Pozostałe dane (zdjęcie, telefon, opis, lokalizacja, linki) są opcjonalne – bez nich niektóre funkcje mogą być niedostępne.' },
+                { type: 'p', text: 'Podanie danych jest dobrowolne, ale bez danych wskazanych w pierwszym wierszu tabeli w §3 (przy rejestracji adresem e-mail: e-mail, hasło, imię, nazwisko i numer telefonu; przy logowaniu przez Google, Facebook lub Apple – data urodzenia) nie da się założyć Konta. Osoby poniżej 16 lat podają też datę urodzenia i adres e-mail rodzica lub opiekuna. Pozostałe dane (zdjęcie, opis, lokalizacja, linki) są opcjonalne – bez nich niektóre funkcje mogą być niedostępne.' },
             ],
         },
         {
@@ -89,7 +89,7 @@ export const PRIVACY: LegalDocumentData = {
                 },
                 { type: 'p', text: `Aktualną listę dostawców z nazwy przekażemy Ci na prośbę wysłaną na ${OPERATOR.email}.` },
                 { type: 'p', text: '3. **Niezależnym administratorom**: Google, Meta Platforms i Apple – gdy logujesz się przez ich usługi (przetwarzają dane według własnych polityk prywatności); operatorom sklepów z aplikacjami i systemowych usług powiadomień (Apple, Google); Apple – przy zakupie Plus w App Store Apple jest sprzedawcą i samodzielnie przetwarza dane płatności, a my otrzymujemy od Apple jedynie informacje o subskrypcji (produkt, status, daty, identyfikator transakcji); dostawcom poczty e-mail i hostingu Twoich rozmówców.' },
-                { type: 'p', text: '4. **Organom publicznym** (np. sądom, prokuraturze, Policji, Prezesowi UKE, UOKiK) – wyłącznie gdy wynika to z przepisów prawa, w tym z nakazów wydanych na podstawie DSA.' },
+                { type: 'p', text: '4. **Organom publicznym** – wyłącznie wtedy, gdy obowiązek przekazania danych wynika z przepisów prawa.' },
             ],
         },
         {
@@ -104,9 +104,9 @@ export const PRIVACY: LegalDocumentData = {
             title: 'Usunięcie Konta i danych',
             blocks: [
                 { type: 'p', text: `1. Konto usuniesz w ustawieniach Konta w aplikacji lub w serwisie internetowym albo na stronie ${OPERATOR.website}/delete-account (bez instalowania aplikacji). Dla bezpieczeństwa usunięcie potwierdzasz linkiem wysłanym na adres e-mail Konta.` },
-                { type: 'p', text: '2. Po potwierdzeniu: usuwamy dane Profilu (imię, nazwisko, zdjęcia, opis, telefon, linki, datę urodzenia, adres do ewidencji), Ogłoszenia z ich zdjęciami i nagraniami, Aktualności, Certyfikaty z plikami, wpisy ewidencji, tokeny powiadomień i powiązania z kontami Google, Facebook i Apple, a adres e-mail zastępujemy losowym identyfikatorem. Kończymy też wszystkie sesje logowania.' },
+                { type: 'p', text: '2. Po potwierdzeniu: usuwamy dane Profilu (imię, nazwisko, zdjęcia, opis, telefon, linki, datę urodzenia, adres do ewidencji), Ogłoszenia z ich zdjęciami i nagraniami, Aktualności, Certyfikaty z plikami, wpisy ewidencji, tokeny powiadomień i powiązania z kontami Google, Facebook i Apple, a adres e-mail zastępujemy technicznym identyfikatorem niepowiązanym z Twoją osobą. Kończymy też wszystkie sesje logowania.' },
                 { type: 'p', text: '3. Rezerwacje i Opinie pozostają w Serwisie w formie zanonimizowanej (bez powiązania z Twoją osobą), aby nie zafałszować historii i ocen drugiej strony. Wiadomości wysłane innym Użytkownikom pozostają w ich rozmowach jako wiadomości „Usuniętego Użytkownika”.' },
-                { type: 'p', text: '4. Dane mogą jeszcze znajdować się w zaszyfrowanych kopiach zapasowych – **nie dłużej niż 4 miesiące** od usunięcia (kopie przechowujemy do 90 dni, a w drugiej lokalizacji są dodatkowo chronione przed usunięciem przez 30 dni) – oraz w logach bezpieczeństwa (do 12 miesięcy). Kopii zapasowych nie używamy do innych celów niż odtworzenie Serwisu po awarii. Dłużej przechowujemy tylko dane potrzebne do wykonania obowiązków prawnych lub obrony przed roszczeniami (patrz tabela w §3).' },
+                { type: 'p', text: '4. Dane mogą jeszcze znajdować się w zaszyfrowanych kopiach zapasowych – **nie dłużej niż 4 miesiące** od usunięcia (kopie przechowujemy do 90 dni, a w drugiej lokalizacji są dodatkowo chronione przed usunięciem przez 30 dni) – oraz w logach bezpieczeństwa (do 12 miesięcy). Kopii zapasowych nie używamy do innych celów niż odtworzenie Serwisu po awarii. Dłużej przechowujemy tylko dane, których wymagają przepisy (np. podatkowe), oraz dane opisane w ostatnim wierszu tabeli w §3.' },
             ],
         },
         {
@@ -117,11 +117,11 @@ export const PRIVACY: LegalDocumentData = {
                 {
                     type: 'list',
                     items: [
-                        'dostępu do danych i otrzymania ich kopii (art. 15 RODO),',
+                        'dostępu do danych i otrzymania ich kopii (art. 15 RODO) – kopię danych Konta pobierzesz sam: Ustawienia → Prywatność → „Pobierz moje dane”,',
                         'sprostowania danych (art. 16 RODO) – większość danych poprawisz sam w ustawieniach Konta,',
                         'usunięcia danych (art. 17 RODO) – w tym przez usunięcie Konta,',
                         'ograniczenia przetwarzania (art. 18 RODO),',
-                        'przenoszenia danych, które nam przekazałeś, w ustrukturyzowanym formacie (art. 20 RODO),',
+                        'przenoszenia danych, które nam przekazałeś, w ustrukturyzowanym formacie (art. 20 RODO) – plik z „Pobierz moje dane” ma format JSON,',
                         '**sprzeciwu** wobec przetwarzania opartego na prawnie uzasadnionym interesie (art. 21 RODO), w tym wobec przypomnień o uzupełnieniu Profilu,',
                         'cofnięcia zgody w dowolnym momencie (np. na lokalizację lub powiadomienia – w ustawieniach urządzenia), bez wpływu na zgodność z prawem przetwarzania przed jej cofnięciem,',
                         'wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, uodo.gov.pl).',
@@ -167,6 +167,7 @@ export const PRIVACY: LegalDocumentData = {
                         '**Aparat i zdjęcia** – dodawanie zdjęć do Profilu, Ogłoszeń, Opinii, Certyfikatów i Czatu; aplikacja nie przegląda galerii w tle,',
                         '**Powiadomienia** – informacje o wiadomościach, Rezerwacjach i przypomnieniach,',
                         '**Face ID / Touch ID / odcisk palca** – opcjonalna blokada aplikacji i sekcji Zarobki; weryfikacji dokonuje system telefonu, a my nie otrzymujemy ani nie przechowujemy danych biometrycznych – dostajemy jedynie informację, czy weryfikacja się powiodła.',
+                        '**Logowanie przez Facebook lub Google** – biblioteki tych firm służą w aplikacji wyłącznie do logowania; automatyczne przesyłanie zdarzeń z aplikacji i identyfikatora reklamowego do Meta jest wyłączone.',
                     ],
                 },
                 { type: 'p', text: 'Aplikacja nie zawiera reklam ani narzędzi śledzących użytkowników między aplikacjami innych firm.' },
@@ -176,7 +177,7 @@ export const PRIVACY: LegalDocumentData = {
             id: 'dzieci',
             title: 'Dzieci',
             blocks: [
-                { type: 'p', text: '1. Konto może założyć osoba, która ukończyła 13 lat. Osoby w wieku 13–15 lat potrzebują zgody rodzica lub opiekuna prawnego (art. 8 RODO – w Polsce granicą wieku jest 16 lat). Zgodę potwierdza rodzic lub opiekun przez link wysłany na jego adres e-mail.' },
+                { type: 'p', text: '1. Konto może założyć osoba, która ukończyła 13 lat. Osoby w wieku 13–15 lat potrzebują zgody rodzica lub opiekuna prawnego (art. 8 RODO – w Polsce granicą wieku jest 16 lat). Zgodę potwierdza rodzic lub opiekun przez link wysłany na jego adres e-mail; do tego czasu Konto nie jest aktywne. Dane osób małoletnich nie trafiają do narzędzi reklamowych ani analitycznych – nie używamy takich narzędzi.' },
                 { type: 'p', text: `2. Rodzic lub opiekun może w każdej chwili cofnąć zgodę i zażądać usunięcia Konta dziecka, pisząc na ${OPERATOR.email}.` },
                 { type: 'p', text: '3. Jeżeli dowiemy się, że Konto założyła osoba poniżej 13 lat lub osoba w wieku 13–15 lat bez zgody rodzica, usuniemy Konto i dane.' },
             ],
@@ -185,7 +186,7 @@ export const PRIVACY: LegalDocumentData = {
             id: 'bezpieczenstwo',
             title: 'Bezpieczeństwo danych',
             blocks: [
-                { type: 'p', text: 'Stosujemy środki techniczne i organizacyjne odpowiednie do ryzyka, w tym: szyfrowanie połączeń (HTTPS/TLS), przechowywanie haseł wyłącznie w postaci skrótu, krótkotrwałe tokeny dostępu, opcjonalną weryfikację dwuetapową, przechowywanie skanów Certyfikatów i plików z Czatu w prywatnym magazynie z dostępem przez czasowe, podpisane linki, ograniczanie liczby prób logowania, szyfrowane kopie zapasowe w dwóch niezależnych lokalizacjach oraz ograniczony dostęp do danych. Do panelu administracyjnego ma dostęp wyłącznie Administrator; wgląd w treść rozmów na Czacie jest technicznie możliwy tylko w związku ze zgłoszeniem dotyczącym uczestnika rozmowy albo z udokumentowanego powodu (np. żądanie organu), a każdy taki wgląd, podgląd profilu i eksport danych jest rejestrowany. O naruszeniu ochrony danych, które może powodować ryzyko dla Twoich praw, zawiadomimy Prezesa UODO w ciągu 72 godzin, a jeżeli ryzyko jest wysokie – także Ciebie.' },
+                { type: 'p', text: 'Stosujemy środki techniczne i organizacyjne odpowiednie do ryzyka, w tym: szyfrowanie połączeń (HTTPS/TLS), przechowywanie haseł wyłącznie w postaci skrótu, krótkotrwałe tokeny dostępu, opcjonalną weryfikację dwuetapową, przechowywanie skanów Certyfikatów i plików z Czatu w prywatnym magazynie z dostępem przez czasowe, podpisane linki, ograniczanie liczby prób logowania, szyfrowane kopie zapasowe w dwóch niezależnych lokalizacjach oraz ograniczony dostęp do danych. Do panelu administracyjnego ma dostęp wyłącznie Administrator, a logowanie do niego wymaga klucza dostępu (passkey) i odbywa się przez dodatkową bramkę Cloudflare Access; wgląd w treść rozmów na Czacie jest technicznie możliwy tylko w związku ze zgłoszeniem dotyczącym uczestnika rozmowy albo z udokumentowanego powodu (np. żądanie organu), a każdy taki wgląd, podgląd profilu i eksport danych jest rejestrowany. O naruszeniu ochrony danych, które może powodować ryzyko dla Twoich praw, zawiadomimy Prezesa UODO w ciągu 72 godzin, a jeżeli ryzyko jest wysokie – także Ciebie.' },
             ],
         },
         {

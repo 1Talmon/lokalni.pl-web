@@ -40,6 +40,8 @@ interface RawUserPayload {
     zdjecieTla?: string | null;
     unregistered_activity_enabled?: boolean;
     unregisteredActivityEnabled?: boolean;
+    accountType?: 'private' | 'business';
+    account_type?: 'private' | 'business';
     address_street?: string;
     addressStreet?: string;
     address_city?: string;
@@ -331,6 +333,7 @@ export const authService = {
             website: userData.website ?? null,
             zdjecieTla: userData.zdjecieTla ?? null,
             unregisteredActivityEnabled: userData.unregistered_activity_enabled ?? userData.unregisteredActivityEnabled ?? false,
+            accountType: (userData.accountType ?? userData.account_type) === 'business' ? 'business' : 'private',
             addressStreet: userData.address_street ?? userData.addressStreet ?? '',
             addressCity: userData.address_city ?? userData.addressCity ?? '',
             addressPostal: userData.address_postal ?? userData.addressPostal ?? '',
