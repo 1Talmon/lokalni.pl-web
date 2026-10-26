@@ -495,7 +495,7 @@ const PublicProfileView = ({
                                     <Send size={14} className="text-indigo-400" />
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Aktualności</span>
-                                <span className="ml-auto text-[9px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
+                                <span className="ml-auto text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
                                     {!isFeedPending && <>{feed.length} {polishPlural(feed.length, 'wpis', 'wpisy', 'wpisów')} <ChevronRight size={10} /></>}
                                 </span>
                             </div>
@@ -524,7 +524,7 @@ const PublicProfileView = ({
                                 ) : feed.length === 1 ? (
                                     <div className={`relative pl-5 border-l ${feed[0].type === 'realizacja' ? 'border-emerald-500/50' : 'border-indigo-500/50'}`}>
                                         <div className={`absolute left-[-4px] top-2 w-2.5 h-2.5 rounded-full ${feed[0].type === 'realizacja' ? 'bg-emerald-400 ring-4 ring-emerald-400/20' : 'bg-indigo-400 ring-4 ring-indigo-400/20'}`} />
-                                        <span className={`text-[9px] font-black block mb-2 uppercase tracking-widest ${feed[0].type === 'realizacja' ? 'text-emerald-400' : 'text-indigo-400'}`}>
+                                        <span className={`text-[10px] font-black block mb-1.5 uppercase tracking-widest ${feed[0].type === 'realizacja' ? 'text-emerald-400' : 'text-indigo-400'}`}>
                                             {feed[0].date}
                                         </span>
                                         {feed[0].type === 'post' ? (
@@ -538,7 +538,7 @@ const PublicProfileView = ({
                                                 )}
                                                 <div>
                                                     <p className="text-[11px] text-slate-500 font-semibold mb-1">Wykonano usługę</p>
-                                                    <p className="text-[15px] text-slate-200 font-bold leading-snug">{feed[0].serviceName}</p>
+                                                    <p className="text-[14px] text-slate-200 leading-relaxed">{feed[0].serviceName}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -548,7 +548,7 @@ const PublicProfileView = ({
                                         {feed.slice(0, 4).map((item) => (
                                             <div key={`${item.type}-${item.id}`} className={`relative pl-5 border-l ${item.type === 'realizacja' ? 'border-emerald-500/50' : 'border-indigo-500/50'}`}>
                                                 <div className={`absolute left-[-4px] top-1.5 w-2 h-2 rounded-full ${item.type === 'realizacja' ? 'bg-emerald-400 ring-4 ring-emerald-400/20' : 'bg-indigo-400 ring-4 ring-indigo-400/20'}`} />
-                                                <span className={`text-[9px] font-black block mb-1.5 uppercase tracking-widest ${item.type === 'realizacja' ? 'text-emerald-400' : 'text-indigo-400'}`}>
+                                                <span className={`text-[10px] font-black block mb-1 uppercase tracking-widest ${item.type === 'realizacja' ? 'text-emerald-400' : 'text-indigo-400'}`}>
                                                     {item.date}
                                                 </span>
                                                 {item.type === 'post' ? (
@@ -561,7 +561,7 @@ const PublicProfileView = ({
                                                             </div>
                                                         )}
                                                         <p className="text-[14px] text-slate-400 leading-relaxed line-clamp-2">
-                                                            Wykonano: <span className="text-slate-200 font-semibold">{item.serviceName}</span>
+                                                            Wykonano: <span className="text-slate-200">{item.serviceName}</span>
                                                         </p>
                                                     </div>
                                                 )}
