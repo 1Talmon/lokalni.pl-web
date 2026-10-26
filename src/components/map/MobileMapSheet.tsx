@@ -67,7 +67,7 @@ const ServiceCard = ({ svc, onServiceClick, onClose, onHandleDown }: {
             <div style={{ position: 'absolute', bottom: 12, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                     <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-.04em', lineHeight: 1 }}>{svc.price}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginLeft: 4 }}>{svc.priceUnit || 'zł'}</span>{svc.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#EDE9FE', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginLeft: 4 }}>{svc.priceUnit || 'zł'}</span>{svc.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#EDE9FE', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                 </div>
                 {svc.rating > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,.45)', borderRadius: 99, padding: '5px 10px' }}>
@@ -149,7 +149,7 @@ const ClusterCard = ({ item, onServiceClick, onClose, onHandleDown }: {
                             <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                             <p style={{ margin: '0 0 5px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                                <span style={{ fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                                 <span style={{ fontSize: 10, color: '#9ca3af' }}>{s.priceUnit}</span>
                                 {s.rating > 0 && <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#f59e0b', fontWeight: 700 }}><Star size={10} fill="currentColor" />{s.rating}</span>}
                             </div>
@@ -197,7 +197,7 @@ const MobileListSheet = ({ services, onServiceClick, onHandleDown }: {
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                                 <p style={{ margin: '0 0 4px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                                <span style={{ fontSize: 14, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                             </div>
                             <ChevronRight size={14} color="#d1d5db" style={{ flexShrink: 0 }} />
                         </div>
@@ -329,7 +329,7 @@ const DesktopCityList = ({ city, services, onServiceClick, onBack }: {
                         <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                         <p style={{ margin: '0 0 5px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 14, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                            <span style={{ fontSize: 14, fontWeight: 800, color: '#111827', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                             {s.rating > 0 && <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#f59e0b', fontWeight: 700 }}><Star size={9} fill="currentColor" />{s.rating}</span>}
                         </div>
                     </div>
@@ -368,7 +368,7 @@ const DesktopList = ({ services, onServiceClick }: { services: Service[]; onServ
                             <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                             <p style={{ margin: '0 0 5px', fontSize: 11, color: '#94a3b8' }}>{s.provider.name}{s.city ? ` · ${s.city}` : ''}</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                                <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', letterSpacing: '-.02em' }}>{s.price} zł</span>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                                 <span style={{ fontSize: 10, color: '#94a3b8' }}>{s.priceUnit}</span>
                                 {s.rating > 0 && <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#f59e0b', fontWeight: 700 }}><Star size={9} fill="currentColor" />{s.rating}</span>}
                             </div>

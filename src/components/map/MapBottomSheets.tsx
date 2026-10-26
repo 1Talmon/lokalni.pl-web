@@ -68,7 +68,7 @@ export const ServiceBottomSheet = ({
                     <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-.03em' }}>
                         {svc.price}
                     </span>
-                    <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>{svc.priceUnit || 'zł'}</span>{svc.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                    <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>{svc.priceUnit || 'zł'}</span>{svc.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                 </div>
                 <button onClick={() => onView(svc)} style={{
                     background: '#6366F1', color: '#fff', border: 'none',
@@ -144,7 +144,7 @@ export const ClusterBottomSheet = ({
                             margin: '0 0 2px', fontSize: 12, fontWeight: 600, color: '#0f172a',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>{s.title}</p>
-                        <p style={{ margin: 0, fontSize: 11, color: '#6366F1', fontWeight: 700 }}>{s.price} zł</p>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Plus · wyróżnienie</span>}
+                        <p style={{ margin: 0, fontSize: 11, color: '#6366F1', fontWeight: 700 }}>{s.price} zł</p>{s.provider?.isPremium && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, color: '#6D28D9', whiteSpace: 'nowrap' }}>✦ Promowane · Plus</span>}
                     </div>
                 ))}
             </div>

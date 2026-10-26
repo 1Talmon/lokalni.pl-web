@@ -50,8 +50,8 @@ export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter
                         {isOffer ? 'Oferta' : 'Zlecenie'}
                     </div>
                     {service.provider?.isPremium && (
-                        <div className="px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-1 shadow-sm shrink-0 bg-white text-violet-700 border border-violet-200" title="Usługodawca z pakietem Plus – płatne wyróżnienie, wyżej w sortowaniu „Polecane”">
-                            ✦ Plus · wyróżnienie
+                        <div className="px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[10px] md:text-xs font-bold flex items-center gap-1 shadow-sm shrink-0 bg-white text-violet-700 border border-violet-200" title="Promowane: Usługodawca płaci za pakiet Plus, dzięki któremu oferta jest wyżej w sortowaniu „Polecane”">
+                            ✦ Promowane · Plus
                         </div>
                     )}
                 </div>
