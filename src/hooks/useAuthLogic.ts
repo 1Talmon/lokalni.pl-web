@@ -91,7 +91,6 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
     const [showPassword, setShowPassword] = useState(false);
     const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
     const [acceptTerms, setAcceptTerms] = useState(false);
-    const [acceptNewsletter, setAcceptNewsletter] = useState(false);
     const [termsError, setTermsError] = useState(false);
     const [firstNameError, setFirstNameError] = useState('');
     const [lastNameError, setLastNameError] = useState('');
@@ -159,59 +158,71 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         onLoginSuccess((result as { user: UserProfile }).user);
     };
 
-    // Google & Facebook SDK init
-    useEffect(() => {
-        const scriptGoogle = document.createElement('script');
-        scriptGoogle.src = "https://accounts.google.com/gsi/client";
-        scriptGoogle.async = true;
-        scriptGoogle.defer = true;
-        scriptGoogle.onload = () => {
-            const win = window as WindowWithSDKs;
-            if (win.google?.accounts?.id) {
-                win.google.accounts.id.initialize({
-                    client_id: '1020493448098-nprs538u47hv37a9sb6c9qbvpr98bid7.apps.googleusercontent.com',
-                    callback: async (response: { credential?: string }) => {
-                        if (response.credential) {
-                            setIsLoading(true);
-                            try {
-                                const result = await authService.loginWithGoogle(response.credential);
-                                handle2FAOrSuccess(result);
-                            } catch (error: unknown) {
-                                const e = error as AuthError;
-                                if (e.code === 'ACCOUNT_EXISTS') {
-                                    setApiError(e.message);
-                                    setAuthMode('login');
-                                } else {
-                                    setApiError(e.message);
-                                }
-                            } finally {
-                                setIsLoading(false);
-                            }
-                        }
-                    },
-                    auto_select: false,
-                    itp_support: true
-                });
-                if (googleButtonRef.current) {
-                    win.google.accounts.id.renderButton(
-                        googleButtonRef.current,
-                        { theme: "outline", size: "large", width: "100%" }
-                    );
-                }
-            }
-        };
-        document.body.appendChild(scriptGoogle);
+    // Google & Facebook SDKs load only when the user picks that sign-in — no connection to Google or Meta
+    // (IP, cookies) before. The first click loads the SDK and continues; if the browser blocks the popup
+    // after that short wait, the next click opens it at once.
+    const handle2FAOrSuccessRef = useRef(handle2FAOrSuccess);
+    useEffect(() => { handle2FAOrSuccessRef.current = handle2FAOrSuccess; });
+    const googleSdk = useRef<Promise<void> | null>(null);
+    const facebookSdk = useRef<Promise<void> | null>(null);
 
-        (window as WindowWithSDKs).fbAsyncInit = function () {
-            (window as WindowWithSDKs).FB?.init({ appId: '1082296997226159', cookie: true, xfbml: true, version: 'v18.0' });
-        };
-        const scriptFB = document.createElement('script');
-        scriptFB.src = "https://connect.facebook.net/pl_PL/sdk.js";
-        scriptFB.async = true;
-        scriptFB.defer = true;
-        document.body.appendChild(scriptFB);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- SDK scripts load once; handle2FAOrSuccess captured via closure intentionally
-    }, [onLoginSuccess]);
+    const loadScript = (src: string) => new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => { script.remove(); reject(new Error(src)); };
+        document.body.appendChild(script);
+    });
+
+    const loadGoogleSdk = () => {
+        googleSdk.current ??= loadScript('https://accounts.google.com/gsi/client').then(() => {
+            const win = window as WindowWithSDKs;
+            if (!win.google?.accounts?.id) throw new Error('Google SDK');
+            win.google.accounts.id.initialize({
+                client_id: '1020493448098-nprs538u47hv37a9sb6c9qbvpr98bid7.apps.googleusercontent.com',
+                callback: async (response: { credential?: string }) => {
+                    if (response.credential) {
+                        setIsLoading(true);
+                        try {
+                            const result = await authService.loginWithGoogle(response.credential);
+                            handle2FAOrSuccessRef.current(result);
+                        } catch (error: unknown) {
+                            const e = error as AuthError;
+                            if (e.code === 'ACCOUNT_EXISTS') {
+                                setApiError(e.message);
+                                setAuthMode('login');
+                            } else {
+                                setApiError(e.message);
+                            }
+                        } finally {
+                            setIsLoading(false);
+                        }
+                    }
+                },
+                auto_select: false,
+                itp_support: true
+            });
+            if (googleButtonRef.current) {
+                win.google.accounts.id.renderButton(
+                    googleButtonRef.current,
+                    { theme: "outline", size: "large", width: "100%" }
+                );
+            }
+        }).catch((err) => { googleSdk.current = null; throw err; });
+        return googleSdk.current;
+    };
+
+    const loadFacebookSdk = () => {
+        facebookSdk.current ??= new Promise<void>((resolve, reject) => {
+            (window as WindowWithSDKs).fbAsyncInit = function () {
+                (window as WindowWithSDKs).FB?.init({ appId: '1082296997226159', cookie: true, xfbml: false, version: 'v18.0' });
+                resolve();
+            };
+            loadScript('https://connect.facebook.net/pl_PL/sdk.js').catch(reject);
+        }).catch((err) => { facebookSdk.current = null; throw err; });
+        return facebookSdk.current;
+    };
 
     // URL params → mode detection
     useEffect(() => {
@@ -354,15 +365,17 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         codeInputsRef.current[focusTarget]?.focus();
     };
 
-    const handleGoogleLogin = () => {
+    const handleGoogleLogin = async () => {
         setApiError('');
+        try { await loadGoogleSdk(); } catch { setApiError('Nie udało się połączyć z Google. Spróbuj ponownie.'); return; }
         const btn = googleButtonRef.current?.querySelector('div[role="button"]') as HTMLElement;
         if (btn) btn.click();
         else (window as WindowWithSDKs).google?.accounts?.id?.prompt();
     };
 
-    const handleFacebookLogin = () => {
+    const handleFacebookLogin = async () => {
         setApiError('');
+        try { await loadFacebookSdk(); } catch { setApiError('Nie udało się połączyć z Facebookiem. Spróbuj ponownie.'); return; }
         try {
             (window as WindowWithSDKs).FB?.login((response: FacebookLoginResponse) => {
                 if (response.authResponse && response.status === 'connected') {
@@ -441,7 +454,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
                 email: email.trim(), password: password.trim(),
                 imie: firstName.trim(), nazwisko: lastName.trim(),
                 telefon: formattedPhone, zgodaRegulamin: acceptTerms,
-                zgodaNewsletter: acceptNewsletter, kodPolecajacy: referralCode.trim() || undefined,
+                zgodaNewsletter: false, kodPolecajacy: referralCode.trim() || undefined,
                 dateOfBirth: dateOfBirth || undefined,
                 parentalEmail: parentalEmail.trim() || undefined,
             });
@@ -557,6 +570,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
                 if (age < 13) { setDateOfBirthError('Rejestracja jest dostępna od 13. roku życia'); hasError = true; }
                 else if (age < 16 && !parentalEmail) { setParentalEmailError('Adres email rodzica jest wymagany'); hasError = true; }
                 else if (age < 16 && !emailFormatRegex.test(parentalEmail)) { setParentalEmailError('Nieprawidłowy adres email rodzica'); hasError = true; }
+                else if (age < 16 && parentalEmail.trim().toLowerCase() === email.trim().toLowerCase()) { setParentalEmailError('Podaj adres e-mail rodzica lub opiekuna – inny niż Twój'); hasError = true; }
             } else if (!acceptAgeConfirmation) {
                 setAgeConfirmationError(true);
                 hasError = true;
@@ -661,7 +675,7 @@ export function useAuthLogic({ authMode, setAuthMode, onLoginSuccess }: UseAuthL
         // Fields
         email, setEmail, password, setPassword, confirmPassword, firstName, lastName, phoneNumber,
         showPassword, setShowPassword, verificationCode,
-        acceptTerms, setAcceptTerms, acceptNewsletter, setAcceptNewsletter,
+        acceptTerms, setAcceptTerms,
         // Errors
         termsError, firstNameError, lastNameError, passwordError, confirmPasswordError, phoneError, emailError,
         apiError, setApiError, apiSuccess,

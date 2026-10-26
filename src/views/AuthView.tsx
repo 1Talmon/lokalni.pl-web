@@ -40,7 +40,7 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
         phoneInputRef, codeInputsRef, googleButtonRef,
         email, password, confirmPassword, firstName, lastName, phoneNumber,
         showPassword, setShowPassword, verificationCode,
-        acceptTerms, acceptNewsletter, setAcceptNewsletter,
+        acceptTerms,
         termsError, firstNameError, lastNameError, passwordError, confirmPasswordError, phoneError, emailError,
         apiError, setApiError, apiSuccess,
         isLoading, resendTimer, isResending, socialNeedsName,
@@ -537,14 +537,6 @@ const AuthView = ({ authMode, setAuthMode, onLoginSuccess, onGoBack }: AuthViewP
                                                 <span className={`text-sm leading-tight ${termsError ? 'text-red-500 font-medium' : 'text-gray-600'}`}>
                                                     Akceptuję <Link href="/regulamin" className="font-semibold text-[#6366F1]">Regulamin</Link> oraz <Link href="/polityka-prywatnosci" className="font-semibold text-[#6366F1]">Politykę Prywatności</Link>
                                                 </span>
-                                            </label>
-                                            <label className="flex items-start gap-3 cursor-pointer">
-                                                <div className="relative flex items-center pt-0.5">
-                                                    <input type="checkbox" checked={acceptNewsletter} onChange={(e) => setAcceptNewsletter(e.target.checked)}
-                                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:bg-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 outline-none" />
-                                                    <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
-                                                </div>
-                                                <span className="text-sm text-gray-600 leading-tight">Chcę otrzymywać newsletter z informacjami o nowościach i promocjach</span>
                                             </label>
                                         </div>
                                     </motion.div>
