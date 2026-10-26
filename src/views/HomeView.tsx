@@ -160,6 +160,21 @@ const HomeView = ({
     }, [recommendedServices, services, searchQuery, activeCategory, filterType, showOnlineOnly, location, sortBy]);
 
     const [rankingInfoOpen, setRankingInfoOpen] = useState(false);
+    const rankingInfoRef = useRef<HTMLDivElement>(null);
+    // ⓘ przy sortowaniu: zamknij po kliknięciu poza dymkiem lub klawiszem Esc
+    useEffect(() => {
+        if (!rankingInfoOpen) return;
+        const onPointer = (e: PointerEvent) => {
+            if (rankingInfoRef.current && !rankingInfoRef.current.contains(e.target as Node)) setRankingInfoOpen(false);
+        };
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setRankingInfoOpen(false); };
+        document.addEventListener('pointerdown', onPointer);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('pointerdown', onPointer);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [rankingInfoOpen]);
     const [showMap, setShowMap] = useState(false);
     const pathname = usePathname();
     const HeroHeading = pathname === '/' ? 'h1' : 'p';
@@ -454,7 +469,7 @@ const HomeView = ({
                   </h2>
                   <div className="relative flex items-center gap-1 shrink-0">
                       {/* Zasady kolejności i oznaczenia „Promowane” (u.p.n.p.r. art. 6 ust. 3 i zał. pkt 11a) */}
-                      <div className="shrink-0">
+                      <div ref={rankingInfoRef} className="shrink-0">
                           <button type="button" onClick={() => setRankingInfoOpen(o => !o)} aria-label="Jak ustalamy kolejność ofert" aria-expanded={rankingInfoOpen}
                               className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
                               <Info size={17} />
