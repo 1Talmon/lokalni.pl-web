@@ -44,7 +44,8 @@ export function HomeStaticShell({ services, totalServices, groups, posts }: Prop
                 {services.length > 0 && (
                     <section aria-labelledby="home-latest">
                         <h2 id="home-latest" className="text-xl font-bold text-gray-900 mb-4">Najnowsze oferty</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                        {/* data-nosnippet: snippet comes from our description, not offer cards (same in HomeView) */}
+                        <div data-nosnippet="" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                             {services.map((s, i) => <StaticServiceCard key={s.publicId} s={s} priority={i < 4} />)}
                         </div>
                         {providers > 0 && (

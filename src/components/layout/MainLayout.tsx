@@ -307,7 +307,9 @@ export const MainLayout = ({
                 <Suspense fallback={null}>
                     {tabElements ? (
                         <>
-                            <div style={{ height: STRIP_H, display: isOnTabRoute ? 'block' : 'none' }}>
+                            {/* Off a tab route the strip is hidden but stays mounted (home tab keeps its offer cards) —
+                                data-nosnippet stops Google from quoting those cards as a profile's/service's snippet */}
+                            <div style={{ height: STRIP_H, display: isOnTabRoute ? 'block' : 'none' }} data-nosnippet={isOnTabRoute ? undefined : ''}>
                                 <div
                                     ref={tabScrollRef}
                                     onScroll={handleTabScroll}

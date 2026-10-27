@@ -22,7 +22,8 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
     };
 
     return (
-        <footer className="bg-gray-900 text-gray-300 py-12 px-6">
+        // data-nosnippet: links and the operator line are never a useful Google snippet
+        <footer className="bg-gray-900 text-gray-300 py-12 px-6" data-nosnippet="">
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* KOLUMNA 1: LOGO */}
                 <div className="space-y-4">

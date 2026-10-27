@@ -472,7 +472,9 @@ const HomeView = ({
           </div>
         </div>
 
-        <div id="results-section" className="px-4 md:px-6 py-4 md:py-6 max-w-7xl mx-auto">
+        {/* data-nosnippet: Google builds the home/landing snippet from our description, not from a list of offer
+            cards (names, "Promowane"); each offer still has its own indexed page */}
+        <div id="results-section" data-nosnippet="" className="px-4 md:px-6 py-4 md:py-6 max-w-7xl mx-auto">
           {/* FILTRY */}
           <div className="mb-6 md:mb-8">
               {/* Tytuł + Sortowanie */}

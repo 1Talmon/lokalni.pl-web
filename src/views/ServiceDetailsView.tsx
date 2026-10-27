@@ -790,7 +790,8 @@ const ServiceDetailsView = ({
 
                     {/* ── PODOBNE USŁUGI ── */}
                     {similarServices.length > 0 && (
-                        <div className="mt-10">
+                        // data-nosnippet: other providers' offers must not become this offer's Google snippet
+                        <div className="mt-10" data-nosnippet="">
                             <div className="flex items-center justify-between mb-4">
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap shrink-0">Podobne w okolicy</p>
                                 <div className="flex gap-2">

@@ -46,7 +46,8 @@ export function SlugStaticShell({ data, related, parents }: Props) {
             <p className="text-sm text-gray-600 mt-2 max-w-3xl">{intro(group, total, providers, cities)}</p>
 
             <section className="mt-6" aria-label="Oferty">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {/* data-nosnippet: snippet comes from our description, not offer cards (same in HomeView) */}
+                <div data-nosnippet="" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {services.map((s, i) => (
                         <StaticServiceCard key={s.publicId} s={s} priority={i < 4} />
                     ))}
