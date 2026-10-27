@@ -486,12 +486,19 @@ const HomeView = ({
                   <span className="font-semibold text-[10px] md:text-sm text-center leading-tight">{category.name}</span>
                 </>
               );
-              // A plain click filters in place as before; Ctrl/Cmd/middle click opens the landing natively
+              // A plain click filters in place as before; Ctrl/Cmd/middle click opens the landing natively.
+              // stopImmediatePropagation: nextjs-toploader's document click listener (registered after React's
+              // root listener) would start the top bar for this same-origin link and never finish it — no navigation.
               return href ? (
                 <a
                   key={category.id}
                   href={href}
-                  onClick={(e) => { if (e.ctrlKey || e.metaKey) return; e.preventDefault(); setActiveCategory(category.id); }}
+                  onClick={(e) => {
+                    if (e.ctrlKey || e.metaKey) return;
+                    e.preventDefault();
+                    e.nativeEvent.stopImmediatePropagation();
+                    setActiveCategory(category.id);
+                  }}
                   draggable={false}
                   style={{ WebkitTouchCallout: 'none' }}
                   className={chipClass}
