@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { Search, Filter, ArrowUpDown, Info, MapPin, X, ChevronDown, Check, LocateFixed, Loader2 } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
+import { useRecentlyViewed } from '../utils/recentlyViewed';
 import { ClientPortal } from '../components/ui/ClientPortal';
 import { CityAutocomplete } from '../components/ui/CityAutocomplete';
 import { cityService } from '../services/cityService';
@@ -142,22 +143,34 @@ const HomeView = ({
     setShowOnlineOnly,
     skipInitialAnimation,
 }: HomeViewProps) => {
+    // Offers opened in this visit (memory only) — "Polecane" reacts immediately, also without an account
+    const recentlyViewed = useRecentlyViewed();
     const { data: recommendedData } = useQuery({
-        queryKey: ['recommended', isLoggedIn],
-        queryFn:  () => serviceService.getRecommendedServices(),
+        queryKey: ['recommended', isLoggedIn, recentlyViewed.join(',')],
+        queryFn:  () => serviceService.getRecommendedServices(recentlyViewed),
         staleTime: 5 * 60 * 1000,
+        placeholderData: keepPreviousData,
     });
     const recommendedServices = useMemo(() => (recommendedData?.data ?? []) as unknown as Service[], [recommendedData?.data]);
+    const personalized = recommendedData?.source === 'personalized';
 
-    // Wstrzyknij rekomendacje na górę gridu gdy brak aktywnych filtrów (bez duplikatów)
+    // "Polecane" (§11 ust. 4 Regulaminu): offers similar to the recently viewed ones go first (up to 6).
+    // Only for the default order without a search phrase — on top of price/distance sorting or a search they'd break the order.
     const displayServices = useMemo(() => {
-        // Only for the default "Polecane" order — on top of price/distance sorting they'd break the order
-        const noFilters = !searchQuery && activeCategory === 'all' && filterType === 'all' && !showOnlineOnly && !location && sortBy === 'rating';
-        if (!noFilters || recommendedServices.length === 0) return services;
-        const existingIds = new Set(services.map(s => s.publicId));
-        const newRecs = recommendedServices.filter(s => !existingIds.has(s.publicId)).slice(0, 6);
-        return [...newRecs, ...services];
-    }, [recommendedServices, services, searchQuery, activeCategory, filterType, showOnlineOnly, location, sortBy]);
+        if (searchQuery || sortBy !== 'rating' || recommendedServices.length === 0) return services;
+        const noFilters = activeCategory === 'all' && filterType === 'all' && !showOnlineOnly && !location;
+        const byId = new Map(services.map(s => [s.publicId, s]));
+        if (!personalized) {
+            // no history yet: popular offers missing from the first page are added on top (as before)
+            if (!noFilters) return services;
+            return [...recommendedServices.filter(s => !byId.has(s.publicId)).slice(0, 6), ...services];
+        }
+        // with filters only offers already in the results move up (they match the filters); without filters others can join
+        const picks = recommendedServices.filter(s => noFilters || byId.has(s.publicId)).slice(0, 6);
+        if (picks.length === 0) return services;
+        const pickedIds = new Set(picks.map(s => s.publicId));
+        return [...picks.map(s => byId.get(s.publicId) ?? s), ...services.filter(s => !pickedIds.has(s.publicId))];
+    }, [recommendedServices, personalized, services, searchQuery, activeCategory, filterType, showOnlineOnly, location, sortBy]);
 
     const [rankingInfoOpen, setRankingInfoOpen] = useState(false);
     const rankingInfoRef = useRef<HTMLDivElement>(null);
@@ -476,7 +489,7 @@ const HomeView = ({
                           </button>
                           {rankingInfoOpen && (
                               <div className="absolute right-0 top-12 z-30 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-2xl shadow-xl p-4 text-xs text-gray-600 leading-relaxed">
-                                  Kolejność „Polecane” zależy głównie od ocen i liczby zrealizowanych rezerwacji. Oferty oznaczone <span className="font-bold text-violet-600">✦ Promowane</span> należą do Usługodawców z płatnym pakietem Plus, który podnosi ich pozycję.
+                                  Kolejność „Polecane” zależy głównie od ocen i liczby zrealizowanych rezerwacji, a na górze pokazujemy oferty podobne do ostatnio oglądanych. Oferty oznaczone <span className="font-bold text-violet-600">✦ Promowane</span> należą do Usługodawców z płatnym pakietem Plus, który podnosi ich pozycję.
                                   <Link href="/regulamin#ranking" className="block mt-2 font-semibold text-[#6366F1] hover:underline">Zasady kolejności w Regulaminie</Link>
                               </div>
                           )}

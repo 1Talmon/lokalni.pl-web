@@ -137,8 +137,9 @@ export const serviceService = {
     apiClient.post('/events', { event_type: eventType, category }).catch(() => {});
   },
 
-  async getRecommendedServices(): Promise<{ data: ReturnType<typeof mapApiService>[]; source: 'personalized' | 'trending' }> {
-    const res = await apiClient.get('/services/recommended?_v=2');
+  /** `seen` — offers opened in this visit, newest first (similar ones go first in "Polecane"). */
+  async getRecommendedServices(seen: string[] = []): Promise<{ data: ReturnType<typeof mapApiService>[]; source: 'personalized' | 'trending' }> {
+    const res = await apiClient.get(`/services/recommended?_v=3${seen.length ? `&seen=${seen.map(encodeURIComponent).join(',')}` : ''}`);
     if (!res.ok) return { data: [], source: 'trending' };
     const json = await res.json();
     return {

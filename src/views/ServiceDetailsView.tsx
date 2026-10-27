@@ -22,6 +22,7 @@ import { ServiceMediaGallery } from './ServiceDetailsView/ServiceMediaGallery';
 import { ServiceReviews } from './ServiceDetailsView/ServiceReviews';
 import { Service, Review, ProviderProfile } from '../types';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
+import { markViewed } from '../utils/recentlyViewed';
 
 export { ServiceMap } from './ServiceDetailsView/ServiceMap';
 
@@ -166,6 +167,7 @@ const ServiceDetailsView = ({
     const viewedPublicId = activeService && !activeService.isMine ? activeService.publicId : null;
     useEffect(() => {
         if (!viewedPublicId) return;
+        markViewed(viewedPublicId);
         apiClient.post(`/services/${viewedPublicId}/view`, {}).catch(() => {});
     }, [viewedPublicId]);
 
