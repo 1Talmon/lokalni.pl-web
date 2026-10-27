@@ -8,24 +8,26 @@ import { buildProfileJsonLd } from '@/lib/jsonLd';
 import { PublicProfileStaticShell } from '@/app/profile/[uid]/PublicProfileStaticShell';
 import PublicProfileContent from './PublicProfileContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
-import { fetchPosts, fetchProviderServices } from '@/lib/landings';
+import { fetchPosts, fetchProviderServices, isGoneStatus, SeoApiError } from '@/lib/landings';
 import { profileDescription } from '@/lib/seoText';
 import { ssrHeaders } from '@/lib/ssrHeaders';
 
 interface Props { params: Promise<{ uid: string }> }
 
 const fetchProfileMeta = cache(async function fetchProfileMeta(uid: string) {
+    let res: Response;
     try {
-        const res = await fetch(`${API_URL}/users/${uid}/profile`, {
+        res = await fetch(`${API_URL}/users/${uid}/profile`, {
             headers: ssrHeaders(),
             next: { revalidate: 3600 },
         });
-        if (!res.ok) return null;
-        const json = await res.json();
-        return (json.data ?? json) as Record<string, unknown>;
-    } catch {
-        return null;
+    } catch (e) {
+        throw new SeoApiError(`fetch profile ${uid}: ${String(e)}`);
     }
+    if (isGoneStatus(res.status)) return null;
+    if (!res.ok) throw new SeoApiError(`fetch profile ${uid}: HTTP ${res.status}`);
+    const json = await res.json();
+    return (json.data ?? json) as Record<string, unknown>;
 });
 
 function buildProfileName(p: Record<string, unknown>): string {

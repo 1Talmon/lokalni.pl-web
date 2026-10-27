@@ -54,6 +54,10 @@ export interface LandingData {
 /** Thrown on API failure — page renders 500 (retry later) instead of a 404 that would deindex it. */
 export class SeoApiError extends Error {}
 
+/** API statuses meaning the page is really gone (missing, malformed id, deleted/banned → 410). Anything else
+ * that isn't ok (a bot challenge 403, 429, 5xx) is temporary and must not turn a live page into a 404. */
+export const isGoneStatus = (status: number) => status === 400 || status === 404 || status === 410;
+
 async function getJson<T>(path: string): Promise<T | null> {
     let res: Response;
     try {

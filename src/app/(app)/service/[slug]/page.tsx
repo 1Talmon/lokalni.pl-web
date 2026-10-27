@@ -11,21 +11,24 @@ import ServiceDetailsContent from './ServiceDetailsContent';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { serviceDescription, serviceTitle } from '@/lib/seoText';
 import { ssrHeaders } from '@/lib/ssrHeaders';
+import { isGoneStatus, SeoApiError } from '@/lib/landings';
 
 interface Props { params: Promise<{ slug: string }> }
 
 const fetchServiceMeta = cache(async function fetchServiceMeta(publicId: string) {
+    let res: Response;
     try {
-        const res = await fetch(`${API_URL}/services/${publicId}`, {
+        res = await fetch(`${API_URL}/services/${publicId}`, {
             headers: ssrHeaders(),
             next: { revalidate: 3600 },
         });
-        if (!res.ok) return null;
-        const json = await res.json();
-        return (json.data ?? json) as Record<string, unknown>;
-    } catch {
-        return null;
+    } catch (e) {
+        throw new SeoApiError(`fetch service ${publicId}: ${String(e)}`);
     }
+    if (isGoneStatus(res.status)) return null;
+    if (!res.ok) throw new SeoApiError(`fetch service ${publicId}: HTTP ${res.status}`);
+    const json = await res.json();
+    return (json.data ?? json) as Record<string, unknown>;
 });
 
 /** Canonical slug = slugified title + publicId (same algorithm as API sitemap). */
