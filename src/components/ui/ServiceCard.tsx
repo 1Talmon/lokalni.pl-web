@@ -76,7 +76,18 @@ export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter
                         <Star size={12} fill="currentColor" /><span className="font-bold text-xs md:text-sm">{service.rating}</span>
                     </div>
                 </div>
-                <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 md:mb-2 line-clamp-1">{service.title}</h3>
+                <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1 md:mb-2 line-clamp-1">
+                    {/* Real link so crawlers see the offer page; a plain click still goes through the card's
+                        onClick (prepared navigation), Ctrl/Cmd/middle click opens a new tab natively */}
+                    {service.publicId ? (
+                        <a
+                            href={`/service/${createServiceUrl(service.title, service.publicId)}`}
+                            onClick={(e) => { if (e.ctrlKey || e.metaKey) e.stopPropagation(); else e.preventDefault(); }}
+                        >
+                            {service.title}
+                        </a>
+                    ) : service.title}
+                </h3>
                 <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4 line-clamp-2 min-h-[32px] md:min-h-[40px]">{service.description}</p>
                 <div className="flex gap-2 md:gap-3">
                     <button

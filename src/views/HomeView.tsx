@@ -15,6 +15,7 @@ import { MobileMapSheet } from '../components/map/MobileMapSheet';
 import { ServiceCard } from '../components/ui/ServiceCard';
 import { serviceService, mapApiService } from '../services/serviceService';
 import { apiClient } from '../services/apiClient';
+import { CATEGORY_SLUG } from '../lib/seo-data';
 
 
 // Typed one by one into the search placeholder — services young people actually offer here
@@ -153,6 +154,23 @@ const HomeView = ({
     });
     const recommendedServices = useMemo(() => (recommendedData?.data ?? []) as unknown as Service[], [recommendedData?.data]);
     const personalized = recommendedData?.source === 'personalized';
+
+    // Category landings that exist (≥1 public offer): their chips render as real links so crawlers see the
+    // site structure (/motoryzacja…). Chips without a landing stay buttons — no links to 404 pages.
+    const { data: categoryLandingSlugs } = useQuery({
+        queryKey: ['public-landings-categories'],
+        queryFn: async () => {
+            const res = await apiClient.get('/public/landings');
+            if (!res.ok) return [] as string[];
+            const json = await res.json();
+            return ((json.data ?? []) as { slug: string; type: string }[]).filter(g => g.type === 'category').map(g => g.slug);
+        },
+        staleTime: 10 * 60 * 1000,
+    });
+    const categoryHref = (id: string): string | null => {
+        const slug = CATEGORY_SLUG[id];
+        return slug && categoryLandingSlugs?.includes(slug) ? `/${slug}` : null;
+    };
 
     // "Polecane" (§11 ust. 4 Regulaminu): offers similar to the recently viewed ones go first (up to 6).
     // Only for the default order without a search phrase — on top of price/distance sorting or a search they'd break the order.
@@ -457,18 +475,35 @@ const HomeView = ({
         <div className="px-4 md:px-6 py-4 md:py-6 max-w-7xl mx-auto">
           <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Kategorie</h2>
           <div className="flex gap-3 md:gap-4 overflow-x-auto pt-2 pb-4 md:pb-6 -mx-4 px-4 md:-mx-6 md:px-6 md:grid md:grid-cols-8 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
-            {categories.slice(0, 16).map((category) => (
-              <button 
-                key={category.id} 
-                onClick={() => setActiveCategory(category.id)} 
-                className={`min-w-[90px] md:min-w-0 p-2 md:p-3 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 h-24 md:h-28 snap-center border md:hover:-translate-y-1 active:scale-95 ${activeCategory === category.id ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white text-gray-700 border-gray-100 shadow-sm'}`}
-              >
-                <div className="mb-1 md:mb-2 text-xl md:text-2xl">
-                    {category.icon}
-                </div>
-                <span className="font-semibold text-[10px] md:text-sm text-center leading-tight">{category.name}</span>
-              </button>
-            ))}
+            {categories.slice(0, 16).map((category) => {
+              const href = categoryHref(category.id);
+              const chipClass = `min-w-[90px] md:min-w-0 p-2 md:p-3 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 h-24 md:h-28 snap-center border md:hover:-translate-y-1 active:scale-95 ${activeCategory === category.id ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white text-gray-700 border-gray-100 shadow-sm'}`;
+              const chipContent = (
+                <>
+                  <div className="mb-1 md:mb-2 text-xl md:text-2xl">
+                      {category.icon}
+                  </div>
+                  <span className="font-semibold text-[10px] md:text-sm text-center leading-tight">{category.name}</span>
+                </>
+              );
+              // A plain click filters in place as before; Ctrl/Cmd/middle click opens the landing natively
+              return href ? (
+                <a
+                  key={category.id}
+                  href={href}
+                  onClick={(e) => { if (e.ctrlKey || e.metaKey) return; e.preventDefault(); setActiveCategory(category.id); }}
+                  draggable={false}
+                  style={{ WebkitTouchCallout: 'none' }}
+                  className={chipClass}
+                >
+                  {chipContent}
+                </a>
+              ) : (
+                <button key={category.id} onClick={() => setActiveCategory(category.id)} className={chipClass}>
+                  {chipContent}
+                </button>
+              );
+            })}
           </div>
         </div>
 
