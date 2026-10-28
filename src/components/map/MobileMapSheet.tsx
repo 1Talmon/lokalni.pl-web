@@ -327,7 +327,7 @@ const DesktopCityList = ({ city, services, onServiceClick, onBack }: {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                 >
-                    <Image src={s.image} alt="" width={60} height={60} style={{ width: 60, height: 60, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
+                    <Image src={s.image} alt="" width={80} height={80} style={{ width: 80, height: 80, borderRadius: 14, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                         <p style={{ margin: '0 0 5px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
@@ -367,7 +367,7 @@ const DesktopList = ({ services, onServiceClick }: { services: Service[]; onServ
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fafbff'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                     >
-                        <Image src={s.image} alt="" width={60} height={60} style={{ width: 60, height: 60, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
+                        <Image src={s.image} alt="" width={80} height={80} style={{ width: 80, height: 80, borderRadius: 14, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                             <p style={{ margin: '0 0 5px', fontSize: 11, color: '#94a3b8' }}>{s.provider.name}{s.city ? ` · ${s.city}` : ''}</p>
