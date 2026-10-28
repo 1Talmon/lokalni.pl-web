@@ -11,6 +11,9 @@ interface BioSectionProps {
     onSaved?: (newBio: string) => void;
 }
 
+// Same limit as the API (users.schema: bio max 1000) — without it a longer text failed with a generic error
+const BIO_MAX = 1000;
+
 export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [bioText, setBioText] = useState(currentBio);
@@ -90,6 +93,7 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
                     <textarea
                         ref={textareaRef}
                         value={bioText}
+                        maxLength={BIO_MAX}
                         onChange={(e) => setBioText(e.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
@@ -101,7 +105,7 @@ export const BioSection = ({ currentBio = '', onSaved }: BioSectionProps) => {
                     />
                     <div className={`flex justify-end p-2 px-8 pb-6 bg-transparent transition-opacity duration-200 ${showEmptyState ? 'opacity-0' : 'opacity-100'}`}>
                         <span className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em]">
-                            {bioText.length} ZNAKÓW
+                            {bioText.length} / {BIO_MAX} ZNAKÓW
                         </span>
                     </div>
                 </div>
