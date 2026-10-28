@@ -533,7 +533,7 @@ const HomeView = ({
                           </button>
                           {rankingInfoOpen && (
                               <div className="absolute right-0 top-12 z-30 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-2xl shadow-xl p-4 text-xs text-gray-600 leading-relaxed">
-                                  Kolejność „Polecane” zależy głównie od ocen i liczby zrealizowanych rezerwacji, a na górze pokazujemy oferty podobne do ostatnio oglądanych. Oferty oznaczone <span className="font-bold text-violet-600">✦ Promowane</span> należą do Usługodawców z płatnym pakietem Plus, który podnosi ich pozycję.
+                                  Kolejność „Polecane” zależy głównie od ocen i liczby zrealizowanych rezerwacji, a na górze pokazujemy oferty podobne do ostatnio oglądanych. Oferty oznaczone <span className="font-bold text-violet-600">✦ Promowane</span> należą do Usługodawców z płatnym pakietem Plus, który podnosi ich pozycję. Po wybraniu miejsca domyślnie sortujemy od najbliższych.
                                   <Link href="/regulamin#ranking" className="block mt-2 font-semibold text-[#6366F1] hover:underline">Zasady kolejności w Regulaminie</Link>
                               </div>
                           )}

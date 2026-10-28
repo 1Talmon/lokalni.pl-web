@@ -163,13 +163,13 @@ export const TERMS: LegalDocumentData = {
             title: 'Kolejność wyświetlania Ogłoszeń',
             blocks: [
                 { type: 'p', text: '1. Informacja o głównych parametrach decydujących o kolejności (plasowaniu) Ogłoszeń w wynikach wyszukiwania – na podstawie art. 12a pkt 1 ustawy o prawach konsumenta, art. 6 ust. 3 ustawy o przeciwdziałaniu nieuczciwym praktykom rynkowym oraz art. 5 rozporządzenia (UE) 2019/1150 (P2B).' },
-                { type: 'p', text: '2. Wyniki są najpierw zawężane według kryteriów wybranych przez Użytkownika (fraza, kategoria, miejscowość, promień, cena). Gdy Użytkownik wskaże lokalizację, Ogłoszenia usług świadczonych zdalnie są wyświetlane po Ogłoszeniach lokalnych.' },
+                { type: 'p', text: '2. Wyniki są najpierw zawężane według kryteriów wybranych przez Użytkownika (fraza, kategoria, miejscowość, promień, cena). Gdy Użytkownik wskaże miejscowość lub lokalizację, wyświetlane są Ogłoszenia z tego miejsca oraz Ogłoszenia Usługodawców, których obszar działania (miejscowość i promień dojazdu podane w Ogłoszeniu) obejmuje to miejsce; Ogłoszenia usług świadczonych zdalnie są wyświetlane po Ogłoszeniach lokalnych.' },
                 { type: 'p', text: '3. W ramach zawężonych wyników kolejność zależy od wybranego sortowania:' },
                 {
                     type: 'list',
                     items: [
-                        '**Polecane** (domyślnie) – według wskaźnika, w którym ok. 50% stanowi średnia ocen z Opinii, ok. 30% liczba zrealizowanych Rezerwacji, a ok. 20% posiadanie przez Usługodawcę pakietu Plus; przy równym wyniku – nowsze Ogłoszenia wyżej,',
-                        '**Odległość** – od najbliższych względem wskazanej lokalizacji,',
+                        '**Polecane** (domyślnie, gdy Użytkownik nie wskazał miejscowości ani lokalizacji) – według wskaźnika, w którym ok. 50% stanowi średnia ocen z Opinii, ok. 30% liczba zrealizowanych Rezerwacji, a ok. 20% posiadanie przez Usługodawcę pakietu Plus; przy równym wyniku – nowsze Ogłoszenia wyżej,',
+                        '**Odległość** (domyślnie po wskazaniu miejscowości lub lokalizacji) – od najbliższych, licząc od środka wskazanej miejscowości albo od lokalizacji urządzenia,',
                         '**Cena** – od najniższej ceny podanej w Ogłoszeniu,',
                         '**Plus najpierw** – najpierw Ogłoszenia Usługodawców z pakietem Plus, następnie według średniej ocen i liczby Rezerwacji.',
                     ],
