@@ -255,6 +255,11 @@ const PublicProfileView = ({
     const providerData = provider;
     const fullName = `${providerData.imie || ''} ${providerData.nazwisko || ''}`.trim() || provider.name || "Użytkownik";
     const providerIsPremium = !!(provider.isPremium ?? false);
+    // Empty sections stay hidden for visitors (owner's decision 2026-10-28): News when there are no posts and no
+    // completed bookings (those fill it automatically), Certificates when there are none. The counts come with the
+    // profile, so the layout is settled before the sections' own data loads; an API without counts → shown as before.
+    const showFeed = providerIsPremium && ((provider.postsCount ?? 1) > 0 || (provider.completedBookings ?? 0) > 0);
+    const showCerts = providerIsPremium && (provider.certificatesCount ?? 1) > 0;
 
     const avatarUrl = normalizeMediaUrl(providerData.profilowe) || normalizeMediaUrl(provider.avatar) || null;
     const bgImageUrl: string | null = (providerIsPremium && providerData.zdjecieTla) ? (providerData.zdjecieTla as string) : null;
@@ -398,6 +403,26 @@ const PublicProfileView = ({
     const hasMoreServices = allServices.length > visibleLimit;
     const displayedServices = isExpanded ? allServices : allServices.slice(0, visibleLimit);
 
+    const certsCard = (
+                        <button
+                            onClick={() => setCertListOpen(true)}
+                            className="w-full bg-[#6366F1] p-6 rounded-3xl shadow-lg shadow-indigo-300/30 text-white relative overflow-hidden shrink-0 hover:bg-[#4f51e0] transition-colors group text-left cursor-pointer"
+                        >
+                            <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
+                                <FileCheck size={110} />
+                            </div>
+                            <div className="relative z-10">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-1">Dokumentacja</p>
+                                <h3 className="text-lg font-black tracking-tight mb-2">Certyfikaty i kompetencje</h3>
+                                <p className="text-[11px] text-indigo-200 font-semibold">{certItems.length || provider.certificatesCount || 0} pozycji · kliknij, aby zobaczyć</p>
+                                <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Otwórz dokumentację</span>
+                                    <ChevronRight size={14} className="text-indigo-300 group-hover:translate-x-0.5 transition-transform" />
+                                </div>
+                            </div>
+                        </button>
+    );
+
     return (
         <div className="min-h-screen bg-[#F4F4F9] pb-32 font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
 
@@ -426,7 +451,7 @@ const PublicProfileView = ({
 
                 {/* ── BIO + AKTUALNOŚCI ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-6">
-                    <div className={`${providerIsPremium ? 'lg:col-span-5' : 'lg:col-span-12'} flex flex-col gap-5`}>
+                    <div className={`${showFeed || showCerts ? 'lg:col-span-5' : 'lg:col-span-12'} flex flex-col gap-5`}>
                         {/* O mnie */}
                         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex-1 flex flex-col">
                             <div className="flex items-center gap-2.5 mb-4">
@@ -462,30 +487,15 @@ const PublicProfileView = ({
                             </div>
                         </div>
 
-                        {/* Certyfikaty — tylko Premium */}
-                        {providerIsPremium && (
-                            <button
-                                onClick={() => setCertListOpen(true)}
-                                className="w-full bg-[#6366F1] p-6 rounded-3xl shadow-lg shadow-indigo-300/30 text-white relative overflow-hidden shrink-0 hover:bg-[#4f51e0] transition-colors group text-left cursor-pointer"
-                            >
-                                <div className="absolute -right-4 -bottom-4 opacity-[0.08] pointer-events-none">
-                                    <FileCheck size={110} />
-                                </div>
-                                <div className="relative z-10">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-1">Dokumentacja</p>
-                                    <h3 className="text-lg font-black tracking-tight mb-2">Certyfikaty i kompetencje</h3>
-                                    <p className="text-[11px] text-indigo-200 font-semibold">{certItems.length} pozycji · kliknij, aby zobaczyć</p>
-                                    <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Otwórz dokumentację</span>
-                                        <ChevronRight size={14} className="text-indigo-300 group-hover:translate-x-0.5 transition-transform" />
-                                    </div>
-                                </div>
-                            </button>
-                        )}
+                        {/* Certyfikaty pod opisem – gdy obok są Aktualności */}
+                        {showFeed && showCerts && certsCard}
                     </div>
 
-                    {/* Aktualności — tylko Premium */}
-                    {providerIsPremium && <div className="lg:col-span-7">
+                    {/* Bez Aktualności po prawej stają Certyfikaty – nigdy pusty panel */}
+                    {!showFeed && showCerts && <div className="lg:col-span-7">{certsCard}</div>}
+
+                    {/* Aktualności – tylko Premium i tylko gdy są wpisy lub realizacje */}
+                    {showFeed && <div className="lg:col-span-7">
                         <button
                             onClick={openNewsFeed}
                             className="w-full h-full bg-slate-900 p-7 rounded-3xl border border-slate-800 flex flex-col cursor-pointer hover:bg-slate-800/90 transition-colors group text-left"

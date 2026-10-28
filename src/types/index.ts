@@ -89,6 +89,8 @@ export interface ProviderProfile {
   isVerified?: boolean  // Czy wykonawca jest zweryfikowany
   accountType?: 'private' | 'business' // oświadczenie Usługodawcy (art. 12a u.p.k.)
   completedBookings?: number // zrealizowane Rezerwacje (status completed/reviewed)
+  postsCount?: number        // wpisy Aktualności (bez nich i bez realizacji sekcja jest ukryta)
+  certificatesCount?: number // Certyfikaty (bez nich sekcja jest ukryta)
   deleted?: boolean
   joinedAt?: string | null
   avgRating?: number

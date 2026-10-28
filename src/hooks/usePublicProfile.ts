@@ -22,6 +22,8 @@ interface PublicProfileResponse {
   isPremium?: boolean;
   accountType?: 'private' | 'business';
   completedBookings?: number;
+  postsCount?: number;
+  certificatesCount?: number;
   zdjecieTla?: string | null;
   facebook?: string | null;
   instagram?: string | null;
@@ -56,6 +58,8 @@ export const usePublicProfile = (uid: string | undefined) => {
     isPremium: data.isPremium ?? false,
     accountType: data.accountType,
     completedBookings: data.completedBookings ?? 0,
+    postsCount: data.postsCount,
+    certificatesCount: data.certificatesCount,
     zdjecieTla: data.zdjecieTla ?? null,
     servicesCount: data.servicesCount ?? 0,
     email: data.email,
