@@ -478,10 +478,10 @@ export const useAppLogic = () => {
             if (!isLoggedIn) { router.push('/auth'); return; }
             toggleFavoriteMutation.mutate({ publicId, remove: effectiveFavoriteIds.has(publicId) });
         },
-        handleLoginSuccess: (u: UserProfile | null) => {
+        handleLoginSuccess: (u: UserProfile | null, redirectTo = '/') => {
             setIsLoggedIn(true);
             setUserProfile(u);
-            router.push('/');
+            router.push(redirectTo);
             addToast("Zalogowano pomyślnie");
         },
         handleNotificationClick: () => setShowNotifications(!showNotifications),

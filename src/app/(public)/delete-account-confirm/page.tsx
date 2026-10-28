@@ -1,11 +1,10 @@
 'use client';
 import { useApp } from '../../../providers/AppProvider';
 import { DeleteAccountConfirmView } from '../../../views/DeleteAccountConfirmView';
-import { useRouter } from 'next/navigation';
 
+// The link from the confirmation e-mail carries a one-time token and the API confirms with it alone — no login.
+// It's often opened in a browser where the user isn't signed in (deletion requested in the app, link opened from mail).
 export default function DeleteAccountConfirmPage() {
-    const { state, actions } = useApp();
-    const router = useRouter();
-    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace('/auth'); return null; }
+    const { actions } = useApp();
     return <DeleteAccountConfirmView addToast={actions.addToast} />;
 }

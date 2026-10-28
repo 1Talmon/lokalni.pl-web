@@ -12,12 +12,15 @@ function AuthPageContent() {
     const { actions } = useApp();
     const initialMode = (searchParams.get('mode') as AuthMode) || 'login';
     const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
+    // ?next=/delete-account — back to that page after signing in; same-site paths only (no "//host" open redirect)
+    const nextParam = searchParams.get('next');
+    const next = nextParam && /^\/(?!\/)[\w\-/]*$/.test(nextParam) ? nextParam : '/';
 
     return (
         <AuthView
             authMode={authMode}
             setAuthMode={setAuthMode}
-            onLoginSuccess={actions.handleLoginSuccess}
+            onLoginSuccess={(u) => actions.handleLoginSuccess(u, next)}
             onGoBack={() => router.back()}
         />
     );

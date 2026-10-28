@@ -72,7 +72,7 @@ export interface AppActions {
     removeToast: (id: number) => void;
     onServiceClick: (s: Service) => void | Promise<void>;
     toggleFavorite: (publicId: string) => void;
-    handleLoginSuccess: (u: UserProfile | null) => void;
+    handleLoginSuccess: (u: UserProfile | null, redirectTo?: string) => void;
     handleNotificationClick: () => void;
     handleNotificationItemClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null) => Promise<void>;
     onMarkAllRead: () => Promise<void>;
