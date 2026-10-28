@@ -435,7 +435,7 @@ const PublicProfileView = ({
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">O mnie</span>
                             </div>
-                            <p className="text-slate-600 text-[14px] leading-relaxed flex-1">
+                            <p className="text-slate-600 text-[14px] leading-relaxed flex-1 whitespace-pre-line break-words">
                                 {provider.description || "Ten wykonawca jeszcze nie dodał opisu. Napisz wiadomość, aby dowiedzieć się więcej o oferowanych usługach."}
                             </p>
                             {provider?.accountType && (

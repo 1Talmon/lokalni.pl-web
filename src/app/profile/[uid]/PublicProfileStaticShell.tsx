@@ -114,7 +114,7 @@ export function PublicProfileStaticShell({ data, services = [], posts = [] }: { 
                     )}
 
                     {data.bio && (
-                        <p className="text-gray-600 leading-relaxed text-sm">
+                        <p className="text-gray-600 leading-relaxed text-sm whitespace-pre-line break-words">
                             {String(data.bio).slice(0, 400)}
                         </p>
                     )}
