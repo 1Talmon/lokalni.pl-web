@@ -34,7 +34,7 @@ export const ServiceBottomSheet = ({
                 style={{ display: 'flex', gap: 14, alignItems: 'flex-start', touchAction: 'none', cursor: 'grab' }}
             >
                 <Image src={svc.image} alt="" width={80} height={80}
-                    style={{ borderRadius: 14, objectFit: 'cover', flexShrink: 0 }}
+                    style={{ width: 80, height: 80, borderRadius: 14, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
@@ -130,7 +130,7 @@ export const ClusterBottomSheet = ({
                     >
                         <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 7 }}>
                             <Image src={s.image} alt="" width={136} height={96}
-                                style={{ objectFit: 'cover', display: 'block' }}
+                                style={{ width: 136, height: 96, objectFit: 'cover', display: 'block', background: '#f3f4f6' }}
                             />
                             {s.rating > 0 && (
                                 <div style={{

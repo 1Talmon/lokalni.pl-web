@@ -144,7 +144,8 @@ const ClusterCard = ({ item, onServiceClick, onClose, onHandleDown }: {
                         onTouchStart={e => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; }}
                         onTouchEnd={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                     >
-                        <Image src={s.image} alt="" width={64} height={64} style={{ borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
+                        {/* Size in style too: the global img { height: auto } beats the height attribute, so portrait photos came out taller */}
+                        <Image src={s.image} alt="" width={64} height={64} style={{ width: 64, height: 64, borderRadius: 14, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                             <p style={{ margin: '0 0 5px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
@@ -194,7 +195,7 @@ const MobileListSheet = ({ services, onServiceClick, onHandleDown }: {
                             onTouchStart={e => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; }}
                             onTouchEnd={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                         >
-                            <Image src={s.image} alt="" width={54} height={54} style={{ borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                            <Image src={s.image} alt="" width={54} height={54} style={{ width: 54, height: 54, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                                 <p style={{ margin: '0 0 4px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
@@ -326,7 +327,7 @@ const DesktopCityList = ({ city, services, onServiceClick, onBack }: {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f9fafb'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                 >
-                    <Image src={s.image} alt="" width={60} height={60} style={{ borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                    <Image src={s.image} alt="" width={60} height={60} style={{ width: 60, height: 60, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                         <p style={{ margin: '0 0 5px', fontSize: 11, color: '#9ca3af' }}>{s.provider.name}</p>
@@ -366,7 +367,7 @@ const DesktopList = ({ services, onServiceClick }: { services: Service[]; onServ
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fafbff'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
                     >
-                        <Image src={s.image} alt="" width={60} height={60} style={{ borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                        <Image src={s.image} alt="" width={60} height={60} style={{ width: 60, height: 60, borderRadius: 12, objectFit: 'cover', flexShrink: 0, background: '#f3f4f6' }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</p>
                             <p style={{ margin: '0 0 5px', fontSize: 11, color: '#94a3b8' }}>{s.provider.name}{s.city ? ` · ${s.city}` : ''}</p>
