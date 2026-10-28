@@ -488,7 +488,7 @@ const HomeView = ({
                   <div className="mb-1 md:mb-2 text-xl md:text-2xl">
                       {category.icon}
                   </div>
-                  <span className="font-semibold text-[10px] md:text-sm text-center leading-tight">{category.name}</span>
+                  <span className="font-semibold text-xs md:text-sm text-center leading-tight">{category.name}</span>
                 </>
               );
               // A plain click filters in place as before; Ctrl/Cmd/middle click opens the landing natively.
