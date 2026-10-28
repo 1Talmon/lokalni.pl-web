@@ -317,8 +317,11 @@ const HomeView = ({
         return () => observer.disconnect();
     }, [services.length, loadedCount, setLoadedCount]);
 
-    // Klucz animacji wymuszający przerysowanie przy zmianie filtrów
-    const animationKey = `${filterType}-${activeCategory}-${showOnlineOnly}-${location}-${sortBy}`;
+    // Animate when the shown results actually change, not when a filter is tapped: while the new list loads the
+    // previous one stays on screen (keepPreviousData), so a filter-based key faded the old cards out, faded the same
+    // cards back in and then swapped them abruptly when the data arrived — 2–3 flashes per category change.
+    // First 12 ids only, so a longer list growing at the end doesn't re-animate everything.
+    const animationKey = useMemo(() => displayServices.slice(0, 12).map(s => s.publicId).join(','), [displayServices]);
 
     return (
         <motion.div
@@ -477,7 +480,9 @@ const HomeView = ({
           <div className="flex gap-3 md:gap-4 overflow-x-auto pt-2 pb-4 md:pb-6 -mx-4 px-4 md:-mx-6 md:px-6 md:grid md:grid-cols-8 md:overflow-visible md:pb-0 scrollbar-hide snap-x">
             {categories.slice(0, 16).map((category) => {
               const href = categoryHref(category.id);
-              const chipClass = `min-w-[90px] md:min-w-0 p-2 md:p-3 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 h-24 md:h-28 snap-center border md:hover:-translate-y-1 active:scale-95 ${activeCategory === category.id ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white text-gray-700 border-gray-100 shadow-sm'}`;
+              // Colors switch instantly: animating background and text together passed through the same grey,
+              // so for a few frames the tapped chip was a blank grey tile. Only lift/press stays animated.
+              const chipClass = `min-w-[90px] md:min-w-0 p-2 md:p-3 rounded-2xl flex flex-col items-center justify-center transition-[transform,box-shadow] duration-200 h-24 md:h-28 snap-center border md:hover:-translate-y-1 active:scale-95 ${activeCategory === category.id ? 'bg-gray-900 text-white border-gray-900 shadow-lg' : 'bg-white text-gray-700 border-gray-100 shadow-sm'}`;
               const chipContent = (
                 <>
                   <div className="mb-1 md:mb-2 text-xl md:text-2xl">
