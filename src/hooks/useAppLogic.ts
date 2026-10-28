@@ -49,7 +49,16 @@ export const useAppLogic = () => {
     });
     const [location, setLocation] = usePersistedState('user_location', '');
     const [pickedCoords, setPickedCoords] = usePersistedState<{ lat: number; lng: number } | null>('user_location_coords', null);
-    const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'distance' | 'verified'>('rating');
+    // With a chosen place the nearest offers come first (owner's decision 2026-10-28) — the list also holds
+    // providers from nearby towns whose travel radius covers the place; "Polecane" stays one tap away.
+    const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'distance' | 'verified'>(() => (location ? 'distance' : 'rating'));
+    const prevLocationRef = useRef(location);
+    useEffect(() => {
+        if (prevLocationRef.current === location) return;
+        prevLocationRef.current = location;
+        // A new place → nearest first; place cleared → "distance" has nothing to measure from → back to "Polecane"
+        setSortBy(prev => (location ? 'distance' : prev === 'distance' ? 'rating' : prev));
+    }, [location]);
     const [filterType, setFilterType] = useState<'all' | 'offer' | 'request'>('all');
     const [showOnlineOnly, setShowOnlineOnly] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = usePersistedState('is_logged_in', false);
