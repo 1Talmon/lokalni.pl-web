@@ -801,6 +801,10 @@ export const ChatModal = ({
             date: m.bookingData.date ?? undefined,
             time: m.bookingData.time ?? undefined,
             address: m.bookingData.address ?? undefined,
+            addressLat: m.bookingData.addressLat,
+            addressLng: m.bookingData.addressLng,
+            serviceMode: m.bookingData.serviceMode,
+            serviceCity: m.bookingData.serviceCity ?? undefined,
             notes: m.bookingData.notes ?? undefined,
             message: m.bookingData.message ?? undefined,
             // eslint-disable-next-line eqeqeq

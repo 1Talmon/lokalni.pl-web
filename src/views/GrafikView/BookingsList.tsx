@@ -7,8 +7,31 @@ import {
     Clock, Banknote, ChevronRight, PartyPopper, X, Loader2, Save, Info,
 } from 'lucide-react';
 import { MapNavigationButton } from '../../components/ui/MapNavigationButton';
-import type { BookingEvent } from '../../hooks/useBookings';
+import type { ApiBooking, BookingEvent } from '../../hooks/useBookings';
+import { bookingPlace } from '../../utils/bookingPlace';
 import { fmt, getTodayStr } from './helpers';
+
+// Address with navigation when the booking has one, otherwise the offer's mode (on-site with only a city is not "online").
+const BookingPlaceLine = ({ booking, iconClass }: { booking: ApiBooking; iconClass: string }) => {
+    const place = bookingPlace(booking);
+    if (!place) return null;
+    if (place.remote) return <span className="flex items-center gap-1"><Globe size={10} className={iconClass} />{place.label}</span>;
+    return (
+        <div className="flex items-center gap-1.5 w-full">
+            <MapPin size={10} className={`${iconClass} shrink-0`} />
+            <span className="flex-1 leading-snug">{place.label}</span>
+            {booking.address && booking.addressLat && booking.addressLng && (
+                <MapNavigationButton
+                    lat={booking.addressLat}
+                    lng={booking.addressLng}
+                    label={booking.address}
+                    buttonClassName="p-1.5 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 active:scale-90 transition-all shrink-0"
+                    iconSize={14}
+                />
+            )}
+        </div>
+    );
+};
 
 // ── PlanDayDetail ──────────────────────────────────────────────────────────────
 
@@ -86,21 +109,7 @@ export const PlanDayDetail = memo(({ selected, events, busyDays, onComplete, onO
                                 <p className="font-bold text-gray-900 text-sm truncate">{ev.booking.serviceTitle}</p>
                                 <p className="text-xs text-gray-400 font-medium truncate">{ev.otherPartyName}</p>
                                 <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-500 font-medium">
-                                    {ev.booking.address
-                                        ? <div className="flex items-center gap-1.5 w-full">
-                                            <MapPin size={10} className="text-indigo-400 shrink-0" />
-                                            <span className="flex-1 leading-snug">{ev.booking.address}</span>
-                                            {ev.booking.addressLat && ev.booking.addressLng && (
-                                                <MapNavigationButton
-                                                    lat={ev.booking.addressLat}
-                                                    lng={ev.booking.addressLng}
-                                                    label={ev.booking.address}
-                                                    buttonClassName="p-1.5 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 active:scale-90 transition-all shrink-0"
-                                                    iconSize={14}
-                                                />
-                                            )}
-                                          </div>
-                                        : <span className="flex items-center gap-1"><Globe size={10} className="text-indigo-400" />Online</span>}
+                                    <BookingPlaceLine booking={ev.booking} iconClass="text-indigo-400" />
                                     <span className="flex items-center gap-1 font-bold text-gray-700">
                                         <Banknote size={10} className="text-indigo-400" />{ev.booking.price} {ev.booking.priceUnit}
                                     </span>
@@ -179,21 +188,7 @@ export const DayPanel = memo(({ selected, events, busyDays, onClose, onComplete 
                                     <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-500 font-medium">
                                         {ev.booking.time && <span className="flex items-center gap-1"><Clock size={10} className="text-[#6366F1]" />{ev.booking.time}</span>}
                                         <span className="flex items-center gap-1 font-bold text-gray-700"><Banknote size={10} className="text-[#6366F1]" />{ev.booking.price} {ev.booking.priceUnit}</span>
-                                        {ev.booking.address
-                                            ? <div className="flex items-center gap-1.5 w-full">
-                                                <MapPin size={10} className="text-[#6366F1] shrink-0" />
-                                                <span className="flex-1 leading-snug">{ev.booking.address}</span>
-                                                {ev.booking.addressLat && ev.booking.addressLng && (
-                                                    <MapNavigationButton
-                                                        lat={ev.booking.addressLat}
-                                                        lng={ev.booking.addressLng}
-                                                        label={ev.booking.address}
-                                                        buttonClassName="p-1.5 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 active:scale-90 transition-all shrink-0"
-                                                        iconSize={14}
-                                                    />
-                                                )}
-                                              </div>
-                                            : <span className="flex items-center gap-1"><Globe size={10} className="text-[#6366F1]" />Online</span>}
+                                        <BookingPlaceLine booking={ev.booking} iconClass="text-[#6366F1]" />
                                     </div>
                                     {!ev.isOutgoing && onComplete && (
                                         <button onClick={() => onComplete(ev.booking.id)}

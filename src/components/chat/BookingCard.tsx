@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { createServiceUrl } from '../../utils/helpers';
+import { bookingPlace } from '../../utils/bookingPlace';
 import type { BookingData, BookingStatus } from '../../types';
 import { RescheduleSheet } from '../modals/RescheduleSheet';
 import { MapNavigationButton } from '../ui/MapNavigationButton';
@@ -57,6 +58,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
     const isRequest = booking.serviceType === 'request';
     const isDone = booking.status !== 'pending';
     const isCompleted = booking.status === 'completed' || booking.status === 'reviewed';
+    const place = bookingPlace(booking);
     const [showReschedule, setShowReschedule] = useState(false);
     const router = useRouter();
 
@@ -149,11 +151,16 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                     {booking.time && <span className="text-xs text-slate-400">{booking.time}</span>}
                                 </div>
                             )}
-                            {booking.address ? (
+                            {place && (place.remote ? (
+                                <div className="flex items-center gap-2 text-slate-500">
+                                    <Globe size={13} className="text-indigo-400 shrink-0" />
+                                    <span className="text-xs">{place.label}</span>
+                                </div>
+                            ) : (
                                 <div className="flex items-start gap-2 text-slate-600">
                                     <MapPin size={13} className="text-indigo-400 shrink-0 mt-0.5" />
-                                    <span className="text-xs flex-1 leading-relaxed">{booking.address}</span>
-                                    {booking.addressLat && booking.addressLng && (
+                                    <span className="text-xs flex-1 leading-relaxed">{place.label}</span>
+                                    {booking.address && booking.addressLat && booking.addressLng && (
                                         <MapNavigationButton
                                             lat={booking.addressLat}
                                             lng={booking.addressLng}
@@ -163,12 +170,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                         />
                                     )}
                                 </div>
-                            ) : (
-                                <div className="flex items-center gap-2 text-slate-500">
-                                    <Globe size={13} className="text-indigo-400 shrink-0" />
-                                    <span className="text-xs">Zdalnie / Online</span>
-                                </div>
-                            )}
+                            ))}
                             <div className="flex items-center gap-2">
                                 <Banknote size={13} className="text-indigo-400 shrink-0" />
                                 <span className="text-xs font-bold text-slate-900">{booking.price} {booking.priceUnit}</span>

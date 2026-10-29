@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../services/apiClient';
 import { normalizeMediaUrl } from '../utils/normalizeUrl';
+import type { ServiceMode } from '../utils/bookingPlace';
 
 export interface ApiBooking {
   id: number | string;
@@ -25,6 +26,8 @@ export interface ApiBooking {
   address: string | null;
   addressLat?: number;
   addressLng?: number;
+  serviceMode?: ServiceMode;
+  serviceCity?: string | null;
   notes: string | null;
   message: string | null;
   proposedPrice?: number;

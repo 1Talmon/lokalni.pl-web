@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import type { ServiceMode } from '../utils/bookingPlace';
 
 // --- NOWY INTERFEJS DLA WYSZUKIWARKI MIAST ---
 export interface CityResult {
@@ -202,6 +203,8 @@ export interface BookingData {
   notes?: string;
   addressLat?: number;
   addressLng?: number;
+  serviceMode?: ServiceMode;
+  serviceCity?: string;
   // Aplikacja (request)
   message?: string;
   proposedPrice?: string;

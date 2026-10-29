@@ -1,5 +1,6 @@
 // src/services/chatService.ts
 import { apiClient } from './apiClient';
+import type { ServiceMode } from '../utils/bookingPlace';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ export interface ApiMessageBooking {
   address: string | null;
   addressLat?: number;
   addressLng?: number;
+  serviceMode?: ServiceMode;
+  serviceCity?: string | null;
   notes: string | null;
   message: string | null;
   proposedPrice?: number;
