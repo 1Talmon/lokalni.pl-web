@@ -162,7 +162,7 @@ export async function rescheduleBooking(
         const json = await res.json() as { chatId?: string };
         queryClient.invalidateQueries({ queryKey: ['bookings'] });
         queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
-        addToast('Termin zmieniony!', 'success');
+        addToast('Nowy termin wysłany — czeka na akceptację drugiej strony.', 'success');
         if (json.chatId) {
             setCurrentChatId(json.chatId);
             setActiveModal('chat_detail');

@@ -59,6 +59,11 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
     const isDone = booking.status !== 'pending';
     const isCompleted = booking.status === 'completed' || booking.status === 'reviewed';
     const place = bookingPlace(booking);
+    // Role comes from the booking, not from who sent this card: after a date change the card is sent by whoever
+    // proposed the new date. A pending date is answered by the side that didn't propose it.
+    const iAmClient = booking.isMine ?? isMe;
+    const proposedByProvider = booking.proposedBy === 'provider';
+    const myTurn = iAmClient ? proposedByProvider : !proposedByProvider;
     const [showReschedule, setShowReschedule] = useState(false);
     const router = useRouter();
 
@@ -186,14 +191,18 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                 </div>
                 </div>
 
-                {/* Akcje */}
+                {/* Akcje — oczekuje: odpowiada strona, która nie proponowała terminu */}
                 {!isDone && (
                     <div className="pt-2 border-t border-slate-50 space-y-2">
-                        {/* Wykonawca/Zleceniodawca (nie ja) — może akceptować lub odrzucić */}
-                        {!isMe && (
+                        {proposedByProvider && (
+                            <p className="text-[11px] font-bold text-amber-600 text-center">
+                                {iAmClient ? 'Wykonawca proponuje ten termin' : 'Czeka na akceptację klienta'}
+                            </p>
+                        )}
+                        {myTurn ? (
                             <div className="flex gap-2">
                                 <button
-                                    onClick={onDecline}
+                                    onClick={iAmClient ? onCancel : onDecline}
                                     className="flex-1 py-2 rounded-xl text-xs font-black border border-slate-200 text-slate-500 hover:bg-slate-50 active:scale-95 transition-all"
                                 >
                                     Odrzuć
@@ -205,15 +214,13 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                     Akceptuj
                                 </button>
                             </div>
-                        )}
-                        {/* Ja (klient) — mogę anulować i zmienić termin */}
-                        {isMe && (
+                        ) : (
                             <div className="flex gap-2">
                                 <button
                                     onClick={onCancel}
                                     className="flex-1 py-2 rounded-xl text-xs font-black border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 active:scale-95 transition-all"
                                 >
-                                    Anuluj prośbę
+                                    {iAmClient ? 'Anuluj prośbę' : 'Anuluj rezerwację'}
                                 </button>
                                 {onReschedule && !isRequest && (
                                     <button
@@ -225,12 +232,12 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 )}
                             </div>
                         )}
-                        {onReschedule && !isMe && !isRequest && (
+                        {myTurn && onReschedule && !isRequest && (
                             <button
                                 onClick={() => { setShowReschedule(true); onRescheduleSheetToggle?.(true); }}
                                 className="w-full py-2 rounded-xl text-xs font-black border border-indigo-100 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                             >
-                                <Pencil size={11} /> Zmień termin
+                                <Pencil size={11} /> Zaproponuj inny termin
                             </button>
                         )}
                     </div>
@@ -245,8 +252,8 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 {isRequest ? 'Oferta zaakceptowana — skontaktujcie się!' : 'Termin potwierdzony — do zobaczenia!'}
                             </span>
                         </div>
-                        {/* Wykonawca (isMe=false) może oznaczyć jako zakończone, zmienić termin i anulować */}
-                        {!isMe && onComplete && (
+                        {/* Wykonawca może oznaczyć jako zakończone, zmienić termin i anulować */}
+                        {!iAmClient && onComplete && (
                             <button
                                 onClick={onComplete}
                                 className="w-full py-2 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-200"
@@ -254,7 +261,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 <CheckCircle size={11} /> Zakończyłem zlecenie
                             </button>
                         )}
-                        {!isMe && onCancel && (
+                        {!iAmClient && onCancel && (
                             <button
                                 onClick={onCancel}
                                 className="w-full py-2 rounded-xl text-xs font-black border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 active:scale-95 transition-all"
@@ -262,7 +269,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 Anuluj rezerwację
                             </button>
                         )}
-                        {onReschedule && !isMe && !isRequest && (
+                        {onReschedule && !iAmClient && !isRequest && (
                             <button
                                 onClick={() => { setShowReschedule(true); onRescheduleSheetToggle?.(true); }}
                                 className="w-full py-2 rounded-xl text-xs font-black border border-indigo-100 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
@@ -270,8 +277,8 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 <Pencil size={11} /> Zmień termin
                             </button>
                         )}
-                        {/* Klient (isMe=true) może anulować i zaproponować zmianę terminu */}
-                        {isMe && !isRequest && (
+                        {/* Klient może anulować i zaproponować zmianę terminu */}
+                        {iAmClient && !isRequest && (
                             <div className="flex gap-2">
                                 {onCancel && (
                                     <button
@@ -301,7 +308,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                             <PartyPopper size={13} />
                             <span className="text-xs font-bold">Zlecenie zakończone!</span>
                         </div>
-                        {isMe && booking.status === 'completed' && onReview && (
+                        {iAmClient && booking.status === 'completed' && onReview && (
                             <button
                                 onClick={onReview}
                                 className="w-full py-2 rounded-xl text-xs font-black bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 active:scale-95 transition-all flex items-center justify-center gap-1.5"
@@ -309,12 +316,12 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                                 <Star size={11} className="fill-amber-500 text-amber-500" /> Wystaw opinię
                             </button>
                         )}
-                        {isMe && booking.status === 'reviewed' && booking.clientReviewed && (
+                        {iAmClient && booking.status === 'reviewed' && booking.clientReviewed && (
                             <div className="flex items-center gap-1.5 text-violet-600 text-xs font-bold justify-center py-1">
                                 <Star size={11} className="fill-violet-500 text-violet-500" /> Opinia wystawiona — dziękujemy!
                             </div>
                         )}
-                        {isMe && booking.status === 'reviewed' && !booking.clientReviewed && (
+                        {iAmClient && booking.status === 'reviewed' && !booking.clientReviewed && (
                             <div className="flex items-center gap-1.5 text-slate-400 text-xs font-bold justify-center py-1">
                                 <Clock size={11} /> Czas na wystawienie opinii minął
                             </div>

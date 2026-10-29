@@ -41,6 +41,7 @@ export interface ApiMessageBooking {
   price: number;
   priceUnit: string;
   isMine: boolean;
+  proposedBy?: 'client' | 'provider';
   servicePublicId?: string | null;
   clientReviewed?: boolean;
   createdAt: string;

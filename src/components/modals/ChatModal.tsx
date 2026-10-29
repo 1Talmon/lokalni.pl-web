@@ -805,6 +805,8 @@ export const ChatModal = ({
             addressLng: m.bookingData.addressLng,
             serviceMode: m.bookingData.serviceMode,
             serviceCity: m.bookingData.serviceCity ?? undefined,
+            isMine: m.bookingData.isMine,
+            proposedBy: m.bookingData.proposedBy,
             notes: m.bookingData.notes ?? undefined,
             message: m.bookingData.message ?? undefined,
             // eslint-disable-next-line eqeqeq
@@ -1249,14 +1251,14 @@ export const ChatModal = ({
                                                                 isMe={isMe}
                                                                 isOutdated={latestBookingMsgIds.get(String(msg.bookingData!.id)) !== msg.id}
                                                                 onClose={onClose}
-                                                                onGoToReservations={() => { onClose(); navPush(router, '/dashboard', { openTab: 'orders', bookingTab: isMe ? 'outgoing' : 'incoming' }); }}
+                                                                onGoToReservations={() => { onClose(); navPush(router, '/dashboard', { openTab: 'orders', bookingTab: (msg.bookingData!.isMine ?? isMe) ? 'outgoing' : 'incoming' }); }}
                                                                 onAccept={() => onBookingAction?.(msg.bookingData!.id, 'accept')}
                                                                 onDecline={() => onBookingAction?.(msg.bookingData!.id, 'decline')}
                                                                 onCancel={() => onBookingAction?.(msg.bookingData!.id, 'cancel')}
-                                                                onComplete={!isMe && msg.bookingData.status === 'accepted' ? () => onBookingAction?.(msg.bookingData!.id, 'complete') : undefined}
+                                                                onComplete={!(msg.bookingData.isMine ?? isMe) && msg.bookingData.status === 'accepted' ? () => onBookingAction?.(msg.bookingData!.id, 'complete') : undefined}
                                                                 onReschedule={(msg.bookingData.status === 'pending' || msg.bookingData.status === 'accepted') && msg.bookingData.serviceType !== 'request' ? (newDate, newTime) => onReschedule?.(msg.bookingData!.id, newDate, newTime) : undefined}
                                                                 onRescheduleSheetToggle={open => { pauseAutoScrollRef.current = open; }}
-                                                                onReview={isMe && msg.bookingData.status === 'completed' ? () => {
+                                                                onReview={(msg.bookingData.isMine ?? isMe) && msg.bookingData.status === 'completed' ? () => {
                                                                     const reviewPath = `/review/${msg.bookingData!.id}`;
                                                                     const reviewNavState = { servicePublicId: activeSession?.servicePublicId ?? '', serviceTitle: msg.bookingData!.serviceTitle, providerName: activeSession?.providerName ?? '', providerAvatar: activeSession?.providerAvatar ?? '', bookingId: msg.bookingData!.id };
                                                                     onClose(); navPush(router, reviewPath, reviewNavState);

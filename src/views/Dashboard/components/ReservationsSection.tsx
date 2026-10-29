@@ -77,6 +77,9 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
     const b = ev.booking;
     const isPending = b.status === 'pending';
     const isAcceptedIncoming = b.status === 'accepted' && !ev.isOutgoing;
+    // A pending date is answered by the side that didn't propose it — the client after the provider proposed another date
+    const proposedByProvider = b.proposedBy === 'provider';
+    const myTurn = ev.isOutgoing ? proposedByProvider : !proposedByProvider;
 
     return (
         <div
@@ -157,6 +160,11 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
                             „{b.message || b.notes}"
                         </p>
                     )}
+                    {isPending && proposedByProvider && (
+                        <p className="mt-1.5 text-[11px] font-bold text-amber-600">
+                            {ev.isOutgoing ? 'Wykonawca proponuje ten termin — zaakceptuj lub odrzuć' : 'Czeka na akceptację klienta'}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -164,10 +172,10 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
             <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col lg:flex-row lg:flex-wrap gap-2">
                 {/* Rząd główny — na desktop staje się częścią flex-row rodzica */}
                 <div className="flex gap-2 lg:contents">
-                    {showActions && isPending && !ev.isOutgoing && (
+                    {showActions && isPending && myTurn && (
                         <>
                             <button
-                                onClick={onDecline}
+                                onClick={ev.isOutgoing ? onCancel : onDecline}
                                 className="flex-1 lg:flex-none flex items-center justify-center gap-1.5 py-2.5 lg:px-4 rounded-xl text-xs font-bold text-red-500 border border-red-100 hover:bg-red-50 transition-all active:scale-95"
                             >
                                 <XCircle size={14} /> Odrzuć
@@ -180,12 +188,12 @@ const BookingCard = ({ ev, onAccept, onDecline, onCancel, onComplete, onReschedu
                             </button>
                         </>
                     )}
-                    {showActions && isPending && ev.isOutgoing && (
+                    {showActions && isPending && !myTurn && (
                         <button
                             onClick={onCancel}
                             className="flex-1 lg:flex-none flex items-center justify-center gap-1.5 py-2.5 lg:px-4 border border-gray-200 text-gray-500 rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-500 hover:border-red-200 active:scale-95 transition-all"
                         >
-                            <X size={14} /> Anuluj prośbę
+                            <X size={14} /> {ev.isOutgoing ? 'Anuluj prośbę' : 'Anuluj rezerwację'}
                         </button>
                     )}
                     {isAcceptedIncoming && onComplete && (

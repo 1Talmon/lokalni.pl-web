@@ -205,6 +205,10 @@ export interface BookingData {
   addressLng?: number;
   serviceMode?: ServiceMode;
   serviceCity?: string;
+  /** I'm the client of this booking (API: isMine) */
+  isMine?: boolean;
+  /** Who proposed the current date — the other side accepts it */
+  proposedBy?: 'client' | 'provider';
   // Aplikacja (request)
   message?: string;
   proposedPrice?: string;

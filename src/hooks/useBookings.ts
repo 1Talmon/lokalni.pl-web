@@ -33,6 +33,7 @@ export interface ApiBooking {
   proposedPrice?: number;
   availableFrom?: string;
   isMine: boolean;
+  proposedBy?: 'client' | 'provider';
 }
 
 export interface BookingEvent {
