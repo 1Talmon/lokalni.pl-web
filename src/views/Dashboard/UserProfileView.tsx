@@ -759,15 +759,6 @@ export const UserProfileView = ({
                                 <Eye size={20} />
                             </button>
                         )}
-                        {currentUid && myServices.length > 0 && (
-                            <button
-                                onClick={() => setStoryOpen(true)}
-                                aria-label="Relacja na Instagram"
-                                className="p-2.5 bg-gray-50 text-gray-500 rounded-full hover:bg-gray-100 active:scale-95 transition-all shadow-sm border border-gray-100 flex items-center justify-center"
-                            >
-                                <Instagram size={20} />
-                            </button>
-                        )}
                     </div>
 
                     <div className="flex flex-row md:flex-col items-center md:items-start gap-5 md:gap-0 w-full md:w-auto">
@@ -813,6 +804,14 @@ export const UserProfileView = ({
                                 {accountType === 'business' && <ShieldCheck size={20} className="text-blue-600 fill-blue-50 shrink-0" />}
                             </h2>
                             <p className="text-gray-500 text-xs font-medium truncate mb-2">{userData?.email}</p>
+                            {myServices.length > 0 && (
+                                <button
+                                    onClick={() => setStoryOpen(true)}
+                                    className="text-[11px] font-bold px-3 py-1.5 rounded-xl text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 transition-all inline-flex items-center gap-1.5 shadow-sm active:scale-95"
+                                >
+                                    <Instagram size={13} /> Relacja na Instagram
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -118,7 +118,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(a.href), 5000);
             }
-            addToast?.('Gotowe! Link do profilu skopiowany – wklej go na Instagramie jako naklejkę „Link”.', 'success');
+            addToast?.('Gotowe – link do profilu skopiowany', 'success');
         } catch {
             addToast?.('Nie udało się przygotować obrazu. Spróbuj inny szablon.', 'error');
         } finally {
@@ -174,7 +174,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
 
                             <div className="flex-1 min-w-0 flex flex-col gap-5">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Szablon</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5">Szablon</p>
                                     <div className="flex flex-wrap gap-2">
                                         {STORY_TEMPLATES.map(t => (
                                             <button
@@ -182,7 +182,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                                                 type="button"
                                                 disabled={t.photos > 0 && !usable.length}
                                                 onClick={() => setTemplate(t.id)}
-                                                className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all disabled:opacity-40 ${template === t.id ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                                                className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all active:scale-95 disabled:opacity-40 ${template === t.id ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-gray-50 border-gray-100 text-gray-700 hover:border-indigo-200'}`}
                                             >
                                                 {t.label}
                                             </button>
@@ -195,7 +195,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
 
                                 {tpl.photos > 0 && (
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5">
                                             {tpl.photos === 1 ? 'Zdjęcie w tle' : 'Zdjęcia (do 3)'}
                                         </p>
                                         <div className="grid grid-cols-4 gap-2">
@@ -203,7 +203,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                                                 const idx = picked.indexOf(p);
                                                 const on = tpl.photos === 1 ? idx === 0 : idx >= 0;
                                                 return (
-                                                    <button key={p} type="button" onClick={() => togglePhoto(p)} className={`relative aspect-square rounded-xl overflow-hidden border-2 ${on ? 'border-indigo-600' : 'border-transparent'}`}>
+                                                    <button key={p} type="button" onClick={() => togglePhoto(p)} className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all active:scale-95 ${on ? 'border-indigo-600 shadow-sm' : 'border-gray-100'}`}>
                                                         <img src={p} alt="" className="w-full h-full object-cover" />
                                                         {on && <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center"><Check size={12} /></span>}
                                                     </button>
@@ -213,7 +213,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                                     </div>
                                 )}
 
-                                <div className="rounded-2xl border border-gray-100 divide-y divide-gray-100">
+                                <div className="rounded-xl border border-gray-100 bg-gray-50 divide-y divide-gray-100">
                                     <div className="flex items-center justify-between gap-4 px-4 py-3">
                                         <span className="text-sm font-semibold text-gray-700">Zdjęcie profilowe</span>
                                         <SettingsToggle enabled={showAvatar} onToggle={() => setShowAvatar(v => !v)} label="Zdjęcie profilowe" />
@@ -241,7 +241,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                             type="button"
                             onClick={exportStory}
                             disabled={!ready || busy}
-                            className="flex-1 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-40 shadow-sm shadow-indigo-200 flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-2xl font-black text-white bg-[#6366F1] hover:bg-[#5558e8] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95 flex items-center justify-center gap-2"
                         >
                             {busy ? <Loader2 size={14} className="animate-spin" /> : canShareFiles ? <Share2 size={14} /> : <Download size={14} />}
                             {canShareFiles ? 'Udostępnij na Instagram' : 'Pobierz obraz'}
