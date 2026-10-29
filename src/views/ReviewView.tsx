@@ -18,11 +18,13 @@ interface ReviewPageState {
 }
 
 const RATING_LABELS = ['', 'Bardzo słaba', 'Słaba', 'Przeciętna', 'Dobra', 'Doskonała'];
-const REVIEW_WINDOW_DAYS = 14;
+// Fallback only — the API sends the window it enforces (panel: autoReviewDays) with the booking
+const DEFAULT_REVIEW_WINDOW_DAYS = 14;
 
-function isWithinReviewWindow(updatedAt: string): boolean {
-    const ms = Date.now() - new Date(updatedAt).getTime();
-    return ms < REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+/** Counted from when the job was marked done (completedAt); updatedAt moves on later changes. */
+function isWithinReviewWindow(since: string, days: number): boolean {
+    const ms = Date.now() - new Date(since).getTime();
+    return ms < days * 24 * 60 * 60 * 1000;
 }
 
 export const ReviewView = () => {
@@ -44,6 +46,9 @@ export const ReviewView = () => {
     const [loadingBooking, setLoadingBooking] = useState(!rawState);
     const [loadError, setLoadError] = useState(false);
     const [isExpired, setIsExpired] = useState(false);
+    // link opened before the job was marked done (or after it was cancelled) — nothing to review yet
+    const [notFinished, setNotFinished] = useState(false);
+    const [windowDays, setWindowDays] = useState(DEFAULT_REVIEW_WINDOW_DAYS);
     const [alreadyReviewed, setAlreadyReviewed] = useState(false);
 
     // Gdy brak location.state (push notification, link email, deep link) — fetch z API
@@ -53,6 +58,22 @@ export const ReviewView = () => {
             .then(async res => {
                 if (!res.ok) throw new Error('not found');
                 const b = await res.json();
+                const days = Number(b.reviewWindowDays) > 0 ? Number(b.reviewWindowDays) : DEFAULT_REVIEW_WINDOW_DAYS;
+                setWindowDays(days);
+                // only the client reviews; the provider opening this link goes to their reservations
+                if (b.isMine === false) throw new Error('not the client');
+                const header = {
+                    servicePublicId: b.servicePublicId ?? '',
+                    serviceTitle: b.serviceTitle ?? 'Usługa',
+                    providerName: b.providerName ?? '',
+                    providerAvatar: b.providerAvatar ?? '',
+                    bookingId: String(bookingId),
+                };
+                if (b.status !== 'completed' && b.status !== 'reviewed') {
+                    setNotFinished(true);
+                    setBookingData(header);
+                    return;
+                }
 
                 if (b.status === 'reviewed' && b.clientReviewed) {
                     setAlreadyReviewed(true);
@@ -66,7 +87,8 @@ export const ReviewView = () => {
                     return;
                 }
 
-                if (b.status === 'reviewed' || (b.updatedAt && !isWithinReviewWindow(b.updatedAt))) {
+                const since = b.completedAt ?? b.updatedAt;
+                if (b.status === 'reviewed' || (since && !isWithinReviewWindow(since, days))) {
                     setIsExpired(true);
                     setBookingData({
                         servicePublicId: b.servicePublicId ?? '',
@@ -89,6 +111,11 @@ export const ReviewView = () => {
             .catch(() => setLoadError(true))
             .finally(() => setLoadingBooking(false));
     }, [bookingId, rawState]);
+
+    // not found / not mine / no access → reservations instead of a blank page
+    useEffect(() => {
+        if (!loadingBooking && (loadError || !bookingData)) router.replace('/dashboard?tab=orders');
+    }, [loadingBooking, loadError, bookingData]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (loadingBooking) {
         return (
@@ -192,7 +219,7 @@ export const ReviewView = () => {
                                 </button>
                             </div>
                         </motion.div>
-                    ) : isExpired ? (
+                    ) : (isExpired || notFinished) ? (
                         <motion.div
                             key="expired"
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -206,10 +233,14 @@ export const ReviewView = () => {
                                     <Clock size={32} className="text-amber-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">Czas na opinię minął</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">{notFinished ? 'Usługa jeszcze się nie zakończyła' : 'Czas na opinię minął'}</h2>
                                     <p className="text-sm text-gray-500 font-medium leading-relaxed">
-                                        Termin {REVIEW_WINDOW_DAYS} dni na wystawienie opinii dla usługi{' '}
-                                        <span className="text-gray-700 font-bold">{serviceTitle}</span> upłynął.
+                                        {notFinished ? (
+                                            <>Opinię o usłudze <span className="text-gray-700 font-bold">{serviceTitle}</span> wystawisz, gdy wykonawca oznaczy ją jako zakończoną.</>
+                                        ) : (
+                                            <>Termin {windowDays} dni na wystawienie opinii dla usługi{' '}
+                                            <span className="text-gray-700 font-bold">{serviceTitle}</span> upłynął.</>
+                                        )}
                                     </p>
                                 </div>
                                 <button

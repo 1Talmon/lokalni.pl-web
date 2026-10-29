@@ -4,6 +4,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useApp } from '../../../../providers/AppProvider';
 import { setActiveChatId } from '../../../../services/pushNotificationService';
 import { LoadingScreen } from '../../../../components/ui/LoadingScreen';
+import { loginHref } from '../../../../utils/authRedirect';
 
 const ChatModalView = lazy(() => import('../../../../components/modals/ChatModal').then(m => ({ default: m.ChatModal })));
 
@@ -28,7 +29,7 @@ export default function ChatConversationPage() {
         return () => { setActiveChatId(null); };
     }, [resolvedChatId]);
 
-    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace('/auth'); return null; }
+    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace(loginHref()); return null; }
 
     return (
         <Suspense fallback={<LoadingScreen isVisible={true} />}>

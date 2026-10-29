@@ -62,6 +62,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: bio,
         ...(isEmpty ? { robots: { index: false, follow: true } } : {}),
         alternates: { canonical: url },
+        // Safari banner „Otwórz” → the app opens this same page
+        itunes: { appId: '6788702057', appArgument: url },
         openGraph: {
             title: `${name}`,
             description: bio,

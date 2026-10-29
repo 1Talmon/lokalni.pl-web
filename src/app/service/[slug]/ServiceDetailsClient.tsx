@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createSlug } from '../../../utils/helpers';
+import { createSlug, publicIdFromSlug } from '../../../utils/helpers';
 import { setPageMeta, resetPageMeta } from '../../../utils/pageMeta';
 import { useApp } from '../../../providers/AppProvider';
 import { setNavDirection } from '../../../utils/navDirection';
@@ -12,6 +12,7 @@ import type { Service } from '../../../types';
 import {
     decodeImage, navigateWhenReady, prepareProfilePage, serviceDetailQuery, serviceHeroUrl,
 } from '../../../utils/navPrepare';
+import { loginHref } from '../../../utils/authRedirect';
 
 // Runs before paint in the browser; plain effect during SSR (where layout effects only warn)
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -52,7 +53,7 @@ export default function ServiceDetailsClient() {
     const queryClient = useQueryClient();
     const { state, actions } = useApp();
 
-    const publicId = id ? id.split('-').pop()! : '';
+    const publicId = id ? publicIdFromSlug(id) : '';
 
     const doNav = useCallback(() => {
         if (window.history.length <= 1) {
@@ -171,7 +172,7 @@ export default function ServiceDetailsClient() {
                 onEdit={actions.openEditServiceModal}
                 onBook={() => router.push('/booking-form')}
                 isLoggedIn={state.isLoggedIn}
-                onLoginRedirect={() => router.push('/auth')}
+                onLoginRedirect={() => router.push(loginHref())}
                 userLocation={state.location}
                 currentUserUid={(state.freshUser || state.userProfile)?.uid ?? null}
                 onReport={() => actions.openReportModal('service', service.publicId ?? '')}
@@ -180,7 +181,7 @@ export default function ServiceDetailsClient() {
                     if (state.isLoggedIn) {
                         actions.openSupportModal();
                     } else {
-                        router.push('/auth');
+                        router.push(loginHref());
                     }
                 }}
                 addToast={actions.addToast}

@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { createServiceUrl } from '@/utils/helpers';
+import { createServiceUrl, publicIdFromSlug } from '@/utils/helpers';
 import { BASE_URL, API_URL, DEFAULT_OG_IMAGE, normalizeMediaUrl } from '@/lib/seo-data';
 import { buildServiceJsonLd } from '@/lib/jsonLd';
 import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
@@ -41,7 +41,7 @@ function canonicalSlug(service: Record<string, unknown>, fallback: string): stri
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    const publicId = slug.split('-').pop() ?? '';
+    const publicId = publicIdFromSlug(slug);
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
     const canonical = canonicalSlug(service, slug);
@@ -59,6 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         // Hidden / pending / rejected services stay reachable for the owner but are never indexed
         ...(service.isPublic === false ? { robots: { index: false, follow: true } } : {}),
         alternates: { canonical: url },
+        // Safari banner „Otwórz” → the app opens this same page
+        itunes: { appId: '6788702057', appArgument: url },
         openGraph: {
             title,
             description,
@@ -78,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ServicePage({ params }: Props) {
     const { slug } = await params;
-    const publicId = slug.split('-').pop() ?? '';
+    const publicId = publicIdFromSlug(slug);
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
     const canonical = canonicalSlug(service, slug);

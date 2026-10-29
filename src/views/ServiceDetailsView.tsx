@@ -23,6 +23,7 @@ import { ServiceReviews } from './ServiceDetailsView/ServiceReviews';
 import { Service, Review, ProviderProfile } from '../types';
 import { DeleteReviewModal } from '../components/modals/DeleteReviewModal';
 import { markViewed } from '../utils/recentlyViewed';
+import { loginHref } from '../utils/authRedirect';
 
 export { ServiceMap } from './ServiceDetailsView/ServiceMap';
 
@@ -271,7 +272,7 @@ const ServiceDetailsView = ({
         if (!activeService) return;
         if (!isLoggedIn) {
             addToast('Zaloguj się, aby dodać do ulubionych', 'info', <Heart size={18} />);
-            router.push('/auth');
+            router.push(loginHref());
             return;
         }
         const willBeFavorite = !effectiveFavorite;

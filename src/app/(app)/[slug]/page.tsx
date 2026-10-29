@@ -73,6 +73,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: desc,
         robots: { index: isIndexableLanding(data.group, data.total), follow: true },
         alternates: { canonical: url },
+        // Safari banner „Otwórz” → the app opens this same page
+        itunes: { appId: '6788702057', appArgument: url },
         openGraph: { title, description: desc, url, siteName: 'MyLokalni.pl', locale: 'pl_PL', type: 'website', images: [{ url: image }] },
         twitter: { card: 'summary_large_image', title, description: desc, images: [image] },
     };

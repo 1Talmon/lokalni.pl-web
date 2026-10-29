@@ -3,6 +3,7 @@ import { useApp } from '../../../providers/AppProvider';
 import { SupportView } from '../../../views/SupportView';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { loginHref } from '../../../utils/authRedirect';
 
 export default function SupportPage() {
     const { state, actions } = useApp();
@@ -14,7 +15,7 @@ export default function SupportPage() {
         if (hasHistory) router.back(); else router.push('/');
     }, [router]);
 
-    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace('/auth'); return null; }
+    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace(loginHref()); return null; }
 
     return <SupportView addToast={actions.addToast} onClose={handleBack} />;
 }

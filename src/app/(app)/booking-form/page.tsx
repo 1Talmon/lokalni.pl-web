@@ -4,6 +4,7 @@ import BookingFormView from '../../../views/BookingFormView';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 import { IS_SAFARI_WEB, createSafariOverlay, revealAfterUnmount } from '../../../utils/safariNavOverlay';
+import { loginHref } from '../../../utils/authRedirect';
 
 export default function BookingFormPage() {
     const { state, actions } = useApp();
@@ -30,7 +31,8 @@ export default function BookingFormPage() {
         }
     }, [doNav]);
 
-    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace('/auth'); return null; }
+    // after login back to the offer — the form itself needs the offer picked in this session
+    if (!state.isLoggedIn && !state.isLoadingApp) { router.replace(loginHref(state.selectedService?.publicId ? `/service/${state.selectedService.publicId}` : null)); return null; }
     if (!state.selectedService && !state.isLoadingApp) { router.replace('/'); return null; }
 
     return (

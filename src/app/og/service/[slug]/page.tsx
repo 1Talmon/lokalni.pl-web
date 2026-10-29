@@ -8,6 +8,7 @@ import { ServiceStaticShell } from '@/app/service/[slug]/ServiceStaticShell';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 import { serviceDescription, serviceTitle } from '@/lib/seoText';
 import { ssrHeaders } from '@/lib/ssrHeaders';
+import { publicIdFromSlug } from '@/utils/helpers';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -27,7 +28,7 @@ async function fetchServiceMeta(publicId: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    const publicId = slug.split('-').pop() ?? '';
+    const publicId = publicIdFromSlug(slug);
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
 
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function OgServicePage({ params }: Props) {
     const { slug } = await params;
-    const publicId = slug.split('-').pop() ?? '';
+    const publicId = publicIdFromSlug(slug);
     const service = await fetchServiceMeta(publicId);
     if (!service) notFound();
     const jsonLd = buildServiceJsonLd(service, slug);

@@ -27,6 +27,7 @@ import { startChatWith, sendMessage } from './domain/chatActions';
 import { useToastState } from './domain/useToastState';
 import { useModalState } from './domain/useModalState';
 import { navigateWhenReady, prepareServicePage } from '../utils/navPrepare';
+import { loginHref } from '../utils/authRedirect';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 
@@ -158,7 +159,7 @@ export const useAppLogic = () => {
             tokenUtils.clearAll();
             secureStorage.removeRefreshToken().catch(() => {});
             queryClient.clear();
-            router.push('/auth');
+            router.push(loginHref());
         };
         window.addEventListener('auth:logout-required', handle);
         return () => window.removeEventListener('auth:logout-required', handle);
@@ -172,8 +173,16 @@ export const useAppLogic = () => {
             setCurrentChatId(data.sessionId);
             setActiveModal('chat_detail');
             router.push('/chat');
+        } else if (data.type === 'like' && data.sessionId) {
+            setCurrentChatId(data.sessionId);
+            setActiveModal('chat_detail');
+            router.push('/chat');
         } else if (data.type === 'booking') {
-            navPush(router, '/dashboard', { openTab: 'orders', bookingTab: data.bookingTab || 'incoming' });
+            if (data.bookingId) router.push(`/dashboard?tab=orders&bookingId=${encodeURIComponent(data.bookingId)}`);
+            else navPush(router, '/dashboard', { openTab: 'orders', bookingTab: data.bookingTab || 'incoming' });
+        } else if (data.type === 'review_reply' && data.servicePublicId) {
+            // reply to my review → the offer where it's shown
+            router.push(`/service/${data.servicePublicId}`);
         } else if (data.type === 'review_received' || data.type === 'review_reply') {
             if (fromKilledApp && data.servicePublicId) router.push(`/service/${data.servicePublicId}`);
             else navPush(router, '/dashboard', { openDetail: 'reviews' });
@@ -475,7 +484,7 @@ export const useAppLogic = () => {
             navigateWhenReady(router, url, prepareServicePage(queryClient, s.publicId ?? ''));
         },
         toggleFavorite: (publicId: string) => {
-            if (!isLoggedIn) { router.push('/auth'); return; }
+            if (!isLoggedIn) { router.push(loginHref()); return; }
             toggleFavoriteMutation.mutate({ publicId, remove: effectiveFavoriteIds.has(publicId) });
         },
         handleLoginSuccess: (u: UserProfile | null, redirectTo = '/') => {
@@ -485,15 +494,19 @@ export const useAppLogic = () => {
             addToast("Zalogowano pomyślnie");
         },
         handleNotificationClick: () => setShowNotifications(!showNotifications),
-        handleNotificationItemClick: async (id: number, cId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null) => {
+        handleNotificationItemClick: async (id: number, cId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null, serviceIsMine?: boolean) => {
             await notificationService.markAsRead(id);
             queryClient.invalidateQueries({ queryKey: ['notification-counts'] });
             queryClient.invalidateQueries({ queryKey: ['notifications-list'] });
             setShowNotifications(false);
             if (type === 'booking') {
-                navPush(router, '/dashboard', { openTab: 'orders', bookingTab: bookingTab ?? 'incoming' });
+                // the reservation itself: the dashboard picks its tab and highlights it
+                if (bookingId) router.push(`/dashboard?tab=orders&bookingId=${encodeURIComponent(bookingId)}`);
+                else navPush(router, '/dashboard', { openTab: 'orders', bookingTab: bookingTab ?? 'incoming' });
                 return;
             }
+            // a reply to MY review → that offer (where the reply is); a review of my offer → my reviews
+            if (type === 'review' && servicePublicId && serviceIsMine === false) { router.push(`/service/${servicePublicId}`); return; }
             if (type === 'review' && servicePublicId) { navPush(router, '/dashboard', { openDetail: 'reviews' }); return; }
             if (type === 'review' && bookingId) { router.push(`/review/${bookingId}`); return; }
             if (type === 'review') { navPush(router, '/dashboard', { openTab: 'orders', bookingTab: 'outgoing' }); return; }
@@ -522,10 +535,10 @@ export const useAppLogic = () => {
         },
         changeView: (v: string) => {
             setActiveModal('none');
-            router.push(v === 'profile' ? (isLoggedIn ? '/dashboard' : '/auth') : `/${v === 'home' ? '' : v}`);
+            router.push(v === 'profile' ? (isLoggedIn ? '/dashboard' : loginHref('/dashboard')) : `/${v === 'home' ? '' : v}`);
         },
         openAddServiceModal: () => {
-            if (!isLoggedIn) { router.push('/auth'); return; }
+            if (!isLoggedIn) { router.push(loginHref()); return; }
             if (activeModal === 'add_service') { setActiveModal('none'); return; }
             setEditingServiceId(null);
             setActiveModal('add_service');
@@ -569,7 +582,7 @@ export const useAppLogic = () => {
             setSortBy, setLoadedCount, setShowOnlineOnly,
             setLocationCoords: setPickedCoords,
             onToggleFavorite: (publicId: string) => {
-                if (!isLoggedIn) { router.push('/auth'); return; }
+                if (!isLoggedIn) { router.push(loginHref()); return; }
                 toggleFavoriteMutation.mutate({ publicId, remove: effectiveFavoriteIds.has(publicId) });
             },
         },

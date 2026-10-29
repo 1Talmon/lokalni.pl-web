@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useApp } from '../../../providers/AppProvider';
 import { UserProfileView } from '../../../views/Dashboard/UserProfileView';
+import { loginHref } from '../../../utils/authRedirect';
 
 export default function DashboardPage() {
     const { state, actions } = useApp();
@@ -30,7 +31,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!state.isLoggedIn && !state.isLoadingApp) {
-            router.replace('/auth');
+            router.replace(loginHref());
         }
     }, [state.isLoggedIn, state.isLoadingApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -41,7 +42,7 @@ export default function DashboardPage() {
             user={state.freshUser || state.userProfile}
             isLoggedIn={state.isLoggedIn}
             myServices={state.myDashboardServices}
-            onLogin={() => router.push('/auth')}
+            onLogin={() => router.push(loginHref())}
             onLogout={actions.handleLogout}
             onAvatarChange={actions.handleAvatarUpdate}
             onAddService={actions.openAddServiceModal}

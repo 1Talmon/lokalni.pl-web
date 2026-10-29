@@ -20,6 +20,7 @@ export const notificationService = {
                 bookingId: n.bookingId ?? null,
                 servicePublicId: n.servicePublicId ?? null,
                 bookingTab: n.bookingTab ?? null,
+                serviceIsMine: n.serviceIsMine ?? undefined,
             }));
         } catch {
             return [];

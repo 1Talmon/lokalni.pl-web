@@ -15,7 +15,7 @@ interface NavbarProps {
     onToggleNotifications: () => void;
     onCloseNotifications: () => void;
     onMarkAllRead: () => void;
-    onNotificationClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null) => void | Promise<void>;
+    onNotificationClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null, serviceIsMine?: boolean) => void | Promise<void>;
     onProfileClick: () => void;
     onLogoClick: () => void;
 }
@@ -203,7 +203,7 @@ export const Navbar = ({
                                                           if (isLong && !expandedIds.has(item.id)) {
                                                               setExpandedIds(prev => new Set(prev).add(item.id));
                                                           } else {
-                                                              onNotificationClick(item.id, item.chatId, item.type, item.bookingId, item.bookingTab, item.servicePublicId);
+                                                              onNotificationClick(item.id, item.chatId, item.type, item.bookingId, item.bookingTab, item.servicePublicId, item.serviceIsMine);
                                                           }
                                                       }}
                                                       className="px-4 py-3.5 border-b border-gray-50 last:border-0 hover:bg-indigo-50/40 active:bg-indigo-50 transition-colors cursor-pointer"

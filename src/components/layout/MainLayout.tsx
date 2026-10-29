@@ -27,7 +27,7 @@ interface MainLayoutProps {
     onToggleNotifications: () => void;
     onCloseNotifications: () => void;
     onMarkAllRead: () => void;
-    onNotificationClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null) => void | Promise<void>;
+    onNotificationClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null, serviceIsMine?: boolean) => void | Promise<void>;
     onProfileClick: () => void;
     onLogoClick: () => void;
     currentView: string;

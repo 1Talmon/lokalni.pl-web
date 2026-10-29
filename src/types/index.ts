@@ -275,4 +275,6 @@ export interface NotificationItem {
   bookingId?: string | null
   servicePublicId?: string | null
   bookingTab?: string | null
+  /** review notification: true = a review of my offer, false = a reply to my review */
+  serviceIsMine?: boolean
 }

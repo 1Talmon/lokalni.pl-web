@@ -18,6 +18,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary';
 import { AppLock } from './AppLock';
 import { logger } from '../utils/logger';
 import HomeView from '../views/HomeView';
+import { loginHref } from '../utils/authRedirect';
 const ChatListView      = dynamic(() => import('../views/ChatListView').then(m => ({ default: m.ChatListView })),     { ssr: false });
 const GrafikView        = dynamic(() => import('../views/GrafikView'),                                                { ssr: false });
 const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });
@@ -87,7 +88,7 @@ function AppShellContent({ children }: AppShellProps) {
         if (state.isLoadingApp) return;
         if (wasLockedRef.current && !locked && !state.isLoggedIn) {
             forceUnlock();
-            router.replace('/auth');
+            router.replace(loginHref());
         }
     }, [locked, state.isLoadingApp, state.isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -269,7 +270,7 @@ function AppShellContent({ children }: AppShellProps) {
                                 hideNavigation={state.isFullScreen || (state.activeModal !== 'none' && state.activeModal !== 'add_service' && state.activeModal !== 'report' && state.activeModal !== 'chat_detail' && state.activeModal !== 'support')}
                                 tabElements={tabElements}
                                 isSlugRoute={isSlugRoute}
-                                onOpenSupport={() => state.isLoggedIn ? handleOpenSupport() : router.push('/auth')}
+                                onOpenSupport={() => state.isLoggedIn ? handleOpenSupport() : router.push(loginHref())}
                             >
                                 {!isTabRoute && children}
                             </MainLayout>

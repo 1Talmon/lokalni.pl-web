@@ -2,6 +2,7 @@ import { chatService, type ApiChatSession } from '../../services/chatService';
 import type { Service, ToastType } from '../../types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import type { QueryClient } from '@tanstack/react-query';
+import { loginHref } from '../../utils/authRedirect';
 
 interface StartChatDeps {
     isLoggedIn: boolean;
@@ -15,7 +16,7 @@ interface StartChatDeps {
 
 export async function startChatWith(s: Service, msg: string = '', deps: StartChatDeps): Promise<void> {
     const { isLoggedIn, router, chatSessions, setInitialChatText, setCurrentChatServiceId, setCurrentChatId, setActiveModal } = deps;
-    if (!isLoggedIn) { router.push('/auth'); return; }
+    if (!isLoggedIn) { router.push(loginHref()); return; }
     setInitialChatText(msg);
     setCurrentChatServiceId(s.publicId ?? null);
 

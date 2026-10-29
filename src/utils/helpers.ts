@@ -44,6 +44,14 @@ export const createServiceUrl = (title: string, publicId: string): string => {
   return `${createSlug(title)}-${publicId}`
 }
 
+/** publicId from `${createSlug(title)}-${publicId}` (or a bare id). Ids are 10 chars and can contain '-',
+ *  so take the last 10 when a '-' separator precedes them; older 9-char ids fall back to the last segment. */
+export const publicIdFromSlug = (slug: string): string => {
+  if (slug.length > 10 && slug[slug.length - 11] === '-') return slug.slice(-10)
+  if (slug.length <= 10) return slug
+  return slug.split('-').pop() ?? ''
+}
+
 export const polishPlural = (n: number, singular: string, pluralNom: string, pluralGen: string): string => {
     if (n % 10 === 1 && n % 100 !== 11) return singular;
     if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return pluralNom;

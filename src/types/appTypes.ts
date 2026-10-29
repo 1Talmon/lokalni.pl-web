@@ -74,7 +74,7 @@ export interface AppActions {
     toggleFavorite: (publicId: string) => void;
     handleLoginSuccess: (u: UserProfile | null, redirectTo?: string) => void;
     handleNotificationClick: () => void;
-    handleNotificationItemClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null) => Promise<void>;
+    handleNotificationItemClick: (id: number, chatId?: string, type?: string, bookingId?: string | null, bookingTab?: string | null, servicePublicId?: string | null, serviceIsMine?: boolean) => Promise<void>;
     onMarkAllRead: () => Promise<void>;
     getCurrentViewName: () => string;
     changeView: (v: string) => void;
