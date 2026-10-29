@@ -15,12 +15,17 @@ const handleFatalError = (): void => {
     }
 };
 
-let _refreshingToken: Promise<string | null> | null = null;
+export type RefreshOutcome = 'ok' | 'unauthorized' | 'error';
 
-export const refreshAccessToken = (): Promise<string | null> => {
-    if (_refreshingToken) return _refreshingToken;
+let _refreshing: Promise<RefreshOutcome> | null = null;
 
-    _refreshingToken = (async () => {
+/** The one place that refreshes the session: start-up, 401 retries, the WebSocket and downloads all wait on the
+ *  same call. Two parallel refreshes with one refresh token look like theft to the API (rotation) → logout.
+ *  'unauthorized' = the API refused the session; 'error' = network/server trouble (keep the user signed in). */
+export const refreshSession = (): Promise<RefreshOutcome> => {
+    if (_refreshing) return _refreshing;
+
+    _refreshing = (async (): Promise<RefreshOutcome> => {
         try {
             const rt = await secureStorage.getRefreshToken();
             const body: Record<string, string> = {};
@@ -31,24 +36,25 @@ export const refreshAccessToken = (): Promise<string | null> => {
                 credentials: 'include',
                 body: JSON.stringify(body),
             });
+            if (response.status === 401 || response.status === 403) return 'unauthorized';
+            if (!response.ok) return 'error';
             const result = await response.json() as { token?: string; refreshToken?: string };
-            if (response.ok && result.token) {
-                tokenUtils.set(result.token);
-                if (result.refreshToken) {
-                    await secureStorage.setRefreshToken(result.refreshToken);
-                }
-                return result.token;
-            }
-            return null;
+            if (!result.token) return 'error';
+            tokenUtils.set(result.token);
+            if (result.refreshToken) await secureStorage.setRefreshToken(result.refreshToken);
+            return 'ok';
         } catch {
-            return null;
+            return 'error';
         } finally {
-            _refreshingToken = null;
+            _refreshing = null;
         }
     })();
 
-    return _refreshingToken;
+    return _refreshing;
 };
+
+export const refreshAccessToken = async (): Promise<string | null> =>
+    (await refreshSession()) === 'ok' ? tokenUtils.get() : null;
 
 const request = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
     // Użyj tokenUtils zamiast surowego localStorage
@@ -74,14 +80,19 @@ const request = async (endpoint: string, options: RequestInit = {}): Promise<Res
 
     if (response.status === 401) {
         logger.info('apiClient: token wygasł, próba odświeżenia');
-        const newToken = await refreshAccessToken();
+        // sent before the session was restored (or by a parallel refresh) → just retry with the new token
+        const current = tokenUtils.get();
+        const outcome = current && current !== token ? 'ok' : await refreshSession();
 
-        if (newToken) {
-            headers['Authorization'] = `Bearer ${newToken}`;
+        if (outcome === 'ok') {
+            headers['Authorization'] = `Bearer ${tokenUtils.get()}`;
             response = await fetch(`${API_URL}${endpoint}`, { ...config, headers });
-        } else {
-            logger.warn('apiClient: odświeżanie nie powiodło się, wylogowuję');
+        } else if (outcome === 'unauthorized') {
+            logger.warn('apiClient: sesja odrzucona, wylogowuję');
             handleFatalError();
+            return response;
+        } else {
+            // no network / server hiccup — keep the session, this request just fails
             return response;
         }
     }
@@ -133,9 +144,10 @@ apiClientFn.postFormData = async (endpoint: string, body: FormData, signal?: Abo
 
     if (response.status === 401) {
         logger.info('apiClient.postFormData: token wygasł, próba odświeżenia');
-        const newToken = await refreshAccessToken();
-        if (newToken) {
-            headers['Authorization'] = `Bearer ${newToken}`;
+        const current = tokenUtils.get();
+        const outcome = current && current !== token ? 'ok' : await refreshSession();
+        if (outcome === 'ok') {
+            headers['Authorization'] = `Bearer ${tokenUtils.get()}`;
             response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers,
@@ -143,8 +155,8 @@ apiClientFn.postFormData = async (endpoint: string, body: FormData, signal?: Abo
                 credentials: 'include',
                 signal,
             });
-        } else {
-            logger.warn('apiClient.postFormData: odświeżanie nie powiodło się, wylogowuję');
+        } else if (outcome === 'unauthorized') {
+            logger.warn('apiClient.postFormData: sesja odrzucona, wylogowuję');
             handleFatalError();
         }
     }

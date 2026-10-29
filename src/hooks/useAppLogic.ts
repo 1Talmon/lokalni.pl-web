@@ -13,7 +13,7 @@ import { authService } from '../services/authService';
 import { notificationService } from '../services/notificationService';
 import { serviceService, mapApiService, type ApiService } from '../services/serviceService';
 import { chatService, type ApiChatSession } from '../services/chatService';
-import { apiClient } from '../services/apiClient';
+import { apiClient, refreshSession } from '../services/apiClient';
 import { unregisterPushToken, takePendingNavigation, setActiveChatId } from '../services/pushNotificationService';
 import { createServiceUrl } from '../utils/helpers';
 import { isRemoteService, serviceMatchesLocation } from '../utils/serviceUtils';
@@ -29,7 +29,6 @@ import { useModalState } from './domain/useModalState';
 import { navigateWhenReady, prepareServicePage } from '../utils/navPrepare';
 import { loginHref } from '../utils/authRedirect';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 
 export const useAppLogic = () => {
     const router = useRouter();
@@ -98,35 +97,20 @@ export const useAppLogic = () => {
 
         (async () => {
             try {
-                const body: Record<string, string> = {};
-
-                const res = await fetch(`${API_BASE}/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(body),
-                });
-
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        setIsLoggedIn(false);
-                        setUserProfile(null);
-                        setActiveModal('none');
-                        setCurrentChatId(null);
-                        tokenUtils.clearAll();
-                        await secureStorage.removeRefreshToken();
-                        queryClient.clear();
-                        // Stay on the current page as a guest — a visitor from Google must not be
-                        // bounced to /auth just because an old session expired.
-                    }
-                    // 5xx / inne → nie wylogowuj
-                    return;
+                // Same single refresh as apiClient's 401 retry — two parallel refreshes = "theft" → logout
+                const outcome = await refreshSession();
+                if (outcome === 'unauthorized') {
+                    setIsLoggedIn(false);
+                    setUserProfile(null);
+                    setActiveModal('none');
+                    setCurrentChatId(null);
+                    tokenUtils.clearAll();
+                    await secureStorage.removeRefreshToken();
+                    queryClient.clear();
+                    // Stay on the current page as a guest — a visitor from Google must not be
+                    // bounced to /auth just because an old session expired.
                 }
-
-                const data = await res.json() as { token?: string; refreshToken?: string };
-                if (data?.token) {
-                    tokenUtils.set(data.token);
-                }
+                // 'error' (no network / 5xx) → stay signed in, the next request retries
             } catch {
                 // Błąd sieci — NIE wylogowuj
             } finally {
