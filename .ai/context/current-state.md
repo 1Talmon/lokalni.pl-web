@@ -7,7 +7,7 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-07 12:18 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-29 15:14 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
@@ -19,16 +19,16 @@ _Regenerated: **2026-10-07 12:18 UTC** przez `scripts/ai-refresh.sh`_
 ### Ostatnie 10 commitów
 
 ```
-f1fda0b fix(chat): podgląd zdjęcia/filmu/pliku na liście czatów jak zwykła wiadomość
-33ad09e fix(chat): pierwsza klatka filmu w dymku gdy brak miniatury z serwera
-3ebedc1 perf(home): miniatury w kartach, bez podwójnego pobierania zdjęć, bez fade przy wejściu
-2217339 fix(og): podgląd landingów jako JPEG (_og.jpg) zamiast WebP
-4f1c4ed fix(ssr): zapytania SSR do API z nagłówkiem x-lokalni-ssr (bez limitu per IP Workers)
-8b94a59 ci(lighthouse): timeout na pobieranie sitemapy (CI wisiał), log kodu HTTP, + /wpisy
-b7b9153 ci(lighthouse): pomiń is-crawlable na hoście podglądowym (CF dodaje noindex na *.pages.dev), UA przeglądarki dla sitemapy
-e461e31 ci(lighthouse): landingi z sitemapy testowanego hosta + configPath (progi wreszcie sprawdzane)
-1f55b22 ci(lighthouse): testuj realne landingi z API zamiast nieistniejących slugów
-b05aace feat(seo): tytuły i opisy w Google z realnych danych
+a25d681 docs: zasady wyglądu (docs/UI-STYLE.md, wspólne z apką) + CLAUDE.md – linki i logowanie, aktualne komendy i wdrażanie
+8c9a2f5 fix(relacja IG): przycisk pod e-mailem zamiast ikony wystającej z karty, główny przycisk i pastylki jak w innych oknach, krótkie powiadomienie
+16ce96b feat(panel): generator relacji na Instagram – 7 szablonów (4 bez zdjęcia, 3 ze zdjęciami z ofert/tła/aktualności), QR do profilu, przełączniki zdjęcia profilowego i oceny, pobranie/udostępnienie PNG 1080×1920
+79b1088 fix(linki): powrót po logowaniu wszędzie (/auth?next= z zapytaniem, zapamiętany na godzinę), powiadomienia do konkretnej rezerwacji/ogłoszenia/czatu, okno opinii od zakończenia z panelu, publicId z myślnikiem, pasek Safari otwiera tę stronę w apce, AASA jako JSON
+74ef7b5 fix(nawigacja): wstecz z formularza rezerwacji, czatu i pomocy wraca na poprzednią stronę (sprawdzanie historii z react-router zawsze dawało stronę główną)
+bf32d7f feat(profil): „Zdjęcia od klientów” – zdjęcia z opinii do wszystkich ogłoszeń (także usuniętych), najnowsze pierwsze, 5 miniatur + „Wszystkie”, galeria po kliknięciu
+abaf9a3 fix(czat): starsza karta zakończonej rezerwacji szara z „Zlecenie zakończone” (data bez przekreślenia) – aktualna karta z „Wystaw opinię” jest na dole
+b043e49 fix(rezerwacje): po zmianie terminu przyciski według roli w rezerwacji, nie nadawcy karty – klient może zaakceptować termin od wykonawcy (Odrzuć = anuluj), wykonawca czeka na akceptację; to samo w Rezerwacjach
+2180fad fix(rezerwacje): miejsce z trybu ogłoszenia – stacjonarnie bez adresu to „Stacjonarnie · miasto”, nie „Zdalnie / Online” (czat i Grafik); w czacie nawigacja do adresu (współrzędne były gubione)
+a0611cc feat(profile): bez pustych sekcji – Aktualności tylko z wpisami lub realizacjami, Certyfikaty tylko gdy są; bez Aktualności Certyfikaty stają po prawej, a gdy nie ma ani jednego, „O mnie” zajmuje całą szerokość (liczby z API profilu, układ od pierwszego wyświetlenia)
 ```
 
 <!-- AI_AUTO_END -->
