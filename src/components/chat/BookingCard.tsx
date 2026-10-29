@@ -71,6 +71,7 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
         ? new Date(booking.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
         : '';
 
+    // Older card of this booking: a newer one below replaced it (new date, or the job marked done — review there)
     if (isOutdated) {
         return (
             <div className="w-[280px] rounded-2xl border border-slate-100 bg-slate-50 opacity-60 overflow-hidden">
@@ -78,13 +79,13 @@ export const BookingCard = ({ booking, isMe, isOutdated, onAccept, onDecline, on
                     <img src={booking.serviceImage} alt="" className="absolute inset-0 w-full h-full object-cover grayscale" />
                     <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
                         <span className="text-[10px] font-black uppercase tracking-widest text-white/80 flex items-center gap-1.5">
-                            <Calendar size={10} /> Zmieniono termin
+                            {isCompleted ? <><PartyPopper size={10} /> Zlecenie zakończone</> : <><Calendar size={10} /> Zmieniono termin</>}
                         </span>
                     </div>
                 </div>
                 <div className="px-4 py-2.5 flex items-center justify-between">
                     <span className="text-xs text-slate-400 font-medium truncate">{booking.serviceTitle}</span>
-                    {booking.date && <span className="text-xs text-slate-400 line-through shrink-0 ml-2">{booking.date}</span>}
+                    {booking.date && <span className={`text-xs text-slate-400 shrink-0 ml-2 ${isCompleted ? '' : 'line-through'}`}>{booking.date}</span>}
                 </div>
             </div>
         );
