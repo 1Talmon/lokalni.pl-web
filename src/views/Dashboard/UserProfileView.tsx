@@ -1,11 +1,11 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ClientPortal } from '../../components/ui/ClientPortal';
 import {
     Camera, Settings,
     ShieldCheck, ClipboardList,
     Eye, Layout, LogOut, Copy,
-    Tag, Megaphone, Sparkles, Gift, Check, Loader2, Trash2
+    Tag, Megaphone, Sparkles, Gift, Check, Loader2, Trash2, Instagram
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -41,6 +41,9 @@ import { AnalyticsDetail } from './subviews/AnalyticsDetail';
 import { CertificatePreviewModal } from '../../components/modals/CertificatePreviewModal';
 import { AvatarEditModal } from '../../components/modals/AvatarEditModal';
 import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { StoryGeneratorModal } from '../../components/modals/StoryGeneratorModal';
+import { CATEGORIES_DATA } from '../../data/categories';
+import { polishPlural } from '../../utils/helpers';
 import { dataUrlToFile } from '../../utils/imageUtils';
 import { tokenUtils } from '@/utils/tokenUtils';
 
@@ -470,6 +473,42 @@ export const UserProfileView = ({
         }
     };
 
+    // ── Relacja na Instagram (z ogłoszeniem): kategoria · miasto z ofert, ocena i zdjęcia dociągane po otwarciu ──
+    const [storyOpen, setStoryOpen] = useState(false);
+    const { data: storyStats } = useQuery({
+        queryKey: ['story-profile', currentUid],
+        queryFn: async () => {
+            const res = await apiClient.get(`/users/${currentUid}/profile`);
+            return res.ok ? (res.json() as Promise<{ reviewsCount?: number; avgRating?: number }>) : null;
+        },
+        enabled: storyOpen && !!currentUid,
+        staleTime: 60_000,
+    });
+    const { data: storyFeedPhotos } = useQuery({
+        queryKey: ['story-feed', currentUid],
+        queryFn: async () => {
+            const res = await apiClient.get(`/users/${currentUid}/feed`);
+            if (!res.ok) return [] as string[];
+            const json = await res.json() as { items?: { image?: string }[] };
+            return (json.items ?? []).map(i => i.image).filter((x): x is string => !!x);
+        },
+        enabled: storyOpen && !!currentUid && isPremium,
+        staleTime: 60_000,
+    });
+    const storySubtitle = useMemo(() => {
+        const cats = [...new Set(myServices.map(s => CATEGORIES_DATA.find(c => c.id === s.category)?.name).filter(Boolean))].slice(0, 2);
+        const city = myServices.find(s => !s.isRemote && s.city)?.city;
+        return [...cats, city ?? (myServices.length ? 'Zdalnie / Online' : null)].filter(Boolean).join(' · ');
+    }, [myServices]);
+    const storyRating = storyStats?.reviewsCount
+        ? `★ ${Number(storyStats.avgRating ?? 0).toFixed(1).replace('.', ',')} · ${storyStats.reviewsCount} ${polishPlural(storyStats.reviewsCount, 'opinia', 'opinie', 'opinii')}`
+        : null;
+    const storyPhotos = useMemo(() => [...new Set([
+        ...myServices.flatMap(s => s.images?.length ? s.images : s.image ? [s.image] : []),
+        ...(dashBgUrl ? [dashBgUrl] : []),
+        ...(storyFeedPhotos ?? []),
+    ].filter(u => /^https:\/\//.test(u)))].slice(0, 24), [myServices, dashBgUrl, storyFeedPhotos]);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         e.target.value = '';
@@ -720,6 +759,15 @@ export const UserProfileView = ({
                                 <Eye size={20} />
                             </button>
                         )}
+                        {currentUid && myServices.length > 0 && (
+                            <button
+                                onClick={() => setStoryOpen(true)}
+                                aria-label="Relacja na Instagram"
+                                className="p-2.5 bg-gray-50 text-gray-500 rounded-full hover:bg-gray-100 active:scale-95 transition-all shadow-sm border border-gray-100 flex items-center justify-center"
+                            >
+                                <Instagram size={20} />
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-row md:flex-col items-center md:items-start gap-5 md:gap-0 w-full md:w-auto">
@@ -787,6 +835,11 @@ export const UserProfileView = ({
                             <button onClick={handleCopyLink} className="text-xs font-bold px-4 py-2.5 rounded-xl text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-100 transition-all flex items-center gap-2 shadow-sm">
                                 <Copy size={14}/> Skopiuj link
                             </button>
+                            {myServices.length > 0 && (
+                                <button onClick={() => setStoryOpen(true)} className="text-xs font-bold px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:opacity-90 transition-all flex items-center gap-2 shadow-sm">
+                                    <Instagram size={14}/> Relacja na Instagram
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -952,6 +1005,19 @@ export const UserProfileView = ({
             </motion.div>
 
             <AvatarEditModal image={imageToCrop} onClose={() => setImageToCrop(null)} onSave={handleSaveCroppedImage} isProcessing={isProcessing} />
+            {currentUid && (
+                <StoryGeneratorModal
+                    isOpen={storyOpen}
+                    onClose={() => setStoryOpen(false)}
+                    name={userData?.imie ? `${userData.imie} ${userData.nazwisko || ''}`.trim() : (userData?.name ?? '')}
+                    subtitle={storySubtitle}
+                    rating={storyRating}
+                    avatarUrl={currentAvatarUrl || null}
+                    url={`https://mylokalni.pl/profile/${currentUid}?utm_source=instagram&utm_medium=story`}
+                    photos={storyPhotos}
+                    addToast={addToast}
+                />
+            )}
 
             {/* Hidden file inputs for avatar selection on native */}
             <input ref={avatarGalleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
