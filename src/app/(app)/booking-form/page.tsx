@@ -10,7 +10,8 @@ export default function BookingFormPage() {
     const router = useRouter();
 
     const doNav = useCallback(() => {
-        const hasHistory = (window.history.state?.idx ?? 0) > 0;
+        // Next.js history.state has no react-router idx — that check was always false and sent Back to the home page
+        const hasHistory = window.history.length > 1;
         if (hasHistory) router.back(); else router.push('/');
     }, [router]);
 
