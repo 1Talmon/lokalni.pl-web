@@ -9,6 +9,19 @@ Produkcja: `https://mylokalni.pl`. Backend API: `https://api.mylokalni.pl` (osob
 
 Siostrzany projekt: `/Users/cypriantalmon/Desktop/lokalni projekt/` — starszy Vite/React + Capacitor SPA (iOS/Android). Web wygaszany, ten projekt (`lokalni-web`) przejmuje SEO i przeglądarkę. Duża część kodu (`src/views/*`, `src/components/modals/*`, `src/hooks/*`) jest współdzielona 1:1 z siostrzanym projektem — dzięki cap-stubs (patrz niżej) działa bez Capacitor runtime.
 
+## Najpierw przeczytaj
+
+- **Wygląd (każda zmiana UI): `docs/UI-STYLE.md`** – kolory, przyciski, pastylki, okna (bottom sheet), toasty, teksty marki. Identyczny plik w `lokalni projekt/docs/UI-STYLE.md`; nowy element = skopiuj klasy z istniejącego wzorca.
+- Apka: `lokalni projekt/CLAUDE.md`. API: `Lokalni API/CLAUDE.md` (migracje, opinie ukryte, kontrakt linków).
+
+## Linki i logowanie (strona + apka)
+
+- Każda bramka logowania: `router.push(loginHref())` / `router.replace(loginHref())` z `src/utils/authRedirect.ts` – nigdy gołe `/auth`. `/auth?next=` przyjmuje ścieżkę z zapytaniem (`safeNext` blokuje obce hosty), cel pamiętany 1 h (rejestracja → potwierdzenie e-maila → logowanie wraca do celu).
+- Sprawdzanie historii w Next: `window.history.length > 1` (nie `history.state.idx` – to z react-router, w Next zawsze puste).
+- ID oferty z adresu: `publicIdFromSlug` (`src/utils/helpers.ts`), nie `split('-').pop()` – ID mogą zawierać „-”.
+- Powiadomienia: rezerwacja → `/dashboard?tab=orders&bookingId=`, odpowiedź na moją opinię (`serviceIsMine === false`) → `/service/<id>`, polubienie → czat.
+- Każdy adres z maili/udostępnień musi działać też w apce (przejmuje wszystkie linki mylokalni.pl) – patrz `lokalni projekt/CLAUDE.md`.
+
 ## AI context — `.ai/`
 
 Ten projekt utrzymuje briefy i skille w `.ai/` — Claude Code powinien czytać na start sesji dla kontekstu domenowego, a skille wywoływać gdy zadanie pasuje do opisu.
@@ -259,7 +272,7 @@ Legacy `1Talmon/Lokalni.pl` — **ARCHIVED** (pre-cursor Admin panelu, read-only
 **Kolejność startu przy full local dev:**
 1. Postgres + Redis + Meilisearch (via `docker-compose` w Lokalni API)
 2. `Lokalni API` (port 8080)
-3. `lokalni-web` (`next dev`, port 3000) lub `lokalni projekt` (`bun run dev`, port 5173) — konsumują API
+3. `lokalni-web` (`next dev`, port 3000) lub `lokalni projekt` (`npm run dev`, Vite) — konsumują API
 4. `Lokalni Admin API` (osobny port) + `Lokalni Admin` (port 3001)
 
 ### 🌐 lokalni-web (ten projekt)
@@ -273,13 +286,13 @@ Patrz cały ten CLAUDE.md wyżej.
 
 **Komendy** (z root):
 ```bash
-bun run dev          # Vite :5173, proxy /api → https://api.cypriantalmon.pl
-bun run build        # → dist/
-bun run lint         # ESLint (pre-commit hook + lint-staged na *.ts/tsx)
+npm run dev          # Vite (pnpm@10.34.6 do instalacji zależności)
+npm run build        # → dist/
+npm run lint         # ESLint (pre-commit hook + lint-staged na *.ts/tsx)
 npx tsc --noEmit     # TypeScript (z src/, strict: false)
 ```
 
-**Deploy natywny:** `bun run build` → `npx cap sync ios|android` → Xcode / Android Studio.
+**Deploy natywny:** `npm run build` → `npx cap sync ios|android` → Xcode / Xcode Cloud / Android Studio.
 **Deploy web (deprecated):** `dist/` → `/usr/share/nginx/html/` na serwerze + `sudo systemctl reload nginx` (user robi ręcznie, nie Claude).
 
 **Kluczowe różnice od lokalni-web:**
@@ -415,8 +428,8 @@ Utrwalone zasady użytkownika — dotyczą **każdej** sesji w tym projekcie. Au
 
 - **Język: polski** — user oczekuje odpowiedzi po polsku. Kod komentarze po angielsku, komunikacja po polsku.
 - **Nie pushuj automatycznie** — po commit **czekaj na wyraźne polecenie** "push". "commit" ≠ "push". Force-push nigdy bez zgody.
-- **Domyślnie push na `dev`** — nigdy bezpośrednio na `main` bez uprzedniej weryfikacji na `dev.mylokalni.pl`. Workflow: push dev → verify preview → merge --ff-only dev do main → push main. Patrz `.ai/skills/deploy-web/SKILL.md`.
-- **Nie wgrywaj nic ręcznie na serwer** ani nie restartuj API — user robi to sam. Deploy web = git push (CF Pages CI). Deploy API = user robi Docker rebuild + push do ghcr.io + SSH.
+- **Push tylko na polecenie.** Na „push na main” właściciela: `git push origin dev dev:main` (commit na `dev`, ta sama wersja na `main`). Bez takiego polecenia nic nie wypychaj. Po wdrożeniu sprawdź produkcję (workflow „Purge CF cache after deploy”).
+- **Nie wgrywaj nic ręcznie na serwer** ani nie restartuj API — user robi to sam. Deploy web = git push (CF Pages CI). Deploy API = push na `main` → GitHub Actions (rolling api-1 → api-2, migracje, rollback przy złym `/health`).
 - **API docs = Notion** — nie edytuj lokalnych `.md` w `Lokalni API/` ani innych projektach. Sam `CLAUDE.md` i `.ai/` można edytować.
 - **Docker logi** — API działa w Dockerze. `docker logs lokalni-api-1` (nie systemd, nie journalctl).
 - **Serwery:** `ssh main` (Docker host — `/home/cyprian/docker/`) + `ssh oracle` (nginx LB — `/etc/nginx/conf.d/lokalni.conf`). CORS zarządza nginx na oracle, nie Fastify.
