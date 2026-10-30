@@ -108,8 +108,8 @@ Custom subdomain `dev.mylokalni.pl` jest **opcjonalny** — obecnie nie skonfigu
 **Claude Code nie deployuje ręcznie** — user pushuje, CI robi resztę. Deploy API = osobny flow (Docker + SSH, robi user).
 
 Env vars per environment w CF Dashboard → Pages → `lokalni-pl-web` → Settings → Environment variables:
-- Production (main): `NEXT_PUBLIC_API_URL=https://api.mylokalni.pl/api`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY=<key>`
-- Preview (dev): te same wartości (dev używa produkcyjnego API — patrz `.ai/context/current-state.md` gdyby zmienił się na staging API)
+- Production (main): `NEXT_PUBLIC_API_URL=https://api.mylokalni.pl/api`, `NEXT_PUBLIC_GOOGLE_MAPS_KEY=<key>`, `NEXT_PUBLIC_GA_ID=G-<id>` (GA4; puste = analityka wyłączona)
+- Preview (dev): te same wartości (dev używa produkcyjnego API — patrz `.ai/context/current-state.md` gdyby zmienił się na staging API). `NEXT_PUBLIC_GA_ID` na preview może zostać puste, żeby testy nie zaśmiecały statystyk.
 
 ## Package manager — pnpm@10 obowiązkowe
 

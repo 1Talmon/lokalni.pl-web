@@ -23,7 +23,6 @@ const ChatListView      = dynamic(() => import('../views/ChatListView').then(m =
 const GrafikView        = dynamic(() => import('../views/GrafikView'),                                                { ssr: false });
 const FavoritesListView = dynamic(() => import('../views/FavoritesListView').then(m => ({ default: m.FavoritesListView })), { ssr: false });
 
-const CookieBanner      = dynamic(() => import('./ui/CookieBanner'),          { ssr: false });
 const MaintenanceBanner = dynamic(() => import('./ui/MaintenanceBanner').then(m => m.MaintenanceBanner), { ssr: false });
 const TourOverlay       = dynamic(() => import('./tour/TourOverlay').then(m => ({ default: m.TourOverlay })),   { ssr: false });
 
@@ -283,7 +282,6 @@ function AppShellContent({ children }: AppShellProps) {
                     </>
                 )}
 
-                <CookieBanner />
                 <MaintenanceBanner />
                 {showTour && <TourOverlay onDone={() => { localStorage.setItem('tour_seen', '1'); setShowTour(false); }} />}
                 {locked && <AppLock onVerify={verify} verifying={verifying} />}

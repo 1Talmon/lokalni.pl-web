@@ -32,12 +32,12 @@ function buildCsp(): string {
     const isDev = process.env.NODE_ENV === 'development';
     return [
         "default-src 'self'",
-        `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com`,
+        `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://connect.facebook.net https://accounts.google.com https://maps.googleapis.com https://www.googletagmanager.com`,
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
         "media-src 'self' data: blob: https:",
-        "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://accounts.google.com https://maps.googleapis.com",
+        "connect-src 'self' https://api.mylokalni.pl wss://api.mylokalni.pl https://accounts.google.com https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
         "frame-src 'self' https://accounts.google.com",
         "object-src 'none'",
         "base-uri 'self'",

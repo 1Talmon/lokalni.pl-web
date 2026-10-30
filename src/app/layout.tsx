@@ -4,6 +4,8 @@ import localFont from 'next/font/local';
 import NextTopLoader from 'nextjs-toploader';
 import { WebVitals } from '@/components/WebVitals';
 import { ChunkErrorRecovery } from '@/components/ChunkErrorRecovery';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import CookieBanner from '@/components/ui/CookieBanner';
 import '../index.css';
 import '../App.css';
 import { safeJsonLd } from '@/lib/safeJsonLd';
@@ -138,9 +140,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <NextTopLoader color="#6366F1" showSpinner={false} height={2} crawlSpeed={200} />
                 <WebVitals />
                 <ChunkErrorRecovery />
+                <GoogleAnalytics />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
                 {children}
+                {/* Baner globalny — także na stronach SEO (/service, /profile, landingi), gdzie nie ma AppShella */}
+                <CookieBanner />
             </body>
         </html>
     );

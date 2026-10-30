@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Mail } from 'lucide-react';
 import { OPERATOR } from '@/lib/legal/operator';
+import { clearConsent } from '@/lib/consent';
 
 const AppleIcon = () => (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -16,8 +17,9 @@ const GooglePlayIcon = () => (
 );
 
 export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) => {
+    // Cofnięcie zgody na analitykę: czyścimy wybór i pokazujemy baner ponownie.
     const handleResetCookies = () => {
-        localStorage.removeItem('cookie-consent');
+        clearConsent();
         window.location.reload();
     };
 
@@ -109,7 +111,7 @@ export const Footer = ({ onOpenSupport }: { onOpenSupport?: () => void } = {}) =
                         onClick={handleResetCookies}
                         className="hover:text-white transition-colors hover:underline"
                     >
-                        Pliki cookies
+                        Ustawienia cookies
                     </button>
                     <span>Usługi na wyciągnięcie ręki.</span>
                 </div>
