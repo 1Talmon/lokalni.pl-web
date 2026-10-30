@@ -7,7 +7,7 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-29 15:14 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-10-30 20:01 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
@@ -19,6 +19,8 @@ _Regenerated: **2026-10-29 15:14 UTC** przez `scripts/ai-refresh.sh`_
 ### Ostatnie 10 commitów
 
 ```
+88f9472 fix(auth): jedno wspólne odświeżanie sesji (start + 401 + WebSocket), retry z już odświeżonym tokenem, brak wylogowania przy błędzie sieci
+16c2c26 chore(ai): sync current-state
 a25d681 docs: zasady wyglądu (docs/UI-STYLE.md, wspólne z apką) + CLAUDE.md – linki i logowanie, aktualne komendy i wdrażanie
 8c9a2f5 fix(relacja IG): przycisk pod e-mailem zamiast ikony wystającej z karty, główny przycisk i pastylki jak w innych oknach, krótkie powiadomienie
 16ce96b feat(panel): generator relacji na Instagram – 7 szablonów (4 bez zdjęcia, 3 ze zdjęciami z ofert/tła/aktualności), QR do profilu, przełączniki zdjęcia profilowego i oceny, pobranie/udostępnienie PNG 1080×1920
@@ -27,8 +29,6 @@ a25d681 docs: zasady wyglądu (docs/UI-STYLE.md, wspólne z apką) + CLAUDE.md �
 bf32d7f feat(profil): „Zdjęcia od klientów” – zdjęcia z opinii do wszystkich ogłoszeń (także usuniętych), najnowsze pierwsze, 5 miniatur + „Wszystkie”, galeria po kliknięciu
 abaf9a3 fix(czat): starsza karta zakończonej rezerwacji szara z „Zlecenie zakończone” (data bez przekreślenia) – aktualna karta z „Wystaw opinię” jest na dole
 b043e49 fix(rezerwacje): po zmianie terminu przyciski według roli w rezerwacji, nie nadawcy karty – klient może zaakceptować termin od wykonawcy (Odrzuć = anuluj), wykonawca czeka na akceptację; to samo w Rezerwacjach
-2180fad fix(rezerwacje): miejsce z trybu ogłoszenia – stacjonarnie bez adresu to „Stacjonarnie · miasto”, nie „Zdalnie / Online” (czat i Grafik); w czacie nawigacja do adresu (współrzędne były gubione)
-a0611cc feat(profile): bez pustych sekcji – Aktualności tylko z wpisami lub realizacjami, Certyfikaty tylko gdy są; bez Aktualności Certyfikaty stają po prawej, a gdy nie ma ani jednego, „O mnie” zajmuje całą szerokość (liczby z API profilu, układ od pierwszego wyświetlenia)
 ```
 
 <!-- AI_AUTO_END -->
