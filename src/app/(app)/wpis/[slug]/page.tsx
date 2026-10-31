@@ -107,6 +107,15 @@ export default async function PostPage({ params }: Props) {
                 {post.image && (
                     <img src={post.image} alt={title} className="w-full rounded-2xl mb-4 object-cover" />
                 )}
+                {post.video && (
+                    <video
+                        src={post.video}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full rounded-2xl mb-4 bg-black"
+                    />
+                )}
                 <div className="text-gray-700 leading-relaxed space-y-3">
                     {post.content.split(/\n{2,}/).map((para, i) => (
                         <p key={i} className="whitespace-pre-line">{para}</p>

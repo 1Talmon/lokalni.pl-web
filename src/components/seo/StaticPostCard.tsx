@@ -6,11 +6,15 @@ export function StaticPostCard({ post, headingLevel = 'h3' }: { post: PublicPost
     const name = authorName(post.author);
     return (
         <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {post.image && (
+            {post.image ? (
                 <a href={`/wpis/${post.slug}`} className="block">
                     <img src={post.image} alt={postTitle(post.content)} loading="lazy" className="w-full aspect-video object-cover" />
                 </a>
-            )}
+            ) : post.video ? (
+                <a href={`/wpis/${post.slug}`} className="block bg-black">
+                    <video src={post.video} preload="metadata" muted playsInline className="w-full aspect-video object-cover" />
+                </a>
+            ) : null}
             <div className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs shrink-0 overflow-hidden">

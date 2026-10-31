@@ -33,6 +33,7 @@ export interface PublicPost {
     slug: string;
     content: string;
     image: string | null;
+    video: string | null;
     indexable: boolean;
     createdAt: string;
     updatedAt: string;
@@ -74,6 +75,7 @@ function mapPost<T extends PublicPost>(p: T): T {
     return {
         ...p,
         image: normalizeMediaUrl(p.image),
+        video: normalizeMediaUrl(p.video),
         author: { ...p.author, profilowe: normalizeMediaUrl(p.author.profilowe) },
     };
 }

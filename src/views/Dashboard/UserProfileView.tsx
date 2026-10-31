@@ -262,6 +262,7 @@ export const UserProfileView = ({
             xhr.onerror = () => resolve(null);
             const fd = new FormData();
             fd.append('file', file);
+            fd.append('context', 'post'); // post video = public content (public bucket, like offer photos)
             xhr.send(fd);
         });
 
