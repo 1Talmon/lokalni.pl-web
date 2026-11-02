@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useApp } from '@/providers/AppProvider';
+import { useContext, useEffect } from 'react';
+import { AppContext } from '@/providers/AppProvider';
 
 /**
  * Zdejmuje nakładkę ładowania powłoki aplikacji na stronach „nie istnieje”.
@@ -12,9 +12,10 @@ import { useApp } from '@/providers/AppProvider';
  * (10 s + przeładowanie + 10 s). 404 renderuje to zamiast niego.
  */
 export function NavLoadingDone() {
-    const { actions } = useApp();
+    // Bez useApp(): globalna strona 404 jest budowana statycznie poza AppProvider i `useApp` rzuciłby błąd.
+    const app = useContext(AppContext);
     useEffect(() => {
-        actions.setNavLoading(false);
+        app?.actions.setNavLoading(false);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     return null;
 }
