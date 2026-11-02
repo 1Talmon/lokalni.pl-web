@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { NavLoadingDone } from '@/components/NavLoadingDone';
 
 export const metadata: Metadata = {
     title: 'Strona nie znaleziona',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
     return (
         <div className="min-h-screen bg-[#F4F4F9] flex items-center justify-center p-6">
+            <NavLoadingDone />
             <div className="text-center max-w-sm">
                 <p className="text-7xl font-black text-indigo-600 mb-4">404</p>
                 <h1 className="text-2xl font-black text-gray-900 mb-2">Strona nie istnieje</h1>
