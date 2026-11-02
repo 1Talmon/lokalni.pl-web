@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { onConsentChange, readConsent, type AnalyticsConsent } from '@/lib/consent';
+import { analyticsLocation, analyticsPath } from '@/lib/analyticsPath';
 
 declare global {
     interface Window {
@@ -35,7 +36,6 @@ function clearAnalyticsCookies(): void {
 
 function GoogleAnalyticsTracker() {
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [consent, setConsent] = useState<AnalyticsConsent | null>(null);
     const [ready, setReady] = useState(false);
 
@@ -63,21 +63,26 @@ function GoogleAnalyticsTracker() {
             send_page_view: false,
             allow_google_signals: false,
             allow_ad_personalization_signals: false,
+            page_location: analyticsLocation(window.location.origin, window.location.pathname, window.location.search),
         });
         setReady(true);
     }, [consent, ready]);
 
     // GA4 nie śledzi zmian trasy w App Routerze samo — page_view wysyłamy przy każdej nawigacji.
-    // `send_page_view: false` w config poniżej, żeby nie policzyć pierwszego odsłonięcia dwa razy.
+    // `send_page_view: false` w config, żeby nie policzyć pierwszego odsłonięcia dwa razy.
+    // Adres jest oczyszczony (bez tokenów z maili, z kodami zastąpionymi znacznikiem). `set` ustawia go
+    // też dla zdarzeń pomiaru rozszerzonego (przewijanie, kliknięcia wychodzące), które inaczej wzięłyby
+    // prawdziwy adres z paska przeglądarki.
     useEffect(() => {
         if (!ready || consent !== 'granted' || typeof window.gtag !== 'function') return;
-        const query = searchParams?.toString();
+        const location = analyticsLocation(window.location.origin, pathname, window.location.search);
+        window.gtag('set', { page_location: location, page_path: analyticsPath(pathname) });
         window.gtag('event', 'page_view', {
-            page_path: `${pathname}${query ? `?${query}` : ''}`,
-            page_location: window.location.href,
+            page_path: analyticsPath(pathname),
+            page_location: location,
             page_title: document.title,
         });
-    }, [ready, consent, pathname, searchParams]);
+    }, [ready, consent, pathname]);
 
     if (consent !== 'granted') return null;
 
@@ -99,6 +104,8 @@ function GoogleAnalyticsTracker() {
                     // Zgodnie z Polityką prywatności: bez sygnałów Google i bez personalizacji reklam.
                     allow_google_signals: false,
                     allow_ad_personalization_signals: false,
+                    // Adres bez parametrów (tokeny z maili!) — patrz lib/analyticsPath.ts.
+                    page_location: analyticsLocation(window.location.origin, window.location.pathname, window.location.search),
                 });
                 setReady(true);
             }}
@@ -112,11 +119,5 @@ function GoogleAnalyticsTracker() {
  */
 export function GoogleAnalytics() {
     if (!GA_ID) return null;
-
-    // useSearchParams w osobnym Suspense — inaczej całe drzewo layoutu wpadłoby w CSR bailout.
-    return (
-        <Suspense fallback={null}>
-            <GoogleAnalyticsTracker />
-        </Suspense>
-    );
+    return <GoogleAnalyticsTracker />;
 }

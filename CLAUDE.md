@@ -438,3 +438,6 @@ Utrwalone zasady użytkownika — dotyczą **każdej** sesji w tym projekcie. Au
 ## MCP: code-review-graph
 
 Projekt ma knowledge graph (auto-update przez hooks). Preferuj MCP tools (`semantic_search_nodes`, `query_graph`, `detect_changes`, `get_impact_radius`, `get_affected_flows`) nad Grep/Glob/Read dla exploration i review — szybsze i tańsze tokenowo. Fall back do Grep/Read tylko gdy graf nie pokrywa.
+
+## Analityka (GA4)
+- Ładowana wyłącznie po zgodzie (`components/analytics/GoogleAnalytics.tsx`, zgoda w `lib/consent.ts`). Do Google idzie tylko `analyticsPath()` / `analyticsLocation()` z `lib/analyticsPath.ts`: bez parametrów adresu (linki z maili niosą tokeny: `/verify-email`, `/reset-password`, `/delete-account-confirm`), kody z `/invite/…` i `/r/…` jako `:code`, zostają tylko `utm_*`. Nigdy nie wysyłaj `location.href` ani `search` do analityki.
