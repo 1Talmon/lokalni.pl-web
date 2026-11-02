@@ -153,6 +153,7 @@ function AppShellContent({ children }: AppShellProps) {
             categories={CATEGORIES_DATA}
             onServiceClick={actions.onServiceClick}
             onStartChat={actions.startChat}
+            onAddClick={actions.openAddServiceModal}
         />,
         state.isLoggedIn ? (
             <ChatListView

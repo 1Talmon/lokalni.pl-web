@@ -1,3 +1,4 @@
+import { postExcerpt } from '@/lib/landings';
 import { createServiceUrl } from '@/utils/helpers';
 import { cardImageUrl } from '@/utils/normalizeUrl';
 import type { Service } from '@/types';
@@ -64,7 +65,7 @@ export function StaticServiceCard({ s, priority }: { s: Service; priority: boole
                     )}
                 </div>
                 <h3 className="font-bold text-base text-gray-900 mb-1 line-clamp-1">{s.title}</h3>
-                <p className="text-gray-600 text-xs mb-3 line-clamp-2 min-h-[32px]">{s.description}</p>
+                <p className="text-gray-600 text-xs mb-3 line-clamp-2 min-h-[32px]">{postExcerpt(s.description ?? '', 140)}</p>
                 <div className="w-full bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm text-center">
                     Zobacz szczegóły
                 </div>
