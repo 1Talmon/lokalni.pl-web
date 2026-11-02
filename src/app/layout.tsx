@@ -79,7 +79,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
-    maximumScale: 1,
+    // Bez maximumScale: 1 — blokada powiększania łamie WCAG 1.4.4. Auto-zoom iOS przy fokusie inputu
+    // jest już wyłączony przez `font-size: 16px` dla pól na urządzeniach dotykowych (App.css).
     viewportFit: 'cover',
     themeColor: '#ffffff',
 };

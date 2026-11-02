@@ -33,17 +33,25 @@ const CookieBanner = () => {
           data-cookie-banner
           className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-[9999]"
         >
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-5 md:p-6 overflow-hidden relative">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 md:p-6 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-50 pointer-events-none" />
 
             <div className="flex items-start gap-4 relative z-10">
-              <div className="bg-indigo-100 p-3 rounded-2xl text-[#6366F1] shrink-0">
+              <div className="hidden md:block bg-indigo-100 p-3 rounded-2xl text-[#6366F1] shrink-0">
                 <ShieldCheck size={24} />
               </div>
 
               <div className="flex-1">
-                <h3 className="font-bold text-gray-900 text-lg mb-1">Pliki cookies</h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">
+                <h3 className="font-bold text-gray-900 text-base md:text-lg mb-1">Pliki cookies</h3>
+                {/* Telefon: krótki tekst (baner nie zasłania ekranu); od md pełna informacja. */}
+                <p className="md:hidden text-gray-500 text-xs leading-snug mb-3">
+                  Używamy niezbędnych cookies, a za Twoją zgodą także Google Analytics. Zgodę wycofasz w stopce
+                  („Ustawienia cookies”).{' '}
+                  <Link href="/polityka-prywatnosci" className="text-[#6366F1] hover:underline font-medium">
+                    Polityka prywatności
+                  </Link>
+                </p>
+                <p className="hidden md:block text-gray-500 text-sm leading-relaxed mb-4">
                   Niezbędne pliki cookies i pamięć przeglądarki utrzymują logowanie i zapamiętują Twoje ustawienia.
                   Za Twoją zgodą korzystamy też z <strong className="font-semibold text-gray-700">Google Analytics</strong> –
                   zbiorcze statystyki pomagają nam poprawiać serwis. Zgodę możesz wycofać w każdej chwili
@@ -53,16 +61,16 @@ const CookieBanner = () => {
                   </Link>.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-row gap-2">
                   <button
                     onClick={() => handleChoice('granted')}
-                    className="bg-[#6366F1] hover:bg-[#4F46E5] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 flex-1"
+                    className="bg-[#6366F1] hover:bg-[#4F46E5] text-white px-3 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex-1"
                   >
                     Akceptuję analitykę
                   </button>
                   <button
                     onClick={() => handleChoice('denied')}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 flex-1"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex-1"
                   >
                     Tylko niezbędne
                   </button>
