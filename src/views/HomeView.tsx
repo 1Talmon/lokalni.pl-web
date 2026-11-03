@@ -115,8 +115,6 @@ interface HomeViewProps {
     setShowOnlineOnly: (val: boolean) => void;
     onSearch?: (phrase: string, category: string) => void;
     skipInitialAnimation?: boolean;
-    /** Hero CTA for providers; opens the add-offer flow (login gate included). Hidden when not passed. */
-    onAddClick?: () => void;
 }
 
 const HomeView = ({
@@ -145,7 +143,6 @@ const HomeView = ({
     showOnlineOnly,
     setShowOnlineOnly,
     skipInitialAnimation,
-    onAddClick,
 }: HomeViewProps) => {
     // Offers opened in this visit (memory only) — "Polecane" reacts immediately, also without an account
     const recentlyViewed = useRecentlyViewed();
@@ -347,18 +344,9 @@ const HomeView = ({
             <HeroHeading className="text-3xl md:text-6xl font-black mb-3 md:mb-4 leading-tight">
                 Zarabiaj na tym, co umiesz, <br className="hidden md:block"/> lub znajdź kogoś tuż obok.
             </HeroHeading>
-            <p className={`text-white/90 text-base md:text-lg ${onAddClick ? 'mb-4' : 'mb-8'}`}>
+            <p className="text-white/90 text-base md:text-lg mb-8">
                 Lokalne usługi od młodych z Twojej okolicy – od koszenia trawnika po montaż rolek.
             </p>
-            {onAddClick && (
-              <button
-                type="button"
-                onClick={onAddClick}
-                className="mb-6 md:mb-8 inline-flex items-center text-sm font-bold px-4 py-2.5 rounded-xl text-white bg-white/15 hover:bg-white/25 border border-white/30 transition-all active:scale-95"
-              >
-                Dodaj ofertę
-              </button>
-            )}
 
             <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl relative z-50">
               

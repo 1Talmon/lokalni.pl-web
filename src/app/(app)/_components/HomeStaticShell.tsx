@@ -2,7 +2,6 @@ import { StaticServiceCard } from '@/components/seo/StaticServiceCard';
 import { StaticPostCard } from '@/components/seo/StaticPostCard';
 import { LandingLinks } from '@/components/seo/LandingLinks';
 import { offersLabel, type LandingGroup, type PublicPost } from '@/lib/landings';
-import { loginHref } from '@/utils/authRedirect';
 import type { Service } from '@/types';
 
 interface Props {
@@ -32,13 +31,6 @@ export function HomeStaticShell({ services, totalServices, groups, posts }: Prop
                         albo przeglądaj oferty z cenami, czytaj opinie, pisz bezpośrednio do wykonawcy i rezerwuj termin
                         online – bez prowizji od zlecenia.
                     </p>
-                    {/* Same CTA as HomeView (button → add-offer flow); here a plain link through the login gate. */}
-                    <a
-                        href={loginHref()}
-                        className="mt-4 inline-flex items-center text-sm font-bold px-4 py-2.5 rounded-xl text-white bg-white/15 hover:bg-white/25 border border-white/30"
-                    >
-                        Dodaj ofertę
-                    </a>
                     {totalServices > 0 && (
                         <p className="text-white/80 text-sm mt-4">
                             Obecnie w serwisie: {offersLabel(totalServices)}
