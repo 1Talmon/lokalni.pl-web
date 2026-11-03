@@ -12,7 +12,6 @@ import {
 } from '@/lib/landings';
 import { SlugContent } from './_components/SlugContent';
 import { SlugStaticShell } from './_components/SlugStaticShell';
-import { LandingFacts } from './_components/LandingFacts';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 
 // Landing pages = real groups of public services from the API (/public/landings):
@@ -124,8 +123,6 @@ export default async function SlugPage({ params }: Props) {
             {/* SSR shell — real HTML for crawlers and first paint; hidden once HomeView takes over */}
             <SlugStaticShell data={data} related={related} parents={parents} />
             <SlugContent categoryId={categoryIdForSlug(group.categorySlug)} city={group.city} />
-            {/* Visible to users and Google alike (the shell above is hidden after load) */}
-            <LandingFacts data={data} />
         </>
     );
 }

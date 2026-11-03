@@ -159,21 +159,6 @@ const formatZl = (n: number) => `${n.toLocaleString('pl-PL', { maximumFractionDi
 export const formatPriceRange = (r: Pick<PriceRange, 'min' | 'max'>) =>
     r.min === r.max ? formatZl(r.min) : `${formatZl(r.min).replace(' zł', '')}–${formatZl(r.max)}`;
 
-export interface ProviderCount { uid: string; name: string; count: number }
-
-/** Providers of the given offers with their offer counts, most offers first. */
-export function providerSummary(services: Pick<Service, 'provider'>[]): ProviderCount[] {
-    const byUid = new Map<string, ProviderCount>();
-    for (const s of services) {
-        const uid = s.provider?.uid;
-        if (!uid) continue;
-        const cur = byUid.get(uid);
-        if (cur) cur.count += 1;
-        else byUid.set(uid, { uid, name: s.provider.name || 'Specjalista', count: 1 });
-    }
-    return [...byUid.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pl'));
-}
-
 export function categoryLabel(categorySlug: string | null): string | null {
     if (!categorySlug) return null;
     // "Inne" alone reads badly in titles ("Inne w Rowach") — "Inne usługi w Rowach"
