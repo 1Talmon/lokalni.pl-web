@@ -93,6 +93,14 @@ const orgJsonLd = {
     url: BASE_URL,
     description: 'Lokalne usługi od młodych z Twojej okolicy – ogłoszenia z cenami, opinie, czat i rezerwacja terminu.',
     email: OPERATOR.email,
+    // Operator is a natural person (unregistered activity) — no legalName/vatID. Locality only, no street:
+    // the full address stays in the regulamin and /o-nas (owner's decision).
+    founder: { '@type': 'Person', name: OPERATOR.fullName },
+    address: {
+        '@type': 'PostalAddress',
+        addressLocality: OPERATOR.postalCity.replace(/^\d{2}-\d{3}\s*/, ''),
+        addressCountry: 'PL',
+    },
     logo: {
         '@type': 'ImageObject',
         url: `${BASE_URL}/icons/web-app-manifest-512x512.png`,
