@@ -6,11 +6,13 @@ import { BASE_URL, DEFAULT_OG_IMAGE, legacyLandingRedirect } from '@/lib/seo-dat
 import { createServiceUrl } from '@/utils/helpers';
 import {
     fetchLanding, servicesOgImage, fetchLandingGroups, landingH1, offersLabel, categoryLabel, categoryIdForSlug,
+    priceSummary, formatPriceRange,
     type LandingData, type LandingGroup,
     isIndexableLanding,
 } from '@/lib/landings';
 import { SlugContent } from './_components/SlugContent';
 import { SlugStaticShell } from './_components/SlugStaticShell';
+import { LandingFacts } from './_components/LandingFacts';
 import { safeJsonLd } from '@/lib/safeJsonLd';
 
 // Landing pages = real groups of public services from the API (/public/landings):
@@ -24,8 +26,10 @@ interface Props {
 function description(data: LandingData): string {
     const { group, services, total } = data;
     const titles = [...new Set(services.map(s => s.title))].slice(0, 3).join(', ');
-    const prices = services.map(s => parseFloat(s.price)).filter(p => p > 0);
-    const from = prices.length > 0 ? ` Ceny od ${Math.min(...prices)} zł.` : '';
+    // Lowest price of the most common unit only (50 zł/h and 400 zł/usługa are not comparable), and only when
+    // the page lists every offer of the group — otherwise "od" could be wrong.
+    const top = services.length === total ? priceSummary(services)[0] : undefined;
+    const from = top ? ` Ceny od ${formatPriceRange({ min: top.min, max: top.min })} ${top.unit}.` : '';
     return `${landingH1(group)}: ${offersLabel(total)} – ${titles}.${from} Porównaj opinie i zarezerwuj termin na MyLokalni.pl.`;
 }
 
@@ -120,6 +124,8 @@ export default async function SlugPage({ params }: Props) {
             {/* SSR shell — real HTML for crawlers and first paint; hidden once HomeView takes over */}
             <SlugStaticShell data={data} related={related} parents={parents} />
             <SlugContent categoryId={categoryIdForSlug(group.categorySlug)} city={group.city} />
+            {/* Visible to users and Google alike (the shell above is hidden after load) */}
+            <LandingFacts data={data} />
         </>
     );
 }

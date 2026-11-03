@@ -134,6 +134,46 @@ export const fetchPost = cache(async (slug: string): Promise<PostDetail | null> 
 
 export const offersLabel = (n: number) => `${n} ${polishPlural(n, 'oferta', 'oferty', 'ofert')}`;
 
+export interface PriceRange { unit: string; min: number; max: number; count: number }
+
+/**
+ * Price ranges per unit ("za usługę", "za godzinę"…) from real offers. Units are never mixed:
+ * 50 zł per hour and 400 zł per service are not comparable. Most common unit first.
+ */
+export function priceSummary(services: Pick<Service, 'price' | 'priceUnit'>[]): PriceRange[] {
+    const byUnit = new Map<string, PriceRange>();
+    for (const s of services) {
+        const p = parseFloat(s.price);
+        if (!(p > 0)) continue;
+        const unit = s.priceUnit?.trim() || 'za usługę';
+        const cur = byUnit.get(unit);
+        if (cur) { cur.min = Math.min(cur.min, p); cur.max = Math.max(cur.max, p); cur.count += 1; }
+        else byUnit.set(unit, { unit, min: p, max: p, count: 1 });
+    }
+    return [...byUnit.values()].sort((a, b) => b.count - a.count || a.unit.localeCompare(b.unit, 'pl'));
+}
+
+const formatZl = (n: number) => `${n.toLocaleString('pl-PL', { maximumFractionDigits: 2 })} zł`;
+
+/** "150–700 zł" or "400 zł" when every offer has the same price. */
+export const formatPriceRange = (r: Pick<PriceRange, 'min' | 'max'>) =>
+    r.min === r.max ? formatZl(r.min) : `${formatZl(r.min).replace(' zł', '')}–${formatZl(r.max)}`;
+
+export interface ProviderCount { uid: string; name: string; count: number }
+
+/** Providers of the given offers with their offer counts, most offers first. */
+export function providerSummary(services: Pick<Service, 'provider'>[]): ProviderCount[] {
+    const byUid = new Map<string, ProviderCount>();
+    for (const s of services) {
+        const uid = s.provider?.uid;
+        if (!uid) continue;
+        const cur = byUid.get(uid);
+        if (cur) cur.count += 1;
+        else byUid.set(uid, { uid, name: s.provider.name || 'Specjalista', count: 1 });
+    }
+    return [...byUid.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'pl'));
+}
+
 export function categoryLabel(categorySlug: string | null): string | null {
     if (!categorySlug) return null;
     // "Inne" alone reads badly in titles ("Inne w Rowach") — "Inne usługi w Rowach"
