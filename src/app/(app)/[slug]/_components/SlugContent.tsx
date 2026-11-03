@@ -4,7 +4,7 @@ import { useIsFetching } from '@tanstack/react-query';
 import { CATEGORIES_DATA } from '@/data/categories';
 import HomeView from '@/views/HomeView';
 import { useApp } from '@/providers/AppProvider';
-import { setLandingPending } from '@/utils/landingReady';
+import { holdLanding, isLandingPending, releaseLanding } from '@/utils/landingReady';
 
 interface Props {
     /** DB category key of the landing group (null = all categories) */
@@ -15,21 +15,25 @@ interface Props {
 
 /** Longest the loader is held for this page's offers; after that the page shows what it has. */
 const MAX_HOLD_MS = 3500;
+/** Absolute cap from the page start: the loader can never stay up longer, whatever happens. */
+const HARD_CAP_MS = 9000;
 
 export function SlugContent({ categoryId, city }: Props) {
     const { state, actions } = useApp();
     const fetching = useIsFetching({ queryKey: ['services'] });
     const fetchingRef = useRef(fetching);
     fetchingRef.current = fetching;
-    const held = useRef(false); // this mount holds the loader (hard page load)
+    const held = useRef(false); // a hard page load is holding the loader for this landing
     const done = useRef(false);
 
     // Hard page load (the app is still starting): keep the loader up until this landing's offers are in place
     // and the page is scrolled to them, so the loader fades onto the finished page — not hero → jump → blank
     // gap → cards popping in. In-app navigation (app already loaded) keeps the earlier behaviour.
+    // NB: when the app finishes starting, AppShell re-mounts this component in another slot of the tree. The hold
+    // therefore lives in the shared flag (landingReady), and the new instance picks it up — no cleanup here.
     useLayoutEffect(() => {
-        if (state.isLoadingApp) { held.current = true; setLandingPending(true); }
-        return () => { if (held.current) setLandingPending(false); };
+        if (state.isLoadingApp) { held.current = true; holdLanding(HARD_CAP_MS); }
+        else if (isLandingPending()) held.current = true;
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Once the app is ready: set HomeView filters to exactly this group, then hide the SSR shell
@@ -51,7 +55,7 @@ export function SlugContent({ categoryId, city }: Props) {
         if (done.current) return;
         done.current = true;
         document.getElementById('results-section')?.scrollIntoView({ behavior: held.current ? 'auto' : 'smooth' });
-        if (held.current) setLandingPending(false);
+        if (held.current) releaseLanding();
     }, []);
 
     // homeProps does not exist yet during SSR / app start (isLoadingApp is true there) — never read it before

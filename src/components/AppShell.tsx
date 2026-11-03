@@ -12,7 +12,7 @@ import { useNavRecovery } from '../hooks/useNavRecovery';
 import { getNavElapsedMs, getNavTarget } from '../utils/navRecovery';
 import { ToastContainer } from './ui/ToastContainer';
 import { LoadingScreen } from './ui/LoadingScreen';
-import { useLandingPending } from '@/utils/landingReady';
+import { releaseLanding, useLandingPending } from '@/utils/landingReady';
 import { MainLayout } from './layout/MainLayout';
 import { ModalsManager } from './modals/ModalsManager';
 import { ErrorBoundary } from './ui/ErrorBoundary';
@@ -218,6 +218,13 @@ function AppShellContent({ children }: AppShellProps) {
     }, [navOverlay]);
     const landingPending = useLandingPending();
     const showLoadingScreen = !!state.isLoadingApp || navOverlay || holdOverlay || landingPending;
+    // Leaving the page while a landing still holds the loader (fast click before the app is ready): let it go.
+    const holdPathRef = useRef(pathname);
+    useEffect(() => {
+        if (holdPathRef.current === pathname) return;
+        holdPathRef.current = pathname;
+        releaseLanding();
+    }, [pathname]);
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
