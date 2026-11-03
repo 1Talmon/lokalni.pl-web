@@ -12,6 +12,7 @@ import { useNavRecovery } from '../hooks/useNavRecovery';
 import { getNavElapsedMs, getNavTarget } from '../utils/navRecovery';
 import { ToastContainer } from './ui/ToastContainer';
 import { LoadingScreen } from './ui/LoadingScreen';
+import { useLandingPending } from '@/utils/landingReady';
 import { MainLayout } from './layout/MainLayout';
 import { ModalsManager } from './modals/ModalsManager';
 import { ErrorBoundary } from './ui/ErrorBoundary';
@@ -215,7 +216,8 @@ function AppShellContent({ children }: AppShellProps) {
         const t = setTimeout(() => setHoldOverlay(false), left);
         return () => clearTimeout(t);
     }, [navOverlay]);
-    const showLoadingScreen = !!state.isLoadingApp || navOverlay || holdOverlay;
+    const landingPending = useLandingPending();
+    const showLoadingScreen = !!state.isLoadingApp || navOverlay || holdOverlay || landingPending;
 
     // Safety net — reset nav loading when leaving service/profile routes
     useEffect(() => {
