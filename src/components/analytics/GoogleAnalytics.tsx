@@ -95,9 +95,11 @@ function GoogleAnalyticsTracker() {
                 window.dataLayer = window.dataLayer || [];
                 window.gtag =
                     window.gtag ??
-                    ((...args: unknown[]) => {
-                        window.dataLayer!.push(args);
-                    });
+                    function gtag() {
+                        // gtag.js czyta obiekt `arguments`; tablicę z `...args` ignoruje i nic nie wysyła.
+                        // eslint-disable-next-line prefer-rest-params
+                        window.dataLayer!.push(arguments);
+                    };
                 window.gtag('js', new Date());
                 window.gtag('config', GA_ID, {
                     send_page_view: false,
