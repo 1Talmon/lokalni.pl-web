@@ -96,13 +96,15 @@ export function ServiceCard({ service, onServiceClick, onStartChat, onMouseEnter
                     >
                         <CreditCard size={16} />{isOffer ? 'Zarezerwuj' : 'Zgłoś się'}
                     </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onStartChat(service); }}
-                        aria-label={`Napisz do ${service.provider.name}`}
-                        className="w-10 md:w-12 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 flex items-center justify-center transition-colors active:scale-95"
-                    >
-                        <MessageCircle size={18} className="text-gray-700" />
-                    </button>
+                    {!service.isMine && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onStartChat(service); }}
+                            aria-label={`Napisz do ${service.provider.name}`}
+                            className="w-10 md:w-12 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 flex items-center justify-center transition-colors active:scale-95"
+                        >
+                            <MessageCircle size={18} className="text-gray-700" />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

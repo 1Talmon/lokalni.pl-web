@@ -12,6 +12,7 @@ interface ProfileHeaderProps {
     provider: ProviderProfile;
     fullName: string;
     providerIsPremium: boolean;
+    isOwner: boolean;
     avatarUrl: string | null;
     bgImageUrl: string | null;
     isActiveNow: boolean;
@@ -33,6 +34,7 @@ export function ProfileHeader({
     provider,
     fullName,
     providerIsPremium,
+    isOwner,
     avatarUrl,
     bgImageUrl,
     isActiveNow,
@@ -192,12 +194,14 @@ export function ProfileHeader({
 
                     {/* CTA */}
                     <div className="w-full md:w-auto shrink-0 flex items-center gap-2">
-                        <button
-                            onClick={() => allServices.length > 0 && onStartChat(allServices[0])}
-                            className="flex-1 md:flex-none bg-[#6366F1] text-white px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-[#4F46E5] hover:shadow-lg hover:shadow-indigo-300/40 transition-all active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            <MessageCircle size={17} /> Napisz wiadomość
-                        </button>
+                        {!isOwner && (
+                            <button
+                                onClick={() => allServices.length > 0 && onStartChat(allServices[0])}
+                                className="flex-1 md:flex-none bg-[#6366F1] text-white px-8 py-3.5 rounded-2xl font-black text-sm hover:bg-[#4F46E5] hover:shadow-lg hover:shadow-indigo-300/40 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <MessageCircle size={17} /> Napisz wiadomość
+                            </button>
+                        )}
                         <button
                             onClick={onShare}
                             aria-label="Udostępnij profil"

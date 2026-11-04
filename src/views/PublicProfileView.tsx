@@ -432,6 +432,7 @@ const PublicProfileView = ({
                 provider={provider}
                 fullName={fullName}
                 providerIsPremium={providerIsPremium}
+                isOwner={isOwner}
                 avatarUrl={avatarUrl}
                 bgImageUrl={bgImageUrl}
                 isActiveNow={isActiveNow}

@@ -17,6 +17,8 @@ interface StartChatDeps {
 export async function startChatWith(s: Service, msg: string = '', deps: StartChatDeps): Promise<void> {
     const { isLoggedIn, router, chatSessions, setInitialChatText, setCurrentChatServiceId, setCurrentChatId, setActiveModal } = deps;
     if (!isLoggedIn) { router.push(loginHref()); return; }
+    // Własna oferta: API i tak odrzuci czat (SELF_CHAT), więc w ogóle go nie otwieramy.
+    if (s.isMine) return;
     setInitialChatText(msg);
     setCurrentChatServiceId(s.publicId ?? null);
 
