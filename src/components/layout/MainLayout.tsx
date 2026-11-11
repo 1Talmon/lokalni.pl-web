@@ -353,8 +353,7 @@ export const MainLayout = ({
                                 <>
                                     <div
                                         key={pathname}
-                                        className={skipEnterAnim ? '' : enterClass}
-                                        style={hasRouteFooter ? { paddingBottom: 'var(--bottom-nav-total-h, var(--web-bottom-nav-h, 0px))' } : undefined}
+                                        className={`${skipEnterAnim ? '' : enterClass}${hasRouteFooter ? ' pb-[var(--bottom-nav-total-h,var(--web-bottom-nav-h,0px))]' : ''}${hasRouteFooter && shouldShowFooter ? ' md:pb-0' : ''}`}
                                         onAnimationEnd={(e) => {
                                             if (e.currentTarget === e.target) {
                                                 const el = e.currentTarget as HTMLDivElement;
