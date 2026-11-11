@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { ClientPortal } from '../ui/ClientPortal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User, MessageCircle, Info, Calendar } from 'lucide-react';
@@ -39,7 +39,8 @@ export const Navbar = ({
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
     const [panelPos, setPanelPos] = useState<{ top: number; right: number } | null>(null);
 
-    useEffect(() => {
+    // useLayoutEffect: pozycja ustawiona przed pierwszym malowaniem, żeby panel nie "leciał" z pozycji zapasowej
+    useLayoutEffect(() => {
         const updatePos = () => {
             if (!showNotifications || !bellButtonRef.current) return;
             const r = bellButtonRef.current.getBoundingClientRect();
@@ -56,7 +57,10 @@ export const Navbar = ({
         };
         updatePos();
         window.addEventListener('resize', updatePos);
-        return () => window.removeEventListener('resize', updatePos);
+        return () => {
+            window.removeEventListener('resize', updatePos);
+            setPanelPos(null);
+        };
     }, [showNotifications]);
 
     const getNotificationTime = (timeStr: string) => {
@@ -149,7 +153,7 @@ export const Navbar = ({
               
               <ClientPortal>
                   <AnimatePresence>
-                  {showNotifications && (
+                  {showNotifications && panelPos && (
                       <motion.div
                         ref={notificationPanelRef}
                         layout
