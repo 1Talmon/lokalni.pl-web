@@ -26,10 +26,13 @@ export const ReportModal = ({ isOpen, onClose, type, onSubmit }: ReportModalProp
         return () => window.removeEventListener('keydown', handleEsc, true);
     }, [isOpen, triggerClose]);
 
+    // Otwierany też nad ChatModal (który już blokuje scroll) — nie zdejmuj cudzej blokady (ani przy montażu, ani przy zamknięciu).
+    // Ten sam wzorzec co BlockUserModal / RescheduleSheet.
     useEffect(() => {
-        if (isOpen) lockScroll();
-        else unlockScroll();
-        return () => { unlockScroll(); };
+        if (!isOpen) return;
+        const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
+        if (!alreadyLocked) lockScroll();
+        return () => { if (!alreadyLocked) unlockScroll(); };
     }, [isOpen]);
 
     useEffect(() => {
@@ -75,7 +78,7 @@ export const ReportModal = ({ isOpen, onClose, type, onSubmit }: ReportModalProp
 
     return createPortal(
         isOpen ? (
-            <div className="fixed inset-0 z-[500]">
+            <div className="fixed inset-0 z-[100002]">
                 {/* Backdrop — fades in real time with drag gesture */}
                 <motion.div
                     style={{ opacity: backdropOpacity }}
