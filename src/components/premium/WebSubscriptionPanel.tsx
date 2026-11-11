@@ -121,10 +121,14 @@ export const WebSubscriptionPanel = ({ config }: { config: StripeConfig }) => {
             <button onClick={() => current && go(() => startCheckout(current.plan))} disabled={!current || !consent || busy}
                 className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-xl shadow-indigo-500/40 disabled:opacity-50">
                 {busy ? <><Loader2 size={20} className="animate-spin" /> Przechodzę do płatności…</>
-                    : trial ? <><Sparkles size={18} /> Wypróbuj {config.trialDays} dni za darmo</>
-                    : <><Sparkles size={18} /> Subskrybuj za {current ? `${pln(current.amount, current.currency)} / ${per(current.interval)}` : ''}</>}
+                    : <><Sparkles size={18} /> Zamawiam z obowiązkiem zapłaty</>}
             </button>
-            <p className="text-center text-[12px] text-slate-300 font-semibold mt-2">Anulujesz w każdej chwili w ustawieniach konta.</p>
+            {current && (
+                <p className="text-center text-[13px] text-white font-bold mt-2">
+                    {trial ? `Pierwsze ${config.trialDays} dni za darmo, potem ` : 'Cena: '}{pln(current.amount, current.currency)} / {per(current.interval)}
+                </p>
+            )}
+            <p className="text-center text-[12px] text-slate-300 font-semibold mt-1">Anulujesz w każdej chwili w ustawieniach konta.</p>
             {error && <p className="text-center text-[12px] text-rose-400 mt-3 font-semibold">{error}</p>}
 
             {current && (
