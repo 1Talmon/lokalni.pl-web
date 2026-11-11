@@ -70,7 +70,7 @@ const CookieBanner = () => {
                   </button>
                   <button
                     onClick={() => handleChoice('denied')}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex-1"
+                    className="bg-[#6366F1] hover:bg-[#4F46E5] text-white px-3 md:px-5 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 flex-1"
                   >
                     Tylko niezbędne
                   </button>

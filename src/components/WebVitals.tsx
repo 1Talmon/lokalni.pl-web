@@ -1,5 +1,6 @@
 'use client';
 import { useReportWebVitals } from 'next/web-vitals';
+import { readConsent } from '../lib/consent';
 
 const THRESHOLDS = { LCP: 2500, INP: 200, CLS: 0.1, FCP: 1800, TTFB: 800 } as const;
 
@@ -13,6 +14,9 @@ export function WebVitals() {
             console.debug(`[CWV] ${label} ${metric.name}`, Math.round(metric.value), metric.rating);
             return;
         }
+
+        // Pomiary szybkości to część statystyk — wysyłamy je tylko po zgodzie na analitykę (Polityka prywatności §3)
+        if (readConsent() !== 'granted') return;
 
         fetch('/api/vitals', {
             method: 'POST',
