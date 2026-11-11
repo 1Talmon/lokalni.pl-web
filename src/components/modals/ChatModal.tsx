@@ -9,7 +9,7 @@ import { BottomSheetHandle } from '../ui/BottomSheetHandle';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, X, ImageIcon, ArrowUp, FileText, ChevronRight, ChevronDown, Trash2, MoreVertical, Film, Images, Play, CalendarPlus, Ban } from 'lucide-react';
+import { ArrowLeft, X, ImageIcon, ArrowUp, FileText, ChevronRight, ChevronDown, Trash2, MoreVertical, Film, Images, Play, CalendarPlus, Ban, Flag } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation'
 import { navPush } from '../../utils/navState';
 import { Service } from '../../types';
@@ -28,6 +28,8 @@ import { startVideoUpload, getVideoUploadState, clearVideoUploadState, type Vide
 import { dataUrlToFile } from '../../utils/imageUtils';
 import { useBlockedUsers } from '../../hooks/useBlockedUsers';
 import { BlockUserModal } from './BlockUserModal';
+import { ReportModal } from './ReportModal';
+import { useApp } from '../../providers/AppProvider';
 
 // ─── Typy ─────────────────────────────────────────────────────────────────────
 
@@ -218,6 +220,23 @@ export const ChatModal = ({
     const { panelRef, panelX } = useSwipeToClose(isOpen, onClose);
     const router = useRouter();
     const queryClient = useQueryClient();
+    const { actions: appActions } = useApp();
+    // Zgłaszanie pojedynczej wiadomości (ReportModal lokalnie — globalny modal zamknąłby czat)
+    const [reportMsgId, setReportMsgId] = useState<string | null>(null);
+    const REPORT_REASONS: Record<string, string> = {
+        'Nękanie': 'inappropriate_content', 'Wulgaryzmy': 'inappropriate_content', 'Spam': 'spam', 'Oszustwo': 'fraud',
+    };
+    const submitMessageReport = async (reason: string) => {
+        const id = reportMsgId;
+        if (!id) return;
+        try {
+            await apiClient.post('/reports', { targetType: 'message', targetId: id, reason: REPORT_REASONS[reason] ?? 'other' });
+            appActions.addToast?.('Zgłoszenie wysłane', 'success');
+        } catch (e: unknown) {
+            const msg = (e as { response?: { data?: { error?: string } } }).response?.data?.error;
+            appActions.addToast?.(msg ?? 'Błąd wysyłania zgłoszenia', 'error');
+        }
+    };
 
     // ── Stan ─────────────────────────────────────────────────────────────────
     const [chatInput, setChatInput] = useState('');
@@ -1468,6 +1487,18 @@ export const ChatModal = ({
                                         <Trash2 size={17} className="text-slate-400" />
                                         Usuń u siebie
                                     </button>
+                                    {!deleteMenu.isMe && (
+                                        <>
+                                            <div className="h-px bg-slate-100 mx-6" />
+                                            <button
+                                                onClick={() => { setReportMsgId(deleteMenu.msgId); setDeleteMenu(null); }}
+                                                className="w-full flex items-center gap-3.5 px-6 py-3 text-[15px] font-[600] text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                                            >
+                                                <Flag size={17} className="text-slate-400" />
+                                                Zgłoś wiadomość
+                                            </button>
+                                        </>
+                                    )}
                                     {deleteMenu.isMe && (
                                         <>
                                             <div className="h-px bg-slate-100 mx-6" />
@@ -1665,6 +1696,13 @@ export const ChatModal = ({
                     onClose={() => setShowCreateBooking(false)}
                 />
             )}
+
+            <ReportModal
+                isOpen={reportMsgId !== null}
+                type="message"
+                onClose={() => setReportMsgId(null)}
+                onSubmit={submitMessageReport}
+            />
 
             <BlockUserModal
                 isOpen={blockModalOpen}

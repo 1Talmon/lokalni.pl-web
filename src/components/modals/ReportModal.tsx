@@ -10,7 +10,7 @@ import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 interface ReportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    type: 'service' | 'profile' | 'review' | null;
+    type: 'service' | 'profile' | 'review' | 'message' | null;
     onSubmit: (reason: string) => void;
 }
 
@@ -49,6 +49,12 @@ export const ReportModal = ({ isOpen, onClose, type, onSubmit }: ReportModalProp
                     title: 'Zgłoś profil użytkownika',
                     desc: 'Dlaczego chcesz zgłosić ten profil?',
                     options: ['Fałszywe konto', 'Nękanie', 'Nieodpowiednie treści', 'Inne']
+                };
+            case 'message':
+                return {
+                    title: 'Zgłoś wiadomość',
+                    desc: 'Co jest nie tak z tą wiadomością?',
+                    options: ['Nękanie', 'Wulgaryzmy', 'Spam', 'Oszustwo', 'Inne']
                 };
             case 'review':
                 return {

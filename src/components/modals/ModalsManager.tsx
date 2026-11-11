@@ -23,7 +23,7 @@ const REASON_MAP: Record<string, string> = {
     'Nieodpowiednie treści': 'inappropriate_content', 'Niedozwolone treści': 'inappropriate_content',
     'Zła kategoria': 'other', 'Nieaktualne': 'other',
 };
-const TYPE_MAP: Record<string, string> = { profile: 'user', review: 'review', service: 'service' };
+const TYPE_MAP: Record<string, string> = { profile: 'user', review: 'review', service: 'service', message: 'message' };
 
 export const ModalsManager = ({ state, actions }: ModalsManagerProps) => {
     const handleReportSubmit = async (reason: string) => {

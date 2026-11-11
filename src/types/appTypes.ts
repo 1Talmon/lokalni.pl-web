@@ -4,7 +4,7 @@ import type { ApiChatSession } from '../services/chatService';
 export type ActiveModal = 'none' | 'chat_detail' | 'add_service' | 'report' | 'support';
 export type SortBy = 'rating' | 'price-low' | 'distance' | 'verified';
 export type FilterType = 'all' | 'offer' | 'request';
-export type ReportType = 'service' | 'profile' | 'review';
+export type ReportType = 'service' | 'profile' | 'review' | 'message';
 
 export interface HomeProps {
     services: Service[];
