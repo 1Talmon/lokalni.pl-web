@@ -1,4 +1,5 @@
 'use client';
+import { MODAL_Z, MODAL_CLOSE_BTN_DARK } from './modalBase';
 import { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -355,7 +356,7 @@ export const MediaLightbox = ({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
-                    className="fixed inset-0 z-[300000]"
+                    className={`fixed inset-0 ${MODAL_Z.viewerTop}`}
                 >
                     <div
                         className="flex flex-col bg-slate-950 w-full h-full relative"
@@ -382,7 +383,7 @@ export const MediaLightbox = ({
                                 {onOpenGallery && (
                                     <button
                                         onClick={onOpenGallery}
-                                        className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                        className={MODAL_CLOSE_BTN_DARK}
                                         aria-label="Otwórz galerię"
                                     >
                                         <LayoutGrid size={17} />
@@ -390,7 +391,7 @@ export const MediaLightbox = ({
                                 )}
                                 <button
                                     onClick={onClose}
-                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    className={MODAL_CLOSE_BTN_DARK}
                                 >
                                     <X size={18} />
                                 </button>

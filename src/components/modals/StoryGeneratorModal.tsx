@@ -1,11 +1,8 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
-import { X, Download, Share2, Loader2, Check, Instagram } from 'lucide-react';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { Download, Share2, Loader2, Check, Instagram } from 'lucide-react';
+import { SheetModal } from './SheetModal';
+import { MODAL_BTN_PRIMARY } from './modalBase';
 import { SettingsToggle } from '../../views/Dashboard/components/Settings/SettingsRow';
 import { renderStory, loadStoryImage, STORY_TEMPLATES, type StoryTemplateId, type StoryData } from '../../utils/storyCanvas';
 
@@ -27,7 +24,6 @@ interface StoryGeneratorModalProps {
 /** Instagram story generator: brand templates with a QR code to the profile, some with the user's photos.
  *  Same sheet as the other modals: handle + draggable header on phones, centred card on desktop. */
 export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, avatarUrl, url, photos, addToast }: StoryGeneratorModalProps) => {
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [template, setTemplate] = useState<StoryTemplateId>('gradient');
     const [picked, setPicked] = useState<string[]>([]);
@@ -42,18 +38,6 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
     // parents rebuild the photo list on every render — reload only when its content changes
     const photosKey = photos.join('|');
 
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && isOpen) { e.stopPropagation(); triggerClose(); } };
-        if (isOpen) window.addEventListener('keydown', handleEsc, true);
-        return () => window.removeEventListener('keydown', handleEsc, true);
-    }, [isOpen, triggerClose]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
-        if (!alreadyLocked) lockScroll();
-        return () => { if (!alreadyLocked) unlockScroll(); };
-    }, [isOpen]);
 
     // fonts + avatar + photos once per opening
     useEffect(() => {
@@ -128,44 +112,25 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
 
     if (!isOpen) return null;
 
-    return createPortal(
-        <div className="fixed inset-0 z-[100002]">
-            {/* Backdrop — fades in real time with drag gesture */}
-            <motion.div
-                style={{ opacity: backdropOpacity }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={handleClose}
-            />
-            {/* Sheet */}
-            <div className="absolute inset-0 flex items-end md:items-center justify-center md:p-4 pointer-events-none">
-                <motion.div
-                    {...sheetDragProps}
-                    className="pointer-events-auto w-full md:max-w-3xl bg-white rounded-t-[2rem] md:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl"
-                    onClick={e => e.stopPropagation()}
+    return (
+        <SheetModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Relacja na Instagram"
+            icon={Instagram}
+            size="3xl"
+            footer={(
+                <button
+                    type="button"
+                    onClick={exportStory}
+                    disabled={!ready || busy}
+                    className={MODAL_BTN_PRIMARY}
                 >
-                    <div className="md:hidden">
-                        <BottomSheetHandle onPointerDown={startDrag} />
-                    </div>
-
-                    <div
-                        className="px-6 md:px-8 py-4 md:py-5 border-b border-gray-50 bg-gray-50/50 shrink-0 md:cursor-default cursor-grab active:cursor-grabbing"
-                        style={{ touchAction: 'none' }}
-                        onPointerDown={startDrag}
-                    >
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-lg text-gray-900 flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                                    <Instagram size={18} />
-                                </div>
-                                Relacja na Instagram
-                            </h3>
-                            <button onClick={handleClose} aria-label="Zamknij" className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400">
-                                <X size={20} />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-scroll overscroll-contain px-5 md:px-8 py-5 max-h-[60dvh] md:max-h-[70vh]">
+                    {busy ? <Loader2 size={14} className="animate-spin" /> : canShareFiles ? <Share2 size={14} /> : <Download size={14} />}
+                    {canShareFiles ? 'Udostępnij na Instagram' : 'Pobierz obraz'}
+                </button>
+            )}
+        >
                         <div className="flex flex-col md:flex-row gap-6">
                             <div className="shrink-0 mx-auto relative" style={{ width: 'min(58vw, 270px)', aspectRatio: '9 / 16' }}>
                                 <canvas ref={canvasRef} data-story-canvas className="w-full h-full rounded-2xl shadow-lg bg-gray-100" />
@@ -231,25 +196,7 @@ export const StoryGeneratorModal = ({ isOpen, onClose, name, subtitle, rating, a
                                 </p>
                             </div>
                         </div>
-                    </div>
-
-                    <div
-                        className="flex gap-2 px-5 pt-4 pb-5 shrink-0 border-t border-gray-100"
-                        style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom, 0px))) + 1.25rem)' }}
-                    >
-                        <button
-                            type="button"
-                            onClick={exportStory}
-                            disabled={!ready || busy}
-                            className="w-full py-4 rounded-2xl font-black text-white bg-[#6366F1] hover:bg-[#5558e8] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            {busy ? <Loader2 size={14} className="animate-spin" /> : canShareFiles ? <Share2 size={14} /> : <Download size={14} />}
-                            {canShareFiles ? 'Udostępnij na Instagram' : 'Pobierz obraz'}
-                        </button>
-                    </div>
-                </motion.div>
-            </div>
-        </div>,
-        document.body,
+                    
+        </SheetModal>
     );
 };

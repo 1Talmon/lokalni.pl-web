@@ -1,4 +1,5 @@
 'use client';
+import { MODAL_Z, MODAL_CLOSE_BTN_DARK } from './modalBase';
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -413,7 +414,7 @@ export const ClientPhotosModal = ({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
-                    className="fixed inset-0 z-[100000]"
+                    className={`fixed inset-0 ${MODAL_Z.viewer}`}
                     onTouchStart={e => e.stopPropagation()}
                     onTouchMove={e => e.stopPropagation()}
                     onTouchEnd={e => e.stopPropagation()}
@@ -441,14 +442,14 @@ export const ClientPhotosModal = ({
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setView(v => v === 'carousel' ? 'grid' : 'carousel')}
-                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    className={MODAL_CLOSE_BTN_DARK}
                                     aria-label={view === 'grid' ? 'Widok pojedynczy' : 'Widok siatki'}
                                 >
                                     <LayoutGrid size={18} />
                                 </button>
                                 <button
                                     onClick={onClose}
-                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    className={MODAL_CLOSE_BTN_DARK}
                                     aria-label="Zamknij"
                                 >
                                     <X size={18} />

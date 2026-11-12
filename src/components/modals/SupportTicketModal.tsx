@@ -1,13 +1,10 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { X, ArrowUp, LifeBuoy } from 'lucide-react';
+import { ArrowUp, LifeBuoy } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
+import { SheetModal } from './SheetModal';
 import { apiClient } from '../../services/apiClient';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import type { ToastType } from '../../types';
 
 interface SupportMessage {
@@ -63,7 +60,6 @@ const formatTime = (iso: string) =>
 export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: SupportTicketModalProps) => {
     const [reply, setReply] = useState('');
     const [isSending, setIsSending] = useState(false);
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const prevMsgCountRef = useRef(0);
@@ -79,21 +75,6 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
         enabled: isOpen && !!ticketId,
         staleTime: 30_000,
     });
-
-    useEffect(() => {
-        if (isOpen) lockScroll();
-        else unlockScroll();
-        return () => { unlockScroll(); };
-    }, [isOpen]);
-
-
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) { e.stopPropagation(); triggerClose(); }
-        };
-        if (isOpen) window.addEventListener('keydown', handleEsc, true);
-        return () => window.removeEventListener('keydown', handleEsc, true);
-    }, [isOpen, triggerClose]);
 
     useEffect(() => {
         const msgs = ticket?.messages ?? [];
@@ -166,59 +147,27 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
         return null;
     }, [ticket?.messages]);
 
-    return createPortal(
-        isOpen ? (
-            <div className="fixed inset-0 z-[500]">
-                {/* Backdrop — fades in real time with drag gesture */}
-                <motion.div
-                    style={{ opacity: backdropOpacity }}
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={handleClose}
-                />
-                {/* Sheet */}
-                <div className="absolute inset-0 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
-                    <motion.div
-                        onClick={e => e.stopPropagation()}
-                        onTouchMove={e => e.stopPropagation()}
-                        {...sheetDragProps}
-                        className="pointer-events-auto bg-white w-full sm:max-w-lg shadow-2xl relative text-left flex flex-col overflow-hidden rounded-t-[2rem] max-h-[92dvh] sm:rounded-[2.5rem] sm:max-h-[85vh] sm:h-auto"
-                    >
-                        <div className="sm:hidden">
-                            <BottomSheetHandle onPointerDown={startDrag} />
-                        </div>
-
-                        {/* Header */}
-                        <div
-                            className="px-6 sm:px-8 py-4 sm:py-5 border-b border-gray-50 flex justify-between items-start bg-gray-50/50 shrink-0 sm:cursor-default cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={startDrag}
-                        >
-                            <div className="flex-1 min-w-0 pr-4">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div className="p-1.5 bg-indigo-50 text-[#6366F1] rounded-lg shrink-0">
-                                        <LifeBuoy size={14} />
-                                    </div>
-                                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        {ticket?.ticket_no ?? '…'}
-                                    </span>
-                                    {statusMeta && (
-                                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${statusMeta.color}`}>
-                                            {statusMeta.label}
-                                        </span>
-                                    )}
-                                </div>
-                                <h3 className="font-bold text-gray-900 text-sm truncate">
-                                    {ticket?.subject ?? (isLoading ? 'Ładowanie…' : '—')}
-                                </h3>
-                            </div>
-                            <button
-                                onClick={handleClose}
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400 shrink-0"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
+    return (
+        <SheetModal
+            isOpen={isOpen}
+            onClose={onClose}
+            size="lg"
+            icon={LifeBuoy}
+            title={ticket?.subject ?? (isLoading ? 'Ładowanie…' : '—')}
+            subtitle={(
+                <>
+                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                        {ticket?.ticket_no ?? '…'}
+                    </span>
+                    {statusMeta && (
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${statusMeta.color}`}>
+                            {statusMeta.label}
+                        </span>
+                    )}
+                </>
+            )}
+            bare
+        >
                         {/* Thread */}
                         <div
                             ref={messagesContainerRef}
@@ -389,10 +338,6 @@ export const SupportTicketModal = ({ ticketId, isOpen, onClose, onToast }: Suppo
                                 </p>
                             </div>
                         )}
-                    </motion.div>
-                </div>
-            </div>
-        ) : null,
-        document.body
+        </SheetModal>
     );
 };

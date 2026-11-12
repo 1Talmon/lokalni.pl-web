@@ -1,11 +1,8 @@
 'use client';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { lockScroll, unlockScrollAfter } from '../../utils/scrollLock';
-import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { X, Send, CheckCircle, Camera, Loader2 } from 'lucide-react';
+import { DarkPanelModal } from './DarkPanelModal';
+import { Send, CheckCircle, Camera, Loader2 } from 'lucide-react';
 import { UserAvatar } from '../ui/UserAvatar';
 import { apiClient } from '../../services/apiClient';
 import { MediaLightbox } from './MediaLightbox';
@@ -56,7 +53,6 @@ export const NewsFeedModal = ({ isOpen, onClose, items, providerName, providerAv
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose, y } = useBottomSheet(onClose, isOpen);
 
     const mediaItems = useMemo<ChatMediaItem[]>(() => {
         const list: ChatMediaItem[] = [];
@@ -86,21 +82,6 @@ export const NewsFeedModal = ({ isOpen, onClose, items, providerName, providerAv
         onLightboxChange?.(lightboxOpen);
     }, [lightboxOpen, onLightboxChange]);
 
-    useEffect(() => {
-        if (!isOpen) return;
-        lockScroll();
-        return () => unlockScrollAfter(250);
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleEsc = (e: KeyboardEvent) => {
-            if (isSubModalOpen || lightboxOpen) return;
-            if (e.key === 'Escape') triggerClose();
-        };
-        document.addEventListener('keydown', handleEsc);
-        return () => document.removeEventListener('keydown', handleEsc);
-    }, [isOpen, triggerClose, isSubModalOpen, lightboxOpen]);
 
     const handleAddPhoto = (id: number) => {
         setPendingId(id);
@@ -132,49 +113,18 @@ export const NewsFeedModal = ({ isOpen, onClose, items, providerName, providerAv
         }
     };
 
-    const portal = createPortal(
-        isOpen ? (
-            <div className="fixed inset-0 z-[400]">
-                {/* Backdrop — fades in real time with drag gesture */}
-                <motion.div
-                    style={{ opacity: backdropOpacity }}
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={lightboxOpen ? undefined : handleClose}
-                />
-                {/* Sheet */}
-                <div className="absolute inset-0 flex items-end md:items-center justify-center pointer-events-none">
-                    <motion.div
-                        {...sheetDragProps}
-                        style={{ maxHeight: 'calc(88dvh - var(--bottom-nav-total-h, 0px))', y }}
-                        className="pointer-events-auto relative w-full max-w-2xl min-h-[45dvh] bg-slate-900 md:rounded-[2.5rem] rounded-t-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <BottomSheetHandle onPointerDown={startDrag} dark />
-
-                        {/* Header */}
-                        <div
-                            className="flex items-center justify-between p-6 border-b border-slate-800 shrink-0 cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={startDrag}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                    <Send size={14} />
-                                </div>
-                                <div>
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Aktualności</h3>
-                                    <p className="text-[10px] text-slate-500 font-semibold mt-0.5">{providerName}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleClose}
-                                aria-label="Zamknij aktualności"
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
+    const portal = (
+        <DarkPanelModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Aktualności"
+            subtitle={providerName}
+            icon={Send}
+            size="lg"
+            closeLabel="Zamknij aktualności"
+            dismissOnBackdrop={!lightboxOpen}
+            onEscape={(close) => { if (isSubModalOpen || lightboxOpen) return false; close(); }}
+        >
                         {/* Feed */}
                         <div className="flex-1 overflow-y-auto min-h-0">
                             {items.length === 0 && (
@@ -286,11 +236,7 @@ export const NewsFeedModal = ({ isOpen, onClose, items, providerName, providerAv
                         </div>
 
                         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                    </motion.div>
-                </div>
-            </div>
-        ) : null,
-        document.body
+        </DarkPanelModal>
     );
 
     return (

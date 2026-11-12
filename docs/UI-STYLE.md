@@ -51,7 +51,20 @@ Czcionka: **Plus Jakarta Sans** (zmienna `--font-jakarta`). W `<canvas>` bierz `
 - **Wybór zdjęć:** kafelki `aspect-square rounded-xl border-2` (zaznaczone `border-indigo-600` + znaczek ✓ w kółku indygo).
 - **Status rezerwacji:** `STATUS_STYLES` / `STATUS_CONFIG` – nie wymyślaj nowych kolorów statusów.
 
-## 5. Okna (bottom sheet na telefonie, karta na PC) – jeden wzorzec
+## 5. Okna – 3 rodziny na wspólnej bazie
+
+Wszystkie okna bazują na `components/modals/modalBase.ts` (warstwy `MODAL_Z`, przycisk X, klasy przycisków `MODAL_BTN_*`, hook `useModalBehavior` = Esc + blokada scrolla bez zdejmowania cudzej) i na jednym uchwycie `BottomSheetHandle`. Breakpoint telefon/PC to **`md:`**. **Nowego okna nie buduj od zera – użyj szkieletu swojej rodziny:**
+
+| Rodzina | Szkielet | Okna |
+|---|---|---|
+| 1. Arkusze (formularze, potwierdzenia, akcje) | `SheetModal` | Zgłoszenie, Blokada, Usuń opinię, Usuń konto, Wsparcie, Zgłoszenie wsparcia, Zmiana terminu, Dodaj rezerwację, Relacja IG, Zdjęcie profilowe, Hasło (dane wrażliwe), Dodaj ogłoszenie |
+| 2. Ciemne panele z treścią profilu | `DarkPanelModal` | Aktualności, Certyfikaty |
+| 3. Podglądy pełnoekranowe | własny układ + `MODAL_Z.viewer/viewerTop` + `MODAL_CLOSE_BTN_DARK` | Galeria czatu, Zdjęcia klientów, Lightbox, Podgląd certyfikatu |
+| (panel) | czat – własny układ | ChatModal |
+
+Przyciski niszczące: **`rose-500`** (nie red). Przycisk w stopce: `MODAL_BTN_PRIMARY / _DANGER / _SECONDARY`. Warstwy: panel 100001 < arkusz 100002 < podgląd 200000 < podgląd nad podglądem 300000.
+
+### Szczegóły arkusza (to robi `SheetModal`)
 
 Wzór do skopiowania: `components/modals/CreateBookingForClientModal.tsx` (też `StoryGeneratorModal`, `RescheduleSheet`).
 

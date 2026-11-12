@@ -1,4 +1,5 @@
 'use client';
+import { MODAL_Z, MODAL_CLOSE_BTN_DARK } from './modalBase';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -107,7 +108,7 @@ export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 24 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="fixed inset-0 z-[200000]"
+                        className={`fixed inset-0 ${MODAL_Z.viewer}`}
                         onTouchStart={onTouchStart}
                         onTouchMove={onTouchMove}
                         onTouchEnd={onTouchEnd}
@@ -135,7 +136,7 @@ export const ChatMediaGallery = ({ isOpen, onClose, items }: Props) => {
                                 </span>
                                 <button
                                     onClick={onClose}
-                                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all active:scale-90"
+                                    className={MODAL_CLOSE_BTN_DARK}
                                 >
                                     <X size={18} />
                                 </button>

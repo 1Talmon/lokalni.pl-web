@@ -1,11 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { lockScroll, unlockScrollAfter } from '../../utils/scrollLock';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { X, Award, CheckCircle, ShieldCheck, ArrowLeft, FileCheck, FileText, ExternalLink } from 'lucide-react';
+import { DarkPanelModal } from './DarkPanelModal';
+import { Award, CheckCircle, ShieldCheck, ArrowLeft, FileCheck, FileText, ExternalLink } from 'lucide-react';
 
 export type CertItem = {
     id: number;
@@ -43,81 +40,31 @@ interface Props {
 
 export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
     const [selected, setSelected] = useState<CertOrComp | null>(null);
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
 
-    useEffect(() => {
-        if (!isOpen) { setSelected(null); return; }
-        lockScroll();
-        return () => unlockScrollAfter(250);
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                if (selected) setSelected(null);
-                else triggerClose();
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-        return () => document.removeEventListener('keydown', handleEsc);
-    }, [isOpen, selected, triggerClose]);
+    useEffect(() => { if (!isOpen) setSelected(null); }, [isOpen]);
 
     const certs = items.filter((i): i is CertItem => i.type === 'cert');
     const comps  = items.filter((i): i is CompItem => i.type === 'comp');
 
-    return createPortal(
-        isOpen ? (
-            <div className="fixed inset-0 z-[400]">
-                {/* Backdrop — fades in real time with drag gesture */}
-                <motion.div
-                    style={{ opacity: backdropOpacity }}
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={() => { if (selected) setSelected(null); else triggerClose(); }}
-                />
-                {/* Sheet */}
-                <div className="absolute inset-0 flex items-end md:items-center justify-center pointer-events-none">
-                    <motion.div
-                        {...sheetDragProps}
-                        className="pointer-events-auto relative w-full max-w-lg bg-slate-900 md:rounded-[2.5rem] rounded-t-[2.5rem] overflow-hidden shadow-2xl"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <BottomSheetHandle onPointerDown={startDrag} dark />
-
-                        {/* Header */}
-                        <div
-                            className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-800 cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={startDrag}
-                        >
-                            <div className="flex items-center gap-3">
-                                {selected && (
-                                    <button
-                                        onClick={() => setSelected(null)}
-                                        className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
-                                    >
-                                        <ArrowLeft size={15} />
-                                    </button>
-                                )}
-                                <div>
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                                        {selected ? selected.name : 'Certyfikaty i kompetencje'}
-                                    </h3>
-                                    {!selected && (
-                                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                                            {items.length} {items.length === 1 ? 'pozycja' : 'pozycji'}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleClose}
-                                className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
+    return (
+        <DarkPanelModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={selected ? selected.name : 'Certyfikaty i kompetencje'}
+            subtitle={selected ? undefined : `${items.length} ${items.length === 1 ? 'pozycja' : 'pozycji'}`}
+            icon={Award}
+            leading={selected ? (
+                <button
+                    type="button"
+                    onClick={() => setSelected(null)}
+                    aria-label="Wróć"
+                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90 shrink-0"
+                >
+                    <ArrowLeft size={15} />
+                </button>
+            ) : undefined}
+            onEscape={(close) => { if (selected) setSelected(null); else close(); }}
+        >
                         <AnimatePresence mode="wait">
                             {!selected ? (
                                 /* ── SIATKA ── */
@@ -273,10 +220,6 @@ export const CertificatesModal = ({ isOpen, onClose, items }: Props) => {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </motion.div>
-                </div>
-            </div>
-        ) : null,
-        document.body
+        </DarkPanelModal>
     );
 };

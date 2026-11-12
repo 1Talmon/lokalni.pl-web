@@ -1,4 +1,5 @@
 'use client';
+import { MODAL_Z, MODAL_CLOSE_BTN } from './modalBase';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +45,7 @@ export const CertificatePreviewModal = ({ cert, onClose }: CertificatePreviewMod
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
-                    className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10 bg-gray-900/90 backdrop-blur-sm"
+                    className={`fixed inset-0 ${MODAL_Z.viewer} flex items-center justify-center p-4 md:p-10 bg-gray-900/90 backdrop-blur-sm`}
                     style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
                     onClick={onClose}
                 >
@@ -56,7 +57,7 @@ export const CertificatePreviewModal = ({ cert, onClose }: CertificatePreviewMod
                         className="w-full max-w-3xl max-h-full bg-white rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between gap-3 shrink-0">
+                        <div className="px-6 md:px-8 py-4 md:py-5 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between gap-3 shrink-0">
                             <div className="min-w-0">
                                 <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 break-words">{cert.name}</h3>
                             </div>
@@ -64,7 +65,7 @@ export const CertificatePreviewModal = ({ cert, onClose }: CertificatePreviewMod
                                 type="button"
                                 onClick={onClose}
                                 aria-label="Zamknij"
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400 shrink-0"
+                                className={`${MODAL_CLOSE_BTN} shrink-0`}
                             >
                                 <X size={20} />
                             </button>

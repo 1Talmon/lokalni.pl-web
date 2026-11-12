@@ -1,13 +1,12 @@
 'use client';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { tokenUtils } from '../../utils/tokenUtils';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
 import { motion } from 'framer-motion';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
-import { X, ArrowLeft, Zap, ImageIcon, Globe, Trash2, Star, Plus, LocateFixed, Loader2, Sparkles, Film } from 'lucide-react';
+import { SheetModal } from './SheetModal';
+import { MODAL_BTN_PRIMARY, MODAL_BTN_SECONDARY } from './modalBase';
+import { Zap, ImageIcon, Globe, Trash2, Star, Plus, LocateFixed, Loader2, Sparkles, Film } from 'lucide-react';
 import { CityAutocomplete } from '../ui/CityAutocomplete';
 import { AddressAutocomplete } from '../ui/AddressAutocomplete';
 import { Service, Category } from '../../types';
@@ -56,7 +55,6 @@ const INPUT = "w-full bg-gray-50 p-3 rounded-xl border border-transparent outlin
 const LABEL = "block text-xs font-bold text-gray-500 mb-1.5";
 
 export const AddServiceModal = ({ isOpen, onClose, editingService, categories, onSubmit }: AddServiceModalProps) => {
-    const { sheetDragProps, startDrag, y, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
     const [formLocation, setFormLocation] = useState('');
     const [formAddress, setFormAddress] = useState('');
     const [formAddressCoords, setFormAddressCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -128,13 +126,6 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
 
     const generateId = () => Math.random().toString(36).substr(2, 9);
 
-    useEffect(() => {
-        if (!isOpen) return;
-        lockScroll();
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') triggerClose(); };
-        window.addEventListener('keydown', onKey);
-        return () => { unlockScroll(); window.removeEventListener('keydown', onKey); };
-    }, [isOpen, triggerClose]);
 
     // One call to the API suggestion engine (learns from real listings): category, price unit and
     // price range. Re-asks when the title changes or the user fixes the category / unit by hand.
@@ -422,41 +413,30 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
     const isOffer = formType === 'offer';
 
     return (
-        <>
-            {/* Backdrop — fades in real time with drag gesture */}
-            <motion.div
-                style={{ opacity: backdropOpacity }}
-                onClick={handleClose}
-                className="fixed inset-0 bg-black/50 z-[300] backdrop-blur-sm"
-            />
-
-            <div className="fixed inset-0 z-[301] flex items-end sm:items-center justify-center pointer-events-none sm:p-6">
-                <motion.div
-                    {...sheetDragProps}
-                    style={{ maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))', y }}
-                    className="bg-white w-full h-[86dvh] sm:h-[88vh] sm:max-w-xl rounded-t-3xl sm:rounded-[2rem] shadow-2xl pointer-events-auto flex flex-col overflow-hidden"
-                >
-                    <BottomSheetHandle onPointerDown={startDrag} />
-
-                    {/* ── HEADER ── */}
-                    <div
-                        className="shrink-0 flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white sm:cursor-default cursor-grab active:cursor-grabbing"
-                        style={{ touchAction: 'none' }}
-                        onPointerDown={startDrag}
-                    >
-                        <button onClick={handleClose} className="p-2 -ml-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500 shrink-0">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <h3 className="flex-1 text-lg font-bold text-gray-900 tracking-tight">
-                            {editingService ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'}
-                        </h3>
-                        <button onClick={handleClose} className="hidden sm:flex p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 shrink-0">
-                            <X size={18} />
-                        </button>
-                    </div>
-
-                    {/* ── TREŚĆ ── */}
-                    <div className="flex-1 overflow-y-auto bg-gray-50/50" style={{ scrollbarGutter: 'stable' }}>
+        <SheetModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={editingService ? 'Edytuj ogłoszenie' : 'Nowe ogłoszenie'}
+            icon={Plus}
+            size="xl"
+            tall
+            bare
+            footer={({ close }) => (
+                <>
+                    <button type="button" onClick={close} className={MODAL_BTN_SECONDARY}>Anuluj</button>
+                    <button type="submit" form="serviceForm"
+                        disabled={isSubmitting || uploadProgress !== null}
+                        className={MODAL_BTN_PRIMARY}>
+                        {isSubmitting
+                                ? <><Loader2 size={18} className="animate-spin" />{editingService ? 'Zapisywanie…' : 'Publikowanie…'}</>
+                                : uploadProgress !== null
+                                    ? <><Loader2 size={18} className="animate-spin" />{uploadingType === 'video' ? 'Przesyłanie wideo…' : 'Przesyłanie zdjęcia…'}</>
+                                    : editingService ? 'Zapisz zmiany' : 'Opublikuj'}
+                    </button>
+                </>
+            )}
+        >
+                                        <div className="flex-1 overflow-y-auto bg-gray-50/50" style={{ scrollbarGutter: 'stable' }}>
                         <form key={editingService?.publicId ?? 'new'} id="serviceForm" onSubmit={handleSubmit} className="p-5 space-y-6 pb-8">
 
                             {/* Typ */}
@@ -844,25 +824,6 @@ export const AddServiceModal = ({ isOpen, onClose, editingService, categories, o
                             </div>
                         </form>
                     </div>
-
-                    {/* ── FOOTER ── */}
-                    <div className="shrink-0 p-4 border-t border-gray-100 bg-white flex gap-3 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 1rem)' }}>
-                        <button type="button" onClick={handleClose}
-                            className="px-5 py-3.5 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-colors">
-                            Anuluj
-                        </button>
-                        <button type="submit" form="serviceForm"
-                            disabled={isSubmitting || uploadProgress !== null}
-                            className={`flex-1 py-3.5 rounded-xl font-bold text-base text-white transition-all shadow-lg flex items-center justify-center gap-2 ${isSubmitting || uploadProgress !== null ? 'opacity-60 cursor-not-allowed' : 'active:scale-95'} ${isOffer ? 'bg-[#6366F1] hover:bg-[#4F46E5] shadow-indigo-200' : 'bg-violet-600 hover:bg-violet-700 shadow-violet-200'}`}>
-                            {isSubmitting
-                                ? <><Loader2 size={18} className="animate-spin" />{editingService ? 'Zapisywanie…' : 'Publikowanie…'}</>
-                                : uploadProgress !== null
-                                    ? <><Loader2 size={18} className="animate-spin" />{uploadingType === 'video' ? 'Przesyłanie wideo…' : 'Przesyłanie zdjęcia…'}</>
-                                    : editingService ? 'Zapisz zmiany' : 'Opublikuj'}
-                        </button>
-                    </div>
-                </motion.div>
-            </div>
-        </>
+        </SheetModal>
     );
 };

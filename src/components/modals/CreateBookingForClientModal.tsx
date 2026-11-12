@@ -1,11 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Loader2, X, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Loader2, RefreshCw } from 'lucide-react';
+import { SheetModal } from './SheetModal';
+import { MODAL_BTN_PRIMARY, MODAL_BTN_SECONDARY } from './modalBase';
 import type { Service } from '../../types';
 
 const MONTHS_PL = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
@@ -45,17 +42,8 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const offset = (() => { const r = new Date(y, m, 1).getDay(); return r === 0 ? 6 : r - 1; })();
 
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, true);
     const scrollRef = useRef<HTMLDivElement>(null);
     const timeRef   = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const alreadyLocked = document.documentElement.classList.contains('scroll-locked');
-        if (!alreadyLocked) lockScroll();
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); triggerClose(); } };
-        window.addEventListener('keydown', onKey, true);
-        return () => { if (!alreadyLocked) unlockScroll(); window.removeEventListener('keydown', onKey, true); };
-    }, [triggerClose]);
 
     useEffect(() => {
         if (!selDate) return;
@@ -68,7 +56,7 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
         return () => cancelAnimationFrame(id);
     }, [selDate]);
 
-    const handleConfirm = async () => {
+    const handleConfirm = async (close: () => void) => {
         if (!selDate || !selService || loading) return;
         setLoading(true);
         try {
@@ -78,7 +66,7 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
                 selService,
                 recurring ? { interval, count } : undefined
             );
-            triggerClose();
+            close();
         } catch {
             setLoading(false);
         }
@@ -88,44 +76,25 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
         [`${String(h).padStart(2,'0')}:00`, `${String(h).padStart(2,'0')}:30`]
     ).flat();
 
-    return createPortal(
-        <div className="fixed inset-0 z-[100002]">
-            {/* Backdrop — fades in real time with drag gesture */}
-            <motion.div
-                style={{ opacity: backdropOpacity }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={handleClose}
-            />
-            {/* Sheet */}
-            <div className="absolute inset-0 flex items-end md:items-center justify-center md:p-4 pointer-events-none">
-            <motion.div
-                {...sheetDragProps}
-                className="pointer-events-auto w-full sm:max-w-md bg-white rounded-t-[2rem] md:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="md:hidden">
-                    <BottomSheetHandle onPointerDown={startDrag} />
-                </div>
-
-                <div
-                    className="px-6 md:px-8 py-4 md:py-5 border-b border-gray-50 bg-gray-50/50 shrink-0 md:cursor-default cursor-grab active:cursor-grabbing"
-                    style={{ touchAction: 'none' }}
-                    onPointerDown={startDrag}
-                >
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-lg text-gray-900 flex items-center gap-3">
-                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                                <Calendar size={18} />
-                            </div>
-                            Dodaj rezerwację
-                        </h3>
-                        <button onClick={handleClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400">
-                            <X size={20} />
-                        </button>
-                    </div>
-                </div>
-
-                <div ref={scrollRef} className="flex-1 overflow-y-scroll overscroll-contain px-5 py-5 max-h-[55dvh] md:max-h-[70vh]">
+    return (
+        <SheetModal
+            isOpen
+            onClose={onClose}
+            title="Dodaj rezerwację"
+            icon={Calendar}
+            bodyRef={scrollRef}
+            footer={({ close }) => (
+                <>
+                    <button type="button" onClick={close} className={MODAL_BTN_SECONDARY}>Anuluj</button>
+                    <button type="button" disabled={!selDate || !selService || loading}
+                        onClick={() => handleConfirm(close)}
+                        className={MODAL_BTN_PRIMARY}>
+                        {loading && <Loader2 size={13} className="animate-spin" />}
+                        {recurring ? `Dodaj ${count} rezerwacji` : 'Dodaj rezerwację'}
+                    </button>
+                </>
+            )}
+        >
 
                     {/* Selektor usługi */}
                     {myServices.length > 1 && (
@@ -267,26 +236,7 @@ export const CreateBookingForClientModal = ({ sessionId: _sessionId, myServices,
                             </div>
                         </div>
                     )}
-                </div>
-
-                <div
-                    className="flex gap-2 px-5 pt-4 pb-5 shrink-0 border-t border-gray-100"
-                    style={{ paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom, 0px))) + 1.25rem)' }}
-                >
-                    <button type="button" onClick={handleClose}
-                        className="flex-1 py-3 rounded-xl text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-100 active:scale-95 transition-all">
-                        Anuluj
-                    </button>
-                    <button type="button" disabled={!selDate || !selService || loading}
-                        onClick={handleConfirm}
-                        className="flex-1 py-3 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-40 shadow-sm shadow-indigo-200 flex items-center justify-center gap-2">
-                        {loading && <Loader2 size={13} className="animate-spin" />}
-                        {recurring ? `Dodaj ${count} rezerwacji` : 'Dodaj rezerwację'}
-                    </button>
-                </div>
-            </motion.div>
-            </div>
-        </div>,
-        document.body
+                
+        </SheetModal>
     );
 };

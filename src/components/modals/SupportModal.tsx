@@ -1,13 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Wrench, CreditCard, AlertTriangle, User, HelpCircle, CheckCircle, ChevronRight, Ticket } from 'lucide-react';
+import { Wrench, CreditCard, AlertTriangle, User, HelpCircle, CheckCircle, ChevronRight, Ticket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useBottomSheet } from '../../hooks/useBottomSheet';
-import { BottomSheetHandle } from '../ui/BottomSheetHandle';
+import { SheetModal } from './SheetModal';
+import { MODAL_BTN_PRIMARY, MODAL_BTN_SECONDARY } from './modalBase';
 import { apiClient } from '../../services/apiClient';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 import type { ToastType } from '../../types';
 
 interface SupportModalProps {
@@ -35,7 +33,6 @@ export const SupportModal = ({ isOpen, onClose, context, onToast }: SupportModal
     const [body, setBody] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [ticketNo, setTicketNo] = useState('');
-    const { sheetDragProps, startDrag, backdropOpacity, triggerClose, handleClose } = useBottomSheet(onClose, isOpen);
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -48,20 +45,6 @@ export const SupportModal = ({ isOpen, onClose, context, onToast }: SupportModal
             setIsSending(false);
         }
     }, [isOpen, context]);
-
-    useEffect(() => {
-        if (isOpen) lockScroll();
-        else unlockScroll();
-        return () => { unlockScroll(); };
-    }, [isOpen]);
-
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) { e.stopPropagation(); triggerClose(); }
-        };
-        if (isOpen) window.addEventListener('keydown', handleEsc, true);
-        return () => window.removeEventListener('keydown', handleEsc, true);
-    }, [isOpen, triggerClose]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -184,95 +167,33 @@ export const SupportModal = ({ isOpen, onClose, context, onToast }: SupportModal
         </AnimatePresence>
     );
 
-    const footerButtons = (
-        <>
-            {step === 'form' && (
-                <div className="flex gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setStep('category')}
-                        className="flex-1 py-4 px-4 rounded-2xl font-black text-gray-500 hover:bg-gray-100 transition-colors uppercase tracking-widest text-xs"
-                    >
-                        Wstecz
-                    </button>
-                    <button
-                        type="submit"
-                        form="support-form"
-                        disabled={isSending || !subject.trim() || !body.trim()}
-                        className="flex-1 py-4 px-4 rounded-2xl font-black text-white bg-[#6366F1] hover:bg-[#5558e8] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95"
-                    >
-                        {isSending ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
-                    </button>
-                </div>
-            )}
-            {step === 'success' && (
-                <button
-                    onClick={handleClose}
-                    className="w-full py-4 rounded-2xl font-black text-white bg-[#6366F1] hover:bg-[#5558e8] transition-all shadow-lg shadow-indigo-100 uppercase tracking-widest text-xs active:scale-95"
-                >
-                    Gotowe
-                </button>
-            )}
-        </>
-    );
-
-    return createPortal(
-        isOpen ? (
-            <div className="fixed inset-0 z-[500]">
-                {/* Backdrop — fades in real time with drag gesture */}
-                <motion.div
-                    style={{ opacity: backdropOpacity }}
-                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                    onClick={handleClose}
-                    onTouchMove={e => e.stopPropagation()}
-                />
-                {/* Sheet */}
-                <div className="absolute inset-0 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
-                    <motion.div
-                        onClick={e => e.stopPropagation()}
-                        onTouchMove={e => e.stopPropagation()}
-                        {...sheetDragProps}
-                        className="pointer-events-auto bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2.5rem] shadow-2xl relative text-left flex flex-col h-[92dvh] sm:h-[640px] overflow-hidden"
-                    >
-                        <div className="sm:hidden">
-                            <BottomSheetHandle onPointerDown={startDrag} />
-                        </div>
-
-                        {/* Header */}
-                        <div
-                            className="px-6 sm:px-8 py-4 sm:py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 shrink-0 sm:cursor-default cursor-grab active:cursor-grabbing"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={startDrag}
+    return (
+        <SheetModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={step === 'success' ? 'Zgłoszenie wysłane' : 'Centrum pomocy'}
+            icon={Ticket}
+            tall
+            bodyClassName="overflow-x-hidden"
+            footer={step === 'category' ? null : ({ close }) => (
+                step === 'form' ? (
+                    <>
+                        <button type="button" onClick={() => setStep('category')} className={MODAL_BTN_SECONDARY}>Wstecz</button>
+                        <button
+                            type="submit"
+                            form="support-form"
+                            disabled={isSending || !subject.trim() || !body.trim()}
+                            className={MODAL_BTN_PRIMARY}
                         >
-                            <h3 className="font-bold text-lg sm:text-xl text-gray-900 flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 text-[#6366F1] rounded-xl">
-                                    <Ticket size={18} />
-                                </div>
-                                {step === 'success' ? 'Zgłoszenie wysłane' : 'Centrum pomocy'}
-                            </h3>
-                            <button onClick={handleClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="overflow-y-auto sm:overflow-hidden flex-1 p-6 sm:p-8">
-                            {stepsJSX}
-                        </div>
-
-                        {/* Footer */}
-                        <div
-                            className={`px-6 sm:px-8 shrink-0 bg-white ${step !== 'category' ? 'pt-3 border-t border-gray-50' : ''}`}
-                            style={{
-                                paddingBottom: 'calc(var(--native-cta-h, var(--bottom-nav-total-h, env(safe-area-inset-bottom))) + 32px)',
-                            }}
-                        >
-                            {footerButtons}
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-        ) : null,
-        document.body
+                            {isSending ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
+                        </button>
+                    </>
+                ) : (
+                    <button type="button" onClick={close} className={MODAL_BTN_PRIMARY}>Gotowe</button>
+                )
+            )}
+        >
+            {stepsJSX}
+        </SheetModal>
     );
 };
