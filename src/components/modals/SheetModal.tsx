@@ -32,8 +32,8 @@ export interface SheetModalProps {
     tone?: keyof typeof MODAL_ICON_TONE;
     /** Szerokość karty na PC. */
     size?: keyof typeof SIZE_CLASS;
-    /** Stała wysokość (czat, kreator) zamiast dopasowania do treści. */
-    tall?: boolean;
+    /** Stała wysokość (czat, kreator) zamiast dopasowania do treści. String = własne klasy wysokości (np. iPad, natywny czat). */
+    tall?: boolean | string;
     /** false = nie da się zamknąć (trwa zapis): Esc, tło, X i gest wyłączone. */
     dismissible?: boolean;
     /** Element obok X w nagłówku (np. „Wstecz”). */
@@ -76,7 +76,7 @@ export const SheetModal = ({
                         onClick={e => e.stopPropagation()}
                         onTouchMove={e => e.stopPropagation()}
                         className={`pointer-events-auto w-full ${SIZE_CLASS[size]} bg-white rounded-t-[2rem] md:rounded-[2.5rem] shadow-2xl relative text-left flex flex-col overflow-hidden ${
-                            tall ? 'h-[92dvh] md:h-[640px] md:max-h-[90vh]' : 'max-h-[92dvh] md:max-h-[90vh]'
+                            tall ? (typeof tall === 'string' ? tall : 'h-[92dvh] md:h-[640px] md:max-h-[90vh]') : 'max-h-[92dvh] md:max-h-[90vh]'
                         }`}
                     >
                         <div className="md:hidden">
