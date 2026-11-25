@@ -349,12 +349,8 @@ export const useAppLogic = () => {
             }
             setPendingToggles(prev => new Map(prev).set(publicId, !remove));
         },
-        onSuccess: async (_data, { publicId, remove }) => {
-            if (!remove) {
-                const svc = queryClient.getQueryData<ReturnType<typeof mapApiService>>(['service', publicId])
-                    ?? allServices.find(s => s.publicId === publicId);
-                if (svc?.category) serviceService.trackEvent('favorite', svc.category);
-            }
+        onSuccess: async (_data, { publicId }) => {
+            // zdarzenie „ulubione” zapisuje serwer (PUT /favorites/:id)
             await refetchFavorites();
             setPendingToggles(prev => { const m = new Map(prev); m.delete(publicId); return m; });
             queryClient.invalidateQueries({ queryKey: ['service'] });

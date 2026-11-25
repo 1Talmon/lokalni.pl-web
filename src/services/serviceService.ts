@@ -132,7 +132,7 @@ export const serviceService = {
     return json.data.map(mapApiService);
   },
 
-  async trackEvent(eventType: 'favorite' | 'search', category?: string): Promise<void> {
+  async trackEvent(eventType: 'search', category?: string): Promise<void> {
     if (!category || category === 'all') return;
     apiClient.post('/events', { event_type: eventType, category }).catch(() => {});
   },
