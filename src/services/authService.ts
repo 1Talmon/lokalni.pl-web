@@ -26,6 +26,7 @@ interface RawUserPayload {
     link_polecajacy?: string;
     liczbaPoleconych?: number;
     liczba_poleconych?: number;
+    polecenia?: UserProfile['polecenia'];
     ustawionehaslo?: boolean;
     rekomendacje?: unknown[];
     confidential?: boolean;
@@ -186,14 +187,16 @@ export const authService = {
 
     // --- DOKOŃCZENIE REJESTRACJI SOCIAL (DOB) ---
     async completeSocialLogin(tempToken: string, dateOfBirth: string, parentalEmail?: string, name?: { firstName: string; lastName: string }, zgodaNewsletter?: boolean): Promise<{ success: boolean; parentalConsentRequired?: boolean; childEmail?: string } | AuthSuccessResult> {
+        const kodPolecajacy = localStorage.getItem('referral_code') || undefined;
         const response = await fetch(`${API_URL}/auth/social/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail, ...(name ? { firstName: name.firstName, lastName: name.lastName } : {}), ...(zgodaNewsletter ? { zgodaNewsletter: true } : {}) }),
+            body: JSON.stringify({ temp_token: tempToken, dateOfBirth, parentalEmail, ...(name ? { firstName: name.firstName, lastName: name.lastName } : {}), ...(zgodaNewsletter ? { zgodaNewsletter: true } : {}), ...(kodPolecajacy ? { kodPolecajacy } : {}) }),
             credentials: 'include',
         });
         const result: RawAuthPayload = await response.json();
         if (!response.ok) throw new Error(result.message as string || 'Błąd rejestracji.');
+        localStorage.removeItem('referral_code');
         if (result.status === 'parental_consent_required') {
             return { success: true, parentalConsentRequired: true, childEmail: result.childEmail as string | undefined };
         }
@@ -322,6 +325,7 @@ export const authService = {
             bio: userData.bio || undefined,
             linkPolecajacy: userData.linkPolecajacy || userData.link_polecajacy || "",
             liczbaPoleconych: userData.liczbaPoleconych ?? userData.liczba_poleconych ?? 0,
+            polecenia: userData.polecenia,
             ustawionehaslo: userData.ustawionehaslo || false,
             rekomendacje: (userData.rekomendacje as { tytul: string; opis: string; napisPrzycisku: string; akcja: string }[]) || [],
             confidential: userData.confidential || false,

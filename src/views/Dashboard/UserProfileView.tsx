@@ -911,7 +911,9 @@ export const UserProfileView = ({
                                         <h4 className="text-sm font-black text-gray-900">Zaproś znajomych</h4>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-400 mb-3 leading-relaxed">Udostępnij link znajomym i pomóż im odkryć Lokalnych.</p>
+                                <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                                    Gdy znajomy dołączy z Twojego linku i potwierdzi e-mail, <strong>oboje dostajecie miesiąc Plus</strong>.
+                                </p>
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 mb-3">
                                     <p className="text-xs text-indigo-500 font-semibold truncate">{inviteUrl}</p>
                                 </div>
@@ -926,6 +928,13 @@ export const UserProfileView = ({
                                     {copiedInvite ? <Check size={14} /> : <Copy size={14} />}
                                     {copiedInvite ? 'Skopiowano!' : 'Kopiuj link'}
                                 </button>
+                                {userData?.polecenia && (userData.polecenia.confirmed > 0 || userData.polecenia.pending > 0 || userData.polecenia.creditDays > 0) && (
+                                    <div className="mt-3 text-[11px] font-bold text-gray-400 leading-relaxed">
+                                        {userData.polecenia.confirmed > 0 && <p className="text-emerald-600">Dołączyło: {userData.polecenia.confirmed} · miesięcy Plus z poleceń: {Math.min(userData.polecenia.rewarded, userData.polecenia.maxRewards)} z {userData.polecenia.maxRewards}</p>}
+                                        {userData.polecenia.pending > 0 && <p>Czeka na potwierdzenie e-maila: {userData.polecenia.pending}</p>}
+                                        {userData.polecenia.creditDays > 0 && <p>{userData.polecenia.creditDays} dni Plus włączy się, gdy skończy się Twój obecny pakiet.</p>}
+                                    </div>
+                                )}
                             </div>
                             );
                         })()}

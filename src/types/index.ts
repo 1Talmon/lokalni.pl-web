@@ -29,6 +29,8 @@ export interface UserProfile {
   website?: string | null
   linkPolecajacy?: string
   liczbaPoleconych?: number
+  /** Program poleceń (z GET /users/me): potwierdzone / czekające na e-mail / z nagrodą dla mnie, limit i dni Plus czekające na włączenie. */
+  polecenia?: { confirmed: number; pending: number; rewarded: number; creditDays: number; maxRewards: number; rewardDays: number }
   rekomendacje?: Array<{ tytul: string; opis: string; napisPrzycisku: string; akcja: string }>
   zdjecieTla?: string | null
   imie?: string

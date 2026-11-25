@@ -1,88 +1,114 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, MapPin, Star, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Gift } from 'lucide-react';
+import { loginHref } from '@/utils/authRedirect';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.mylokalni.pl/api';
+const CODE_RE = /^[a-zA-Z0-9_-]{3,40}$/;
+const APP_STORE_URL = 'https://apps.apple.com/pl/app/mylokalni/id6788702057?l=pl';
+
+/** Prefiks, po którym apka rozpoznaje kod skopiowany do schowka przy instalacji ze sklepu. */
+export const REFERRAL_CLIPBOARD_PREFIX = 'lokalni-ref:';
+
+type Invite = { status: 'loading' } | { status: 'ok'; name: string | null; rewardDays: number } | { status: 'invalid' };
 
 export const InviteView = () => {
     const params = useParams();
-    const code = params?.code as string | undefined;
+    const rawCode = params?.code as string | undefined;
+    const code = rawCode && CODE_RE.test(rawCode) ? rawCode : null;
     const router = useRouter();
+    const [invite, setInvite] = useState<Invite>({ status: code ? 'loading' : 'invalid' });
+    const [isIos, setIsIos] = useState(false);
 
     useEffect(() => {
-        if (code && /^[a-zA-Z0-9_-]{3,32}$/.test(code)) localStorage.setItem('referral_code', code);
+        setIsIos(/iPhone|iPad|iPod/i.test(navigator.userAgent));
+    }, []);
+
+    useEffect(() => {
+        if (!code) return;
+        const ctrl = new AbortController();
+        fetch(`${API_URL}/public/referral/${encodeURIComponent(code)}`, { signal: ctrl.signal })
+            .then(async (res) => {
+                if (res.status === 404) { setInvite({ status: 'invalid' }); return; }
+                if (!res.ok) throw new Error(String(res.status));
+                const data = await res.json() as { name?: string; rewardDays?: number };
+                try { localStorage.setItem('referral_code', code); } catch { /* private mode */ }
+                setInvite({ status: 'ok', name: data.name ?? null, rewardDays: data.rewardDays ?? 30 });
+            })
+            .catch((err) => {
+                if ((err as Error).name === 'AbortError') return;
+                // Brak sieci / błąd serwera: kod zapisujemy mimo to – API i tak sprawdzi go przy rejestracji.
+                try { localStorage.setItem('referral_code', code); } catch { /* private mode */ }
+                setInvite({ status: 'ok', name: null, rewardDays: 30 });
+            });
+        return () => ctrl.abort();
     }, [code]);
 
-    const handleRegister = () => {
-        router.push('/auth');
+    const goAuth = () => router.push(loginHref('/'));
+
+    // Zanim ktoś przejdzie do sklepu, kopiujemy kod – po instalacji apka go odczyta (iOS nie przenosi parametrów linku).
+    const goStore = () => {
+        if (code) navigator.clipboard?.writeText(`${REFERRAL_CLIPBOARD_PREFIX}${code}`).catch(() => {});
+        window.location.href = APP_STORE_URL;
     };
 
+    const ok = invite.status === 'ok' ? invite : null;
+    const title = invite.status === 'loading' ? ' '
+        : ok?.name ? `${ok.name} zaprasza Cię`
+        : ok ? 'Zaprosił Cię znajomy'
+        : 'Witaj w MyLokalni';
+
     return (
-        <div className="min-h-screen bg-[#F4F4F9] flex items-center justify-center p-4">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] px-6 text-white">
+            <div className="pointer-events-none absolute -top-32 -right-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-fuchsia-300/20 blur-3xl" />
+
             <motion.div
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                className="w-full max-w-md"
+                transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+                className="relative flex w-full max-w-sm flex-col items-center text-center"
             >
-                {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="w-9 h-9 bg-[#6366F1] rounded-xl flex items-center justify-center">
-                        <MapPin size={18} className="text-white" strokeWidth={2.5} />
-                    </div>
-                    <span className="text-xl font-black text-gray-900 tracking-tight">MyLokalni.pl</span>
+                <div className="text-5xl font-black tracking-tight">
+                    MyLokalni<span className="text-white/60">.</span>
                 </div>
 
-                {/* Card */}
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Top banner */}
-                    <div className="bg-[#6366F1] px-8 pt-8 pb-10 text-white text-center relative overflow-hidden">
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-                            className="absolute -top-8 -right-8 w-32 h-32 rounded-full border-[20px] border-white/5 pointer-events-none"
-                        />
-                        <div className="w-16 h-16 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                            🎁
+                <h1 className="mt-6 min-h-[1.75rem] text-xl font-bold text-white/90">{title}</h1>
+
+                {ok && (
+                    <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/15 px-5 py-3.5 text-left backdrop-blur">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                            <Gift size={20} />
                         </div>
-                        <h1 className="text-2xl font-black tracking-tight mb-2">Masz zaproszenie!</h1>
-                        <p className="text-indigo-200 text-sm font-medium leading-relaxed">
-                            Twój znajomy zaprasza Cię do MyLokalni.pl — platformy łączącej mieszkańców z lokalnymi wykonawcami.
-                        </p>
+                        <div className="text-sm font-bold leading-snug">
+                            Załóż konto, a oboje dostaniecie miesiąc Plus w prezencie.
+                        </div>
                     </div>
+                )}
 
-                    {/* Features */}
-                    <div className="px-8 py-6 space-y-4">
-                        {[
-                            { icon: <MapPin size={16} />, text: 'Znajdź wykonawców w swojej okolicy – z opiniami po rezerwacjach' },
-                            { icon: <Star size={16} />, text: 'Oceny i opinie od prawdziwych klientów' },
-                            { icon: <ShieldCheck size={16} />, text: 'Bezpieczny kontakt i rezerwacje online' },
-                        ].map(({ icon, text }) => (
-                            <div key={text} className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-indigo-50 text-[#6366F1] rounded-xl flex items-center justify-center shrink-0">
-                                    {icon}
-                                </div>
-                                <span className="text-sm font-medium text-gray-700">{text}</span>
-                            </div>
-                        ))}
-                    </div>
+                <button
+                    onClick={goAuth}
+                    className="mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-xs font-black uppercase tracking-widest text-[#6366F1] shadow-lg shadow-black/10 transition-all hover:bg-indigo-50 active:scale-95"
+                >
+                    Dołącz <ArrowRight size={16} />
+                </button>
+                <button
+                    onClick={goAuth}
+                    className="mt-2 w-full rounded-2xl py-3 text-xs font-black uppercase tracking-widest text-white/70 transition-all hover:bg-white/10"
+                >
+                    Mam już konto
+                </button>
 
-                    {/* Actions */}
-                    <div className="px-8 pb-8 space-y-3">
-                        <button
-                            onClick={handleRegister}
-                            className="w-full bg-[#6366F1] text-white rounded-2xl py-3.5 font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#4F46E5] active:scale-95 transition-all shadow-xl shadow-indigo-100"
-                        >
-                            Dołącz za darmo <ArrowRight size={16} />
-                        </button>
-                        <button
-                            onClick={() => router.push('/auth')}
-                            className="w-full text-center text-xs text-gray-400 hover:text-gray-600 font-medium py-1.5 transition-colors"
-                        >
-                            Mam już konto — zaloguj się
-                        </button>
-                    </div>
-                </div>
+                {isIos && (
+                    <button
+                        onClick={goStore}
+                        className="mt-6 text-xs font-bold text-white/70 underline underline-offset-4 hover:text-white"
+                    >
+                        Wolę aplikację – pobierz z App Store
+                    </button>
+                )}
             </motion.div>
         </div>
     );

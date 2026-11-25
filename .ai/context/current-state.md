@@ -7,28 +7,28 @@ przy refreshu.
 
 <!-- AI_AUTO_START -->
 
-_Regenerated: **2026-10-30 20:01 UTC** przez `scripts/ai-refresh.sh`_
+_Regenerated: **2026-11-23 23:17 UTC** przez `scripts/ai-refresh.sh`_
 
 ### Git snapshot
 
 - Branch: `dev`
-- Uncommitted files: **1**
+- Uncommitted files: **8**
 - Ahead of origin: **0** commits
 - Behind origin: **0** commits
 
 ### Ostatnie 10 commitów
 
 ```
-88f9472 fix(auth): jedno wspólne odświeżanie sesji (start + 401 + WebSocket), retry z już odświeżonym tokenem, brak wylogowania przy błędzie sieci
-16c2c26 chore(ai): sync current-state
-a25d681 docs: zasady wyglądu (docs/UI-STYLE.md, wspólne z apką) + CLAUDE.md – linki i logowanie, aktualne komendy i wdrażanie
-8c9a2f5 fix(relacja IG): przycisk pod e-mailem zamiast ikony wystającej z karty, główny przycisk i pastylki jak w innych oknach, krótkie powiadomienie
-16ce96b feat(panel): generator relacji na Instagram – 7 szablonów (4 bez zdjęcia, 3 ze zdjęciami z ofert/tła/aktualności), QR do profilu, przełączniki zdjęcia profilowego i oceny, pobranie/udostępnienie PNG 1080×1920
-79b1088 fix(linki): powrót po logowaniu wszędzie (/auth?next= z zapytaniem, zapamiętany na godzinę), powiadomienia do konkretnej rezerwacji/ogłoszenia/czatu, okno opinii od zakończenia z panelu, publicId z myślnikiem, pasek Safari otwiera tę stronę w apce, AASA jako JSON
-74ef7b5 fix(nawigacja): wstecz z formularza rezerwacji, czatu i pomocy wraca na poprzednią stronę (sprawdzanie historii z react-router zawsze dawało stronę główną)
-bf32d7f feat(profil): „Zdjęcia od klientów” – zdjęcia z opinii do wszystkich ogłoszeń (także usuniętych), najnowsze pierwsze, 5 miniatur + „Wszystkie”, galeria po kliknięciu
-abaf9a3 fix(czat): starsza karta zakończonej rezerwacji szara z „Zlecenie zakończone” (data bez przekreślenia) – aktualna karta z „Wystaw opinię” jest na dole
-b043e49 fix(rezerwacje): po zmianie terminu przyciski według roli w rezerwacji, nie nadawcy karty – klient może zaakceptować termin od wykonawcy (Odrzuć = anuluj), wykonawca czeka na akceptację; to samo w Rezerwacjach
+2f3b015 feat(okna): SheetModal – prop tall przyjmuje własne klasy wysokości (jak w apce)
+41521ce refactor(okna): trzy rodziny okien na wspólnej bazie (SheetModal, DarkPanelModal, modalBase) – spójny wygląd, gesty, warstwy i scroll
+2917b7d fix(zgłoszenia): modal zgłoszenia nad czatem i bez skoku scrolla (wspólny wzorzec alreadyLocked)
+fe035c1 fix(ui): pasek pod treścią stron informacyjnych (tło, padding, odstęp pod dolne menu na desktopie)
+dc83fb3 fix(powiadomienia): panel dzwonka otwiera się pod dzwonkiem, bez lotu z prawej
+cc90702 fix(ui): usunięty pusty blok nad stopką na stronach informacyjnych (min-h-screen)
+12895db docs(regulamin): §7 ust. 5 – dostęp do danych i równe traktowanie (P2B art. 7, 9, 10); wejście w życie 30.11.2026
+547587c fix(plus): przycisk zakupu „Zamawiam z obowiązkiem zapłaty” + cena po okresie próbnym widoczna przy przycisku (art. 17 ust. 3 u.p.k.)
+da28739 fix(rodo): Polityka prywatności (polecenia, status aktywności, retencje), metryki szybkości tylko po zgodzie, równe przyciski banera cookies
+9369d9d feat(czat): zgłoszenie pojedynczej wiadomości z menu czatu
 ```
 
 <!-- AI_AUTO_END -->
