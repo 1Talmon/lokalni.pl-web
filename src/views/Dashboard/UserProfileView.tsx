@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ClientPortal } from '../../components/ui/ClientPortal';
 import {
     Camera, Settings,
-    ShieldCheck, ClipboardList,
+    ClipboardList,
     Eye, Layout, LogOut, Copy,
     Tag, Megaphone, Sparkles, Gift, Check, Loader2, Trash2, Instagram
 } from 'lucide-react';
@@ -802,7 +802,6 @@ export const UserProfileView = ({
                         <div className="flex-1 min-w-0 text-left md:hidden">
                             <h2 className="text-xl font-bold text-gray-900 leading-tight flex items-center gap-2 mb-1">
                                 <span className="truncate">{userData?.imie ? `${userData.imie} ${userData.nazwisko || ''}` : userData?.name}</span>
-                                {accountType === 'business' && <ShieldCheck size={20} className="text-blue-600 fill-blue-50 shrink-0" />}
                             </h2>
                             <p className="text-gray-500 text-xs font-medium truncate mb-2">{userData?.email}</p>
                             {myServices.length > 0 && (
@@ -820,7 +819,6 @@ export const UserProfileView = ({
                         <div className="hidden md:block">
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex items-center justify-center md:justify-start gap-2 mb-2">
                                 {userData?.imie ? `${userData.imie} ${userData.nazwisko || ''}` : userData?.name}
-                                {accountType === 'business' && <ShieldCheck size={24} className="text-blue-600 fill-blue-50" />}
                             </h2>
                             <p className="text-gray-500 text-sm md:text-base font-medium mb-5">{userData?.email}</p>
                         </div>
